@@ -5,13 +5,13 @@ Système de distribution multi-cibles pour agents IA KeyProd. Définir un agent 
 ## Principe
 
 ```
-agents/*.md  ──→  sync.sh  ──→  plugins/kp-core/  → commit/push → Claude Code via marketplace
+agents/*.md  ──→  sync.sh  ──→  plugins/kp-agents/  → commit/push → Claude Code via marketplace
                             ──→  dist/cursor/      → ~/.cursor/rules/
                             ──→  dist/codex/       → ~/.codex/skills/
 ```
 
 Un seul fichier source par agent dans `agents/`. Le script `sync.sh` :
-- **Génère le plugin `kp-core`** dans `plugins/kp-core/` (versionné dans git, distribué via le marketplace Claude Code)
+- **Génère le plugin `kp-agents`** dans `plugins/kp-agents/` (versionné dans git, distribué via le marketplace Claude Code)
 - **Installe les règles Cursor** dans `~/.cursor/rules/`
 - **Installe les skills Codex** dans `~/.codex/skills/`
 
@@ -23,20 +23,20 @@ L'installation se fait directement depuis le repo git — aucun clone ni `sync.s
 
 ```
 /plugin marketplace add KeyProd/kp-agents
-/plugin install kp-core@kp-agents
+/plugin install kp-agents@kp-agents
 /reload-plugins
 ```
 
-Puis invoque les agents avec le namespace `kp-core:` :
+Puis invoque les agents avec le namespace `kp-agents:` :
 
 ```
-/kp-core:brainstorm
-/kp-core:product
-/kp-core:architect
-/kp-core:developer
-/kp-core:review
-/kp-core:documentation
-/kp-core:ux-ui
+/kp-agents:brainstorm
+/kp-agents:product
+/kp-agents:architect
+/kp-agents:developer
+/kp-agents:review
+/kp-agents:documentation
+/kp-agents:ux-ui
 ```
 
 ### Cursor et Codex (via sync.sh)
@@ -85,14 +85,14 @@ default_prompt: "Prompt suggéré à l'utilisateur."
 Instructions, processus, règles...
 ```
 
-Lancer `./sync.sh` — le plugin Claude exposera l'agent comme `/kp-core:mon-agent`, Cursor comme `@kp-mon-agent`, Codex avec la skill `kp-mon-agent`.
+Lancer `./sync.sh` — le plugin Claude exposera l'agent comme `/kp-agents:mon-agent`, Cursor comme `@kp-mon-agent`, Codex avec la skill `kp-mon-agent`.
 
 ### Publier une mise à jour Claude Code
 
 1. Modifier l'agent source dans `agents/<nom>.md`
-2. Lancer `./sync.sh` pour régénérer `plugins/kp-core/skills/<nom>/SKILL.md`
-3. Bumper la version dans `plugins/kp-core/.claude-plugin/plugin.json` (semver — patch, mineur ou majeur selon la nature du changement)
-4. `git add agents/ plugins/ && git commit && git tag kp-core-v<X.Y.Z> && git push --tags`
+2. Lancer `./sync.sh` pour régénérer `plugins/kp-agents/skills/<nom>/SKILL.md`
+3. Bumper la version dans `plugins/kp-agents/.claude-plugin/plugin.json` (semver — patch, mineur ou majeur selon la nature du changement)
+4. `git add agents/ plugins/ && git commit && git tag kp-agents-v<X.Y.Z> && git push --tags`
 5. Les utilisateurs reçoivent la mise à jour au prochain `/plugin marketplace update` (ou automatiquement selon leur config)
 
 ## Includes
@@ -113,7 +113,7 @@ includes/          Templates partagés ({{include:nom}})
 .claude-plugin/
   marketplace.json Catalogue du marketplace Claude Code (statique)
 plugins/           Plugins Claude Code (COMMITÉS dans git)
-  kp-core/
+  kp-agents/
     .claude-plugin/plugin.json  Manifeste statique (name, version, description)
     skills/        Skills générés par sync.sh (SKILL.md par agent)
 dist/              Artefacts Cursor / Codex (NON commités, .gitignore)
@@ -149,7 +149,7 @@ Détails dans [docs/agents.md](docs/agents.md).
 
 ### `0 skills` au reload-plugins après install
 
-Si `/reload-plugins` annonce `0 skills` au lieu du nombre attendu juste après `/plugin install kp-core@kp-agents`, le cache local du plugin est sans doute stale (typiquement après un renommage ou un changement de source du plugin). Purge le cache puis réinstalle :
+Si `/reload-plugins` annonce `0 skills` au lieu du nombre attendu juste après `/plugin install kp-agents@kp-agents`, le cache local du plugin est sans doute stale (typiquement après un renommage ou un changement de source du plugin). Purge le cache puis réinstalle :
 
 ```bash
 rm -rf ~/.claude/plugins/cache/kp-agents
@@ -160,19 +160,19 @@ Puis dans Claude Code :
 ```
 /plugin marketplace remove kp-agents
 /plugin marketplace add KeyProd/kp-agents
-/plugin install kp-core@kp-agents
+/plugin install kp-agents@kp-agents
 /reload-plugins
 ```
 
 ### Les anciens `/kp-brainstorm` (sans namespace) ne répondent plus
 
-Normal : la distribution Claude Code se fait désormais via le plugin marketplace. Les namespaces sont imposés sous la forme `/kp-core:<nom>`. L'ancien install local via `sync.sh` a été automatiquement purgé au premier run de la nouvelle version.
+Normal : la distribution Claude Code se fait désormais via le plugin marketplace. Les namespaces sont imposés sous la forme `/kp-agents:<nom>`. L'ancien install local via `sync.sh` a été automatiquement purgé au premier run de la nouvelle version.
 
-Utilise `/kp-core:brainstorm` à la place de `/kp-brainstorm`, etc.
+Utilise `/kp-agents:brainstorm` à la place de `/kp-brainstorm`, etc.
 
 ### Installer une branche feature (pour tester)
 
 ```
 /plugin marketplace add KeyProd/kp-agents@feat/ma-branche
-/plugin install kp-core@kp-agents
+/plugin install kp-agents@kp-agents
 ```

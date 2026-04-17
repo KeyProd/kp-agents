@@ -3,12 +3,12 @@ set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────
 # sync.sh - Synchronize agents from canonical source to
-#           Claude Code plugin (kp-core), Cursor, and Codex
+#           Claude Code plugin (kp-agents), Cursor, and Codex
 #
-# The Claude Code plugin is generated into ./plugins/kp-core/
+# The Claude Code plugin is generated into ./plugins/kp-agents/
 # and committed to git. Users install it via:
 #   /plugin marketplace add KeyProd/kp-agents
-#   /plugin install kp-core@kp-agents
+#   /plugin install kp-agents@kp-agents
 #
 # Cursor and Codex keep the local install model via this script.
 # ─────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ DIST_CURSOR_DIR="$DIST_DIR/cursor"
 DIST_CODEX_DIR="$DIST_DIR/codex"
 
 # Claude plugin target (committed to git, not installed locally)
-PLUGIN_DIR="$AGENTS_DIR/plugins/kp-core"
+PLUGIN_DIR="$AGENTS_DIR/plugins/kp-agents"
 PLUGIN_SKILLS_DIR="$PLUGIN_DIR/skills"
 
 MANIFEST_FILE="$AGENTS_DIR/.installed-agents"
@@ -71,19 +71,19 @@ parse_args() {
                 cat <<'HELP_EOF'
 Usage: ./sync.sh [--dist-only] [--clean | --clean-all]
 
-Generates the Claude Code plugin (plugins/kp-core/) from agents/*.md,
+Generates the Claude Code plugin (plugins/kp-agents/) from agents/*.md,
 and installs Cursor rules + Codex skills locally.
 
 Options:
   --dist-only   Generate artefacts only in ./plugins and ./dist without
                 installing to ~/.cursor and ~/.codex
   --clean       Remove previously installed Cursor/Codex agents (based on manifest)
-                and strip their skill folders from plugins/kp-core/, then exit
+                and strip their skill folders from plugins/kp-agents/, then exit
   --clean-all   Remove ALL kp-* Cursor/Codex artefacts via glob (ignores manifest)
-                and clear plugins/kp-core/skills/, then exit
+                and clear plugins/kp-agents/skills/, then exit
 
 Notes:
-  - The Claude plugin in plugins/kp-core/ is versioned in git and distributed
+  - The Claude plugin in plugins/kp-agents/ is versioned in git and distributed
     via the marketplace (.claude-plugin/marketplace.json). This script does NOT
     install anything to ~/.claude/commands/.
 HELP_EOF
@@ -186,7 +186,7 @@ resolve_includes() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Generate Claude Code plugin skill (plugins/kp-core/skills/<name>/SKILL.md)
+# Generate Claude Code plugin skill (plugins/kp-agents/skills/<name>/SKILL.md)
 # Format: minimal YAML frontmatter (description only) + body
 # Committed to git, distributed via plugin marketplace.
 # ─────────────────────────────────────────────────────────────
@@ -209,7 +209,7 @@ generate_plugin() {
 
     mkdir -p "$skill_dir"
     generate_plugin_file "$outfile" "$desc" "$body"
-    ok "Plugin  → plugins/kp-core/skills/${name}/SKILL.md"
+    ok "Plugin  → plugins/kp-agents/skills/${name}/SKILL.md"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -458,11 +458,11 @@ main() {
     echo ""
     echo "Usage:"
     echo "  Claude Code : install plugin via '/plugin marketplace add KeyProd/kp-agents'"
-    echo "                + '/plugin install kp-core@kp-agents', then invoke with"
-    echo "                '/kp-core:brainstorm', '/kp-core:product', '/kp-core:developer', ..."
+    echo "                + '/plugin install kp-agents@kp-agents', then invoke with"
+    echo "                '/kp-agents:brainstorm', '/kp-agents:product', '/kp-agents:developer', ..."
     echo "  Cursor      : @kp-brainstorm (via rules picker)"
     echo "  Codex       : skills auto-détectées (kp-brainstorm, kp-product...)"
-    echo "  Plugin      : artefacts générés dans ./plugins/kp-core/skills/ (commit + push pour distribuer)"
+    echo "  Plugin      : artefacts générés dans ./plugins/kp-agents/skills/ (commit + push pour distribuer)"
     echo "  Dist        : artefacts générés dans ./dist/{cursor,codex}"
     if ! $INSTALL_TARGETS; then
         echo "  Install     : désactivée (--dist-only)"

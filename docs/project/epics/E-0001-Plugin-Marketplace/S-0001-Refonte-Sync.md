@@ -1,5 +1,5 @@
 ---
-title: Refonte sync.sh pour générer le plugin kp-core
+title: Refonte sync.sh pour générer le plugin kp-agents
 date: 2026-04-17
 status: DONE
 author: product-agent
@@ -7,15 +7,15 @@ story-id: S-0001
 epic-id: E-0001
 ---
 
-# S-0001 - Refonte sync.sh pour générer le plugin kp-core
+# S-0001 - Refonte sync.sh pour générer le plugin kp-agents
 
 ## Résumé
 
-Transformer `sync.sh` pour qu'il produise le dossier `plugins/kp-core/` (structure plugin Claude Code native) à partir de `agents/*.md`, et retire complètement la cible d'installation Claude locale (`~/.claude/commands/`). Les cibles Cursor et Codex sont conservées à l'identique.
+Transformer `sync.sh` pour qu'il produise le dossier `plugins/kp-agents/` (structure plugin Claude Code native) à partir de `agents/*.md`, et retire complètement la cible d'installation Claude locale (`~/.claude/commands/`). Les cibles Cursor et Codex sont conservées à l'identique.
 
 ## User Story
 
-En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise automatiquement `plugins/kp-core/` à partir de `agents/`** afin de **maintenir une source unique tout en distribuant via le mécanisme plugin Claude Code natif**.
+En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise automatiquement `plugins/kp-agents/` à partir de `agents/`** afin de **maintenir une source unique tout en distribuant via le mécanisme plugin Claude Code natif**.
 
 ## Contexte
 
@@ -27,9 +27,9 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
 
 ## Règles métier
 
-- Un seul plugin produit pour l'instant : `kp-core` (7 agents génériques)
+- Un seul plugin produit pour l'instant : `kp-agents` (7 agents génériques)
 - Le plugin a son propre `plugin.json` avec un champ `version` (semver) bumpé manuellement
-- Les includes `{{include:xxx}}` sont résolus avant écriture dans `plugins/kp-core/skills/<nom>/SKILL.md`
+- Les includes `{{include:xxx}}` sont résolus avant écriture dans `plugins/kp-agents/skills/<nom>/SKILL.md`
 - Le fichier `.claude-plugin/marketplace.json` existe déjà à la racine et n'est pas régénéré par sync.sh (statique, géré à la main)
 - Les fichiers dans `plugins/` DOIVENT être commités (c'est ce que Claude Code télécharge)
 
@@ -39,8 +39,8 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
 
 - Étant donné un `agents/` contenant 7 fichiers valides et des `includes/` résolvables
 - Quand j'exécute `./sync.sh`
-- Alors `plugins/kp-core/.claude-plugin/plugin.json` est créé avec la version courante
-- Et `plugins/kp-core/skills/<nom>/SKILL.md` est créé pour chacun des 7 agents, avec includes résolus et frontmatter Claude plugin (champ `description` uniquement)
+- Alors `plugins/kp-agents/.claude-plugin/plugin.json` est créé avec la version courante
+- Et `plugins/kp-agents/skills/<nom>/SKILL.md` est créé pour chacun des 7 agents, avec includes résolus et frontmatter Claude plugin (champ `description` uniquement)
 - Et `dist/cursor/kp-*.mdc` et `dist/codex/kp-*/` sont générés comme avant
 - Et **aucun fichier n'est déposé dans `~/.claude/commands/`**
 - Et le manifeste `.installed-agents` reflète uniquement ce qui a été installé dans Cursor/Codex
@@ -50,17 +50,17 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
 - Étant donné un `agents/` où un agent (ex: `ux-ui.md`) a été supprimé
 - Et le sync précédent avait installé ses artefacts
 - Quand j'exécute `./sync.sh`
-- Alors `plugins/kp-core/skills/ux-ui/` est supprimé
+- Alors `plugins/kp-agents/skills/ux-ui/` est supprimé
 - Et `dist/cursor/kp-ux-ui.mdc` et `dist/codex/kp-ux-ui/` sont supprimés
 - Et les installations Cursor/Codex correspondantes sont retirées via le manifeste
 
 ### Alternatif — `--clean`
 
-- Étant donné un `plugins/kp-core/` existant et des installs Cursor/Codex
+- Étant donné un `plugins/kp-agents/` existant et des installs Cursor/Codex
 - Quand j'exécute `./sync.sh --clean`
 - Alors les installs Cursor/Codex du manifeste sont retirées
 - Et les artefacts dans `dist/` sont retirés
-- Et `plugins/kp-core/` n'est **pas** modifié (c'est du contenu commité, pas une install)
+- Et `plugins/kp-agents/` n'est **pas** modifié (c'est du contenu commité, pas une install)
 - Et le script sort sans faire de sync
 
 ### Alternatif — `--clean-all`
@@ -69,7 +69,7 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
 - Quand j'exécute `./sync.sh --clean-all`
 - Alors toutes les installs Cursor/Codex préfixées `kp-*` sont retirées (glob)
 - Et tous les artefacts dans `dist/` sont retirés
-- Et `plugins/kp-core/` n'est **pas** modifié
+- Et `plugins/kp-agents/` n'est **pas** modifié
 - Et le script sort sans faire de sync
 
 ### Erreur — include manquant
@@ -82,7 +82,7 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
 
 ## Cas limites
 
-- [ ] État vide : `agents/` ne contient aucun fichier → sync produit un `plugins/kp-core/` vide (ou pas de plugin du tout ?) + message informatif. **Décision** : produire un plugin vide avec juste le `plugin.json` est acceptable, le marketplace s'occupe du reste
+- [ ] État vide : `agents/` ne contient aucun fichier → sync produit un `plugins/kp-agents/` vide (ou pas de plugin du tout ?) + message informatif. **Décision** : produire un plugin vide avec juste le `plugin.json` est acceptable, le marketplace s'occupe du reste
 - [ ] Frontmatter invalide dans un agent source → warning et skip de cet agent (comportement actuel)
 - [ ] Manifeste `.installed-agents` absent au premier run → pas d'installs à nettoyer (fallback glob `kp-*`)
 - [ ] Les fonctions `generate_claude*` existantes doivent être **supprimées** du script (pas juste commentées)
@@ -91,14 +91,14 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
 ## Critères d'acceptation
 
 - [ ] `./sync.sh` ne dépose plus aucun fichier dans `~/.claude/commands/` (vérifiable par `ls ~/.claude/commands/kp-*` qui retourne vide après sync)
-- [ ] `./sync.sh` crée `plugins/kp-core/.claude-plugin/plugin.json` avec au minimum les champs `name`, `description`, `version`
-- [ ] `./sync.sh` crée un fichier `plugins/kp-core/skills/<nom>/SKILL.md` pour chacun des 7 agents, avec frontmatter YAML contenant au moins `description`
+- [ ] `./sync.sh` crée `plugins/kp-agents/.claude-plugin/plugin.json` avec au minimum les champs `name`, `description`, `version`
+- [ ] `./sync.sh` crée un fichier `plugins/kp-agents/skills/<nom>/SKILL.md` pour chacun des 7 agents, avec frontmatter YAML contenant au moins `description`
 - [ ] Le contenu des `SKILL.md` a tous les `{{include:xxx}}` résolus (aucune directive non-substituée)
 - [ ] `claude plugin validate /Users/vincent/GIT/kp-agents` retourne `✔ Validation passed`
 - [ ] `./sync.sh --clean` retire uniquement les installs Cursor/Codex (vérifiable par comparaison avant/après)
 - [ ] `./sync.sh --clean-all` retire les mêmes + via glob
 - [ ] Aucune fonction `generate_claude*` ne subsiste dans `sync.sh`
-- [ ] Les 7 SKILL.md de `plugins/kp-core/skills/` sont identiques en contenu aux anciens `dist/codex/kp-*/SKILL.md` à l'exception du frontmatter (qui est simplifié — pas de champs Codex-spécifiques)
+- [ ] Les 7 SKILL.md de `plugins/kp-agents/skills/` sont identiques en contenu aux anciens `dist/codex/kp-*/SKILL.md` à l'exception du frontmatter (qui est simplifié — pas de champs Codex-spécifiques)
 - [ ] Le script reste exécutable sur macOS (bash 3.2 supporté — pas de features bash 4+ utilisées)
 - [ ] Le script conserve ses messages de log colorés (BLUE/GREEN/YELLOW/RED)
 
@@ -111,8 +111,8 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
 ## Notes techniques
 
 - Nom de la nouvelle fonction suggéré : `generate_plugin_kp_core` (ou `generate_plugin` si on anticipe plusieurs plugins, mais ça complique pour peu d'intérêt à ce stade)
-- Le dossier `plugins/kp-core-spike/` existant dans le repo **doit être supprimé** dans cette story (le spike est remplacé par le plugin définitif)
-- Le `.claude-plugin/marketplace.json` à la racine doit être mis à jour pour pointer vers `kp-core` (plus vers `kp-core-spike`)
+- Le dossier `plugins/kp-agents-spike/` existant dans le repo **doit être supprimé** dans cette story (le spike est remplacé par le plugin définitif)
+- Le `.claude-plugin/marketplace.json` à la racine doit être mis à jour pour pointer vers `kp-agents` (plus vers `kp-agents-spike`)
 - Attention au frontmatter des SKILL.md : le format Codex ajoute `name:` et `metadata:` → ces champs doivent être **absents** dans la version plugin (seul `description` reste)
 - Considérer d'invoquer `claude plugin validate` en fin de `sync.sh` comme garde-fou (optionnel si `claude` CLI dispo)
 - Mettre à jour `CLAUDE.md` et `README.md` est **hors périmètre** de cette story (géré en S-0002)
@@ -141,16 +141,16 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
   - Ajout : nettoyage one-shot idempotent des résidus (`dist/claude/` et `~/.claude/commands/kp-*.md`) en début de `main()`
   - Mise à jour : help (`--help`) et messages d'usage finaux
   - Convention préservée : bash 3.2 compatible, logs colorés, manifeste `.installed-agents`
-- **`plugins/kp-core/.claude-plugin/plugin.json`** (NOUVEAU, statique) :
-  - `name: "kp-core"`, `version: "0.0.1"` (S-0003 bumpera à 0.1.0)
+- **`plugins/kp-agents/.claude-plugin/plugin.json`** (NOUVEAU, statique) :
+  - `name: "kp-agents"`, `version: "0.0.1"` (S-0003 bumpera à 0.1.0)
   - Champs `homepage`/`repository` pointent vers GitHub
-- **`plugins/kp-core/skills/<nom>/SKILL.md`** (7 fichiers GÉNÉRÉS par sync.sh) :
+- **`plugins/kp-agents/skills/<nom>/SKILL.md`** (7 fichiers GÉNÉRÉS par sync.sh) :
   - Frontmatter minimal `description:` uniquement (pas de `name:` ni `metadata:`)
   - Includes `{{include:xxx}}` résolus
 - **`.claude-plugin/marketplace.json`** (MODIFIÉ) :
-  - Entrée `kp-core-spike` remplacée par `kp-core` avec `source: "./plugins/kp-core"`
+  - Entrée `kp-agents-spike` remplacée par `kp-agents` avec `source: "./plugins/kp-agents"`
   - Description du catalogue mise à jour (retrait "spike")
-- **`plugins/kp-core-spike/`** (SUPPRIMÉ entièrement)
+- **`plugins/kp-agents-spike/`** (SUPPRIMÉ entièrement)
 
 ### Décisions prises sur les questions ouvertes
 
@@ -161,7 +161,7 @@ En tant que **contributeur kp-agents**, je veux que **`./sync.sh` produise autom
 
 ```bash
 ./sync.sh                                                     # génération complète
-find plugins/kp-core -type f                                  # 1 plugin.json + 7 SKILL.md
+find plugins/kp-agents -type f                                  # 1 plugin.json + 7 SKILL.md
 claude plugin validate /Users/vincent/GIT/kp-agents           # ✔ Validation passed
 ls ~/.claude/commands/ | grep kp-                             # vide (no matches)
 ls dist/claude 2>&1                                           # No such file or directory
@@ -176,7 +176,7 @@ ls -d ~/.codex/skills/kp-* | wc -l                            # 7
 
 - Le nettoyage one-shot `cleanup_legacy_claude` est idempotent : s'exécute à chaque sync mais ne fait rien si les résidus n'existent pas
 - Le fichier `plugin.json` reste statique même lors de `--clean-all` (il est hors du dossier `skills/`) — le glob ne le touche pas
-- Le manifeste `.installed-agents` continue de tracker les 7 agents, utilisé par `--clean` pour nettoyer Cursor/Codex + `plugins/kp-core/skills/` de manière surgicale
+- Le manifeste `.installed-agents` continue de tracker les 7 agents, utilisé par `--clean` pour nettoyer Cursor/Codex + `plugins/kp-agents/skills/` de manière surgicale
 - Le script reste **bash 3.2 compatible** (testé macOS) : aucune feature bash 4+ introduite
 - Temps d'exécution : ~0.2s sur machine de dev
 
@@ -187,17 +187,17 @@ ls -d ~/.codex/skills/kp-* | wc -l                            # 7
   - Preuve : `ls ~/.claude/commands/ | grep kp-` retourne 0 match
   - Limites : les fichiers ajoutés manuellement par l'utilisateur dans `~/.claude/commands/` ne sont **pas** touchés (seulement ceux préfixés `kp-`)
 
-- **[✅] `./sync.sh` crée `plugins/kp-core/.claude-plugin/plugin.json` avec `name`, `description`, `version`**
+- **[✅] `./sync.sh` crée `plugins/kp-agents/.claude-plugin/plugin.json` avec `name`, `description`, `version`**
   - Implémentation : fichier créé à la main dans cette story, maintenu statique
-  - Preuve : `cat plugins/kp-core/.claude-plugin/plugin.json` contient les 3 champs + `author`, `homepage`, `repository`
+  - Preuve : `cat plugins/kp-agents/.claude-plugin/plugin.json` contient les 3 champs + `author`, `homepage`, `repository`
 
 - **[✅] `./sync.sh` crée un `SKILL.md` pour chacun des 7 agents avec frontmatter `description`**
   - Implémentation : fonction `generate_plugin_file` produit le format Claude plugin pur
-  - Preuve : `find plugins/kp-core/skills -name SKILL.md | wc -l` retourne 7 ; `head -3 plugins/kp-core/skills/brainstorm/SKILL.md` montre `description: "..."`
+  - Preuve : `find plugins/kp-agents/skills -name SKILL.md | wc -l` retourne 7 ; `head -3 plugins/kp-agents/skills/brainstorm/SKILL.md` montre `description: "..."`
 
 - **[✅] Le contenu des `SKILL.md` a tous les `{{include:xxx}}` résolus**
   - Implémentation : réutilisation de la fonction `resolve_includes` existante
-  - Preuve : `grep -r '{{include:' plugins/kp-core/skills/` retourne 0 occurrence (les seules occurrences trouvées dans le repo sont dans `agents/*.md` sources)
+  - Preuve : `grep -r '{{include:' plugins/kp-agents/skills/` retourne 0 occurrence (les seules occurrences trouvées dans le repo sont dans `agents/*.md` sources)
 
 - **[✅] `claude plugin validate /Users/vincent/GIT/kp-agents` retourne `✔ Validation passed`**
   - Implémentation : format respecté dans `marketplace.json` et `plugin.json`
@@ -205,7 +205,7 @@ ls -d ~/.codex/skills/kp-* | wc -l                            # 7
 
 - **[✅] `./sync.sh --clean` retire uniquement les installs Cursor/Codex + skills du plugin**
   - Implémentation : `clean()` lit le manifeste, appelle `remove_agent()` qui cible seulement les 3 zones (plugin skills, cursor, codex)
-  - Preuve : après `--clean`, `plugins/kp-core/skills/` est vide, `plugins/kp-core/.claude-plugin/` conserve `plugin.json`, Cursor/Codex installs sont vidés
+  - Preuve : après `--clean`, `plugins/kp-agents/skills/` est vide, `plugins/kp-agents/.claude-plugin/` conserve `plugin.json`, Cursor/Codex installs sont vidés
 
 - **[✅] `./sync.sh --clean-all` retire via glob**
   - Implémentation : `glob_clean()` utilise des globs `${PREFIX}-*` sur Cursor/Codex, et `$PLUGIN_SKILLS_DIR/*/` sur le plugin
@@ -235,12 +235,12 @@ Aucun écart significatif avec la story. Les 2 questions ouvertes ont été tran
 ### Suggestions pour les prochaines stories
 
 - **S-0002 (Doc)** : documenter dans README.md / CLAUDE.md le fait que `~/.claude/commands/kp-*.md` peut être purgé automatiquement (pour rassurer les devs ayant déjà installé l'ancienne version)
-- **S-0003 (Release)** : bumper `plugins/kp-core/.claude-plugin/plugin.json` de `0.0.1` à `0.1.0` dans le commit de release
+- **S-0003 (Release)** : bumper `plugins/kp-agents/.claude-plugin/plugin.json` de `0.0.1` à `0.1.0` dans le commit de release
 
 ## Review
 
 **Date** : 2026-04-17
-**Reviewer** : review-agent (en mode dégradé — rôle joué par l'agent Developer en l'absence du skill `/kp-core:review` au moment de la review — non bloquant, la review reste indépendante de l'implémentation)
+**Reviewer** : review-agent (en mode dégradé — rôle joué par l'agent Developer en l'absence du skill `/kp-agents:review` au moment de la review — non bloquant, la review reste indépendante de l'implémentation)
 **Branche reviewée** : `feat/E-0001-Plugin-Marketplace` (commit `b0db93e`)
 **Portée** : story S-0001 uniquement
 
@@ -258,7 +258,7 @@ L'implémentation respecte fidèlement la spec, les 4 ADR architecturaux et les 
 - **Robustesse du `--clean-all`** : `glob_clean` préserve correctement `plugin.json` (hors du dossier `skills/`) — détail critique bien géré
 - **Bash 3.2 compatibility** respectée : aucune feature bash 4+ (pas de `mapfile`/`readarray`, pas d'associative arrays, pas de `wait -n`)
 - **`claude plugin validate`** passé → format marketplace + plugin.json conforme
-- **Validation bonus end-to-end** : l'installation du plugin depuis la branche via `/plugin marketplace add KeyProd/kp-agents@feat/E-0001-Plugin-Marketplace` fonctionne, prouvant que le refactor produit un plugin installable et invoquable (`/kp-core:*`)
+- **Validation bonus end-to-end** : l'installation du plugin depuis la branche via `/plugin marketplace add KeyProd/kp-agents@feat/E-0001-Plugin-Marketplace` fonctionne, prouvant que le refactor produit un plugin installable et invoquable (`/kp-agents:*`)
 
 ### Recommandations
 
@@ -268,7 +268,7 @@ Aucune. Le code est livrable en l'état.
 
 #### P2 — Améliorations significatives (à traiter dans S-0002 ou S-0003)
 
-- **P2.1 — Purge du cache Claude Code lors d'un renommage de plugin** : lors de la session d'install, un cache stale (probablement le reliquat de `kp-core-spike`) a causé une anomalie `0 skills · 5 agents` résolue par `rm -rf ~/.claude/plugins/cache/kp-agents`. Cette situation se reproduira à chaque renommage futur de plugin. **Action recommandée dans S-0002** : ajouter une section "Troubleshooting" dans `README.md` qui documente ce cas.
+- **P2.1 — Purge du cache Claude Code lors d'un renommage de plugin** : lors de la session d'install, un cache stale (probablement le reliquat de `kp-agents-spike`) a causé une anomalie `0 skills · 5 agents` résolue par `rm -rf ~/.claude/plugins/cache/kp-agents`. Cette situation se reproduira à chaque renommage futur de plugin. **Action recommandée dans S-0002** : ajouter une section "Troubleshooting" dans `README.md` qui documente ce cas.
 
 - **P2.2 — Variable `PLUGIN_DIR` peu exploitée** : `PLUGIN_DIR` (ligne 28 de sync.sh) n'est utilisée que pour calculer `PLUGIN_SKILLS_DIR` (ligne 29). Elle pourrait être inlinée pour simplifier. Non bloquant, garder pour cohérence avec d'autres variables ou inliner au prochain refactor.
 
@@ -278,7 +278,7 @@ Aucune. Le code est livrable en l'état.
 
 - **P3.1 — `shopt -s nullglob` pour `glob_clean`** : le code actuel utilise `2>/dev/null || true` pour masquer les erreurs de glob qui ne matchent rien. Utiliser `shopt -s nullglob` localement serait plus propre. Mais `nullglob` change le comportement global, à utiliser avec `( shopt -s nullglob ; ... )` subshell pour l'isoler. Ajout cosmétique.
 
-- **P3.2 — Warning UX sur `--clean`** : actuellement, `--clean` supprime les SKILL.md du plugin ET les installs Cursor/Codex sans distinction. Un utilisateur qui voudrait juste nettoyer ses installs locales perdra aussi le contenu de `plugins/kp-core/skills/`. Ce contenu est régénéré par un `./sync.sh` suivant, donc non destructif en pratique, mais une note dans `--help` serait utile : "Note: --clean also empties plugins/kp-core/skills/ — run sync again to restore".
+- **P3.2 — Warning UX sur `--clean`** : actuellement, `--clean` supprime les SKILL.md du plugin ET les installs Cursor/Codex sans distinction. Un utilisateur qui voudrait juste nettoyer ses installs locales perdra aussi le contenu de `plugins/kp-agents/skills/`. Ce contenu est régénéré par un `./sync.sh` suivant, donc non destructif en pratique, mais une note dans `--help` serait utile : "Note: --clean also empties plugins/kp-agents/skills/ — run sync again to restore".
 
 - **P3.3 — Test automatisé** : un script `./test-sync.sh` minimal qui vérifie les artefacts produits (comptage fichiers, validation JSON, validation plugin) éviterait des régressions futures. Candidat pour une story future.
 
@@ -290,7 +290,7 @@ Aucune. Le code est livrable en l'état.
 - **Revue de non-régression** : comparaison avec le `sync.sh` précédent — les fonctions `generate_cursor*` et `generate_codex*` sont inchangées (pas de risque de régression sur ces cibles)
 - **Revue du frontmatter** : vérification que les 7 SKILL.md générés ont bien uniquement `description:` (pas de `name:` ni `metadata:` qui seraient des résidus Codex)
 - **Revue JSON** : `plugin.json` et `marketplace.json` validés structurellement + par `claude plugin validate`
-- **Test end-to-end** : installation du plugin depuis la branche distante via `/plugin marketplace add KeyProd/kp-agents@feat/E-0001-Plugin-Marketplace` — plugin installé et skill `/kp-core:review` invoquable après purge du cache
+- **Test end-to-end** : installation du plugin depuis la branche distante via `/plugin marketplace add KeyProd/kp-agents@feat/E-0001-Plugin-Marketplace` — plugin installé et skill `/kp-agents:review` invoquable après purge du cache
 
 ### Limites de la review
 

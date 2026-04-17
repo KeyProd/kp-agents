@@ -10,7 +10,7 @@ author: documentation-agent
 > Description de chaque agent et visualisation de leurs workflows.
 > Les traits pleins (`-->`) indiquent les chemins **obligatoires**. Les traits pointillés (`-.->`) indiquent les chemins **facultatifs**.
 
-> **Invocation** : via le plugin Claude Code, les agents sont namespacés sous la forme `/kp-core:<nom>`. Dans Cursor, ils apparaissent sous `@kp-<nom>`. Dans Codex, ce sont les skills `kp-<nom>`.
+> **Invocation** : via le plugin Claude Code, les agents sont namespacés sous la forme `/kp-agents:<nom>`. Dans Cursor, ils apparaissent sous `@kp-<nom>`. Dans Codex, ce sont les skills `kp-<nom>`.
 
 ---
 
@@ -24,13 +24,13 @@ Le projet expose **7 agents génériques** pour le workflow de développement : 
 
 ```mermaid
 flowchart LR
-    B["/kp-core:brainstorm"]
-    P["/kp-core:product"]
-    A["/kp-core:architect"]
-    D["/kp-core:developer"]
-    R["/kp-core:review"]
-    UX["/kp-core:ux-ui"]
-    DOC["/kp-core:documentation"]
+    B["/kp-agents:brainstorm"]
+    P["/kp-agents:product"]
+    A["/kp-agents:architect"]
+    D["/kp-agents:developer"]
+    R["/kp-agents:review"]
+    UX["/kp-agents:ux-ui"]
+    DOC["/kp-agents:documentation"]
     FIN((DONE))
 
     B -->|idée qualifiée| P
@@ -65,7 +65,7 @@ flowchart LR
 
 ---
 
-### 1. Brainstorm (`/kp-core:brainstorm`)
+### 1. Brainstorm (`/kp-agents:brainstorm`)
 
 **Rôle** : facilitateur de brainstorming. Explore une idée sous tous ses angles, propose des approches créatives et structure la réflexion pour la faire avancer concrètement.
 
@@ -94,8 +94,8 @@ flowchart TD
     STRUCT --> OUT
 
     OUT{Relais ?}
-    OUT -->|sujet mature| PRODUCT["/kp-core:product"]
-    OUT -.->|incertitudes techniques| ARCHITECT["/kp-core:architect"]
+    OUT -->|sujet mature| PRODUCT["/kp-agents:product"]
+    OUT -.->|incertitudes techniques| ARCHITECT["/kp-agents:architect"]
 
     style COMP fill:#e3f2fd,stroke:#1976D2
     style EXPLO fill:#e3f2fd,stroke:#1976D2
@@ -107,7 +107,7 @@ flowchart TD
 
 ---
 
-### 2. Product (`/kp-core:product`)
+### 2. Product (`/kp-agents:product`)
 
 **Rôle** : Product Manager. Transforme des idées brutes en spécifications produit actionnables : vision, roadmap, epics et stories avec critères d'acceptation.
 
@@ -138,9 +138,9 @@ flowchart TD
     PRODUCT_MD --> OUT
 
     OUT{Relais ?}
-    OUT -->|design technique| ARCHITECT["/kp-core:architect"]
-    OUT -.->|besoin UX| UX["/kp-core:ux-ui"]
-    OUT -.->|doc à mettre à jour| DOC["/kp-core:documentation"]
+    OUT -->|design technique| ARCHITECT["/kp-agents:architect"]
+    OUT -.->|besoin UX| UX["/kp-agents:ux-ui"]
+    OUT -.->|doc à mettre à jour| DOC["/kp-agents:documentation"]
 
     style CADRAGE fill:#e3f2fd,stroke:#1976D2
     style ROADMAP fill:#e3f2fd,stroke:#1976D2
@@ -155,7 +155,7 @@ flowchart TD
 
 ---
 
-### 3. Architect (`/kp-core:architect`)
+### 3. Architect (`/kp-agents:architect`)
 
 **Rôle** : Architecte logiciel senior. Conçoit des solutions techniques solides, évalue les compromis et documente les décisions d'architecture (ADR).
 
@@ -187,9 +187,9 @@ flowchart TD
     ADR --> OUT
 
     OUT{Relais ?}
-    OUT -->|implémentation| DEV["/kp-core:developer"]
-    OUT -.->|questions produit| PRODUCT["/kp-core:product"]
-    OUT -.->|doc obsolète| DOC["/kp-core:documentation"]
+    OUT -->|implémentation| DEV["/kp-agents:developer"]
+    OUT -.->|questions produit| PRODUCT["/kp-agents:product"]
+    OUT -.->|doc obsolète| DOC["/kp-agents:documentation"]
 
     style ANALYSE fill:#e3f2fd,stroke:#1976D2
     style OPTIONS fill:#e3f2fd,stroke:#1976D2
@@ -202,7 +202,7 @@ flowchart TD
 
 ---
 
-### 4. Developer (`/kp-core:developer`)
+### 4. Developer (`/kp-agents:developer`)
 
 **Rôle** : Développeur senior. Implémente les fonctionnalités en suivant rigoureusement les spécifications produit et techniques documentées.
 
@@ -241,8 +241,8 @@ flowchart TD
     BILAN --> OUT
 
     OUT{Relais ?}
-    OUT -->|review recommandée| REVIEW["/kp-core:review"]
-    OUT -.->|écarts documentaires| DOC["/kp-core:documentation"]
+    OUT -->|review recommandée| REVIEW["/kp-agents:review"]
+    OUT -.->|écarts documentaires| DOC["/kp-agents:documentation"]
 
     style CADRAGE fill:#e3f2fd,stroke:#1976D2
     style CTX fill:#e3f2fd,stroke:#1976D2
@@ -257,7 +257,7 @@ flowchart TD
 
 ---
 
-### 5. Review (`/kp-core:review`)
+### 5. Review (`/kp-agents:review`)
 
 **Rôle** : Reviewer senior. Relit, teste et valide le code produit par le Developer. Émet un verdict GO/NO-GO et écrit les recommandations d'amélioration dans la story.
 
@@ -294,8 +294,8 @@ flowchart TD
 
     OUT{Relais ?}
     VERDICT -->|GO, story DONE| FIN((DONE))
-    VERDICT -->|NO-GO, story IN PROGRESS| DEV["/kp-core:developer"]
-    WRITE -.->|écarts documentaires| DOC["/kp-core:documentation"]
+    VERDICT -->|NO-GO, story IN PROGRESS| DEV["/kp-agents:developer"]
+    WRITE -.->|écarts documentaires| DOC["/kp-agents:documentation"]
 
     style CTX fill:#e3f2fd,stroke:#1976D2
     style AUTO fill:#e3f2fd,stroke:#1976D2
@@ -311,7 +311,7 @@ flowchart TD
 
 ---
 
-### 6. Documentation (`/kp-core:documentation`)
+### 6. Documentation (`/kp-agents:documentation`)
 
 **Rôle** : responsable documentation technique et produit. Analyse la documentation existante, identifie les divergences avec le code, propose des corrections et maintient la documentation après validation.
 
@@ -346,8 +346,8 @@ flowchart TD
     INDEX --> OUT
 
     OUT{Relais ?}
-    OUT -.->|spécification future| PRODUCT["/kp-core:product"]
-    OUT -.->|décision technique| ARCHITECT["/kp-core:architect"]
+    OUT -.->|spécification future| PRODUCT["/kp-agents:product"]
+    OUT -.->|décision technique| ARCHITECT["/kp-agents:architect"]
 
     style ANALYSE fill:#e3f2fd,stroke:#1976D2
     style AUDIT fill:#e3f2fd,stroke:#1976D2
@@ -360,7 +360,7 @@ flowchart TD
 
 ---
 
-### 7. UX/UI (`/kp-core:ux-ui`)
+### 7. UX/UI (`/kp-agents:ux-ui`)
 
 **Rôle** : Designer UX/UI senior. Conçoit des interfaces intuitives et visuellement distinctives. Travaille entre Product et Developer.
 
@@ -394,9 +394,9 @@ flowchart TD
     SPECS --> OUT
 
     OUT{Relais ?}
-    OUT -->|specs prêtes| DEV["/kp-core:developer"]
-    OUT -.->|choix produit non tranchés| PRODUCT["/kp-core:product"]
-    OUT -.->|implications techniques fortes| ARCHITECT["/kp-core:architect"]
+    OUT -->|specs prêtes| DEV["/kp-agents:developer"]
+    OUT -.->|choix produit non tranchés| PRODUCT["/kp-agents:product"]
+    OUT -.->|implications techniques fortes| ARCHITECT["/kp-agents:architect"]
 
     style USERS fill:#e3f2fd,stroke:#1976D2
     style PARCOURS fill:#e3f2fd,stroke:#1976D2

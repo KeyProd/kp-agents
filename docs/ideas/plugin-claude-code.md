@@ -27,8 +27,8 @@ Sources : [code.claude.com/docs/en/discover-plugins](https://code.claude.com/doc
 
 ```
 /plugin marketplace add https://gitlab.com/keyprod/kp-agents.git   # ajoute le catalogue
-/plugin install kp-core@kp-agents                                  # installe un plugin du catalogue
-/kp-core:brainstorm                                                # invocation namespacée
+/plugin install kp-agents@kp-agents                                  # installe un plugin du catalogue
+/kp-agents:brainstorm                                                # invocation namespacée
 ```
 
 ### Structure d'un plugin
@@ -48,7 +48,7 @@ Sources : [code.claude.com/docs/en/discover-plugins](https://code.claude.com/doc
 
 ### Namespacing imposé
 
-- Un plugin nommé `kp-core` expose ses skills sous `/kp-core:brainstorm`, pas `/kp-brainstorm`
+- Un plugin nommé `kp-agents` expose ses skills sous `/kp-agents:brainstorm`, pas `/kp-brainstorm`
 - Les noms actuels `/kp-brainstorm` vont changer → point à acter avec l'utilisateur
 
 ### Format SKILL.md ≈ format Codex actuel
@@ -61,14 +61,14 @@ Le format `SKILL.md` (YAML frontmatter `description` + corps markdown) est quasi
 - **H2** ✅ confirmé : slash commands actuels (`commands/*.md`) supportés mais **deprecated** → la norme moderne est `skills/<name>/SKILL.md`
 - **H3** ✅ confirmé : le format plugin Claude ne couvre pas Cursor ni Codex → `sync.sh` reste nécessaire pour eux
 - **H4** ✅ tranché : `sync.sh` n'installera plus Claude → seulement Cursor et Codex. Pas de cohabitation à gérer.
-- **H5** à valider : accepter le changement de namespace `/kp-brainstorm` → `/kp-core:brainstorm` (ou similaire)
+- **H5** à valider : accepter le changement de namespace `/kp-brainstorm` → `/kp-agents:brainstorm` (ou similaire)
 
 ## Contraintes et décisions utilisateur
 
 - **Distribution** : usage uniquement interne KeyProd, mais doit rester accessible à des **externes sans compte GitLab** → le repo marketplace doit être hébergé publiquement (GitLab public, miroir GitHub, ou hébergement git public self-hosted)
 - **sync.sh après remaniement** : n'installe plus rien dans `~/.claude/commands/`. Seulement Cursor et Codex restent sync.sh-dépendants.
 - **Organisation par branche** : *interprété* : une branche = un périmètre d'agents (à confirmer)
-  - Branche `main` : les 7 agents génériques → plugin `kp-core`
+  - Branche `main` : les 7 agents génériques → plugin `kp-agents`
   - Branche dédiée (nom à définir) : les 3 agents recettemoi (± les 7 génériques ?) → plugin `kp-recettemoi`
 
 ## Méthode choisie
@@ -77,13 +77,13 @@ Starbursting (inconnues cartographiées) → Exploration divergente (approches) 
 
 ## Approches envisagées
 
-### Approche retenue : B — Refonte native, 1 plugin `kp-core`
+### Approche retenue : B — Refonte native, 1 plugin `kp-agents`
 
 - **Hébergement** : GitHub `KeyProd/kp-agents` (privé pour l'instant, public à terme possible). GitLab `keyprod/tools/kp-agents` maintenu en miroir.
 - **Marketplace** : 1 catalogue exposé par `.claude-plugin/marketplace.json` à la racine
-- **Plugin** : 1 seul plugin `kp-core` contenant les 7 agents génériques (brainstorm, product, architect, developer, review, documentation, ux-ui)
+- **Plugin** : 1 seul plugin `kp-agents` contenant les 7 agents génériques (brainstorm, product, architect, developer, review, documentation, ux-ui)
 - **Extensibilité future** : l'architecture marketplace permet d'ajouter d'autres plugins (ex: `kp-projet-X`) sans refonte
-- **Namespacing** : `/kp-brainstorm` → `/kp-core:brainstorm`
+- **Namespacing** : `/kp-brainstorm` → `/kp-agents:brainstorm`
 - **sync.sh** : ne gère plus que Cursor et Codex (plus d'install Claude)
 
 **Décision du 2026-04-17** : les agents RecetteMoi ont été retirés du repo. Le plugin `kp-recettemoi` prévu initialement n'est plus au périmètre.
@@ -93,10 +93,10 @@ Starbursting (inconnues cartographiées) → Exploration divergente (approches) 
 ```
 kp-agents/
 ├── .claude-plugin/
-│   └── marketplace.json                    # catalogue : liste kp-core + kp-recettemoi
+│   └── marketplace.json                    # catalogue : liste kp-agents + kp-recettemoi
 ├── plugins/
-│   ├── kp-core/
-│   │   ├── .claude-plugin/plugin.json      # name: kp-core, version, author
+│   ├── kp-agents/
+│   │   ├── .claude-plugin/plugin.json      # name: kp-agents, version, author
 │   │   └── skills/
 │   │       ├── brainstorm/SKILL.md
 │   │       ├── product/SKILL.md
@@ -115,13 +115,13 @@ kp-agents/
 
 ## Recommandation
 
-**Approche B (refonte native), avec 2 plugins distincts (`kp-core` et `kp-recettemoi`), publiée sur GitLab KeyProd en visibilité publique.** `agents/` reste la source de vérité (avec includes), `plugins/` devient une cible générée **et commitée**, `sync.sh` ne gère plus que Cursor et Codex.
+**Approche B (refonte native), avec 2 plugins distincts (`kp-agents` et `kp-recettemoi`), publiée sur GitLab KeyProd en visibilité publique.** `agents/` reste la source de vérité (avec includes), `plugins/` devient une cible générée **et commitée**, `sync.sh` ne gère plus que Cursor et Codex.
 
 **Principe de validation progressive** : un **spike** minimal (1 plugin, 1 skill, bout-en-bout) précède la migration des 10 agents. Coût du spike : 1-2h. Gain : élimination des risques `HC-1` (faisabilité end-to-end) et `HC-2` (visibilité publique GitLab) avant toute refonte massive.
 
 ### Critères de succès
 
-- Un collègue sans contexte fait `/plugin marketplace add … && /plugin install kp-core@kp-agents` et utilise `/kp-core:brainstorm` en < 2 minutes
+- Un collègue sans contexte fait `/plugin marketplace add … && /plugin install kp-agents@kp-agents` et utilise `/kp-agents:brainstorm` en < 2 minutes
 - Workflow de mise à jour agent : `edit agents/<nom>.md → ./sync.sh → git commit + tag → git push` en ≤ 5 étapes
 - `sync.sh` reste sous 200 lignes après simplification
 - Zéro duplication manuelle source → cibles
@@ -131,15 +131,15 @@ kp-agents/
 ### Étape 1 — Spike de faisabilité ✅ GO (2026-04-17)
 
 **Résultat** : validé en conditions réelles. Les 4 hypothèses critiques sont confirmées :
-- ✅ HC-1 : flow marketplace end-to-end fonctionne (`/plugin marketplace add KeyProd/kp-agents` → `/plugin install kp-core-spike@kp-agents` → invocation OK)
+- ✅ HC-1 : flow marketplace end-to-end fonctionne (`/plugin marketplace add KeyProd/kp-agents` → `/plugin install kp-agents-spike@kp-agents` → invocation OK)
 - ✅ HC-2 : hébergement GitHub privé accessible via token d'accès (alternative à GitLab public initialement prévu — GitHub retenu)
-- ✅ Le namespace `kp-core-spike:brainstorm` fonctionne comme attendu
+- ✅ Le namespace `kp-agents-spike:brainstorm` fonctionne comme attendu
 - ✅ Le skill se comporte bien : l'agent Brainstorm se présente correctement
 
 **Artéfacts produits** :
 - `.claude-plugin/marketplace.json` (validé par `claude plugin validate`)
-- `plugins/kp-core-spike/.claude-plugin/plugin.json`
-- `plugins/kp-core-spike/skills/brainstorm/SKILL.md`
+- `plugins/kp-agents-spike/.claude-plugin/plugin.json`
+- `plugins/kp-agents-spike/skills/brainstorm/SKILL.md`
 - Repo poussé sur GitHub (`KeyProd/kp-agents`) et GitLab (`keyprod/tools/kp-agents`)
 - Installation au niveau organisation GitHub réalisée
 
@@ -148,16 +148,16 @@ kp-agents/
 - `pluginRoot` retiré du marketplace.json (non fonctionnel comme espéré)
 
 **Dette à nettoyer avant refonte complète** :
-- Retirer le plugin `kp-core-spike` (remplacer par les vrais `kp-core` et `kp-recettemoi`)
+- Retirer le plugin `kp-agents-spike` (remplacer par les vrais `kp-agents` et `kp-recettemoi`)
 - Supprimer la description "Spike de faisabilité" du marketplace.json
 
 ### Étape 2 — Refonte structurante (si spike GO)
 
 Sous forme d'une epic à structurer côté Architect puis Product :
 
-1. **Structure repo** : ajouter `.claude-plugin/marketplace.json` + arborescence `plugins/kp-core/` et `plugins/kp-recettemoi/`
+1. **Structure repo** : ajouter `.claude-plugin/marketplace.json` + arborescence `plugins/kp-agents/` et `plugins/kp-recettemoi/`
 2. **sync.sh** : nouvelle cible "plugins" remplaçant la cible "claude" ; réécriture des générateurs ; mise à jour des flags `--clean` / `--clean-all` pour couvrir la nouvelle cible ; manifeste `.installed-agents` à reconsidérer (n'installant plus Claude)
-3. **Migration des 7 agents génériques** → `plugins/kp-core/skills/<nom>/SKILL.md`
+3. **Migration des 7 agents génériques** → `plugins/kp-agents/skills/<nom>/SKILL.md`
 4. **Migration des 3 agents RecetteMoi** → `plugins/kp-recettemoi/skills/<nom>/SKILL.md`
 5. **Versioning** : premier tag `v0.1.0` sur chaque `plugin.json`, stratégie semver à définir
 6. **Documentation** : mise à jour README.md et CLAUDE.md ; adaptation de docs/agents.md (namespaces)

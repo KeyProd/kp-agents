@@ -16,14 +16,14 @@ kp-agents est un système de distribution multi-cibles d'agents IA. Une source u
 - **Codex** : skills `SKILL.md` installées dans `~/.codex/skills/`
 
 La marketplace Claude expose **un plugin** :
-- `kp-core` — 7 agents génériques (brainstorm, product, architect, developer, review, documentation, ux-ui)
+- `kp-agents` — 7 agents génériques (brainstorm, product, architect, developer, review, documentation, ux-ui)
 
 L'architecture marketplace permet d'ajouter d'autres plugins à l'avenir (ex: `kp-projet-X` pour des agents métier spécifiques) sans refonte structurante. Les agents RecetteMoi initialement prévus comme second plugin ont été retirés du périmètre (décision 2026-04-17).
 
 ## Objectifs et contraintes
 
 ### Objectifs techniques
-- Installation d'un plugin Claude en **une commande** (`/plugin install kp-core@kp-agents`)
+- Installation d'un plugin Claude en **une commande** (`/plugin install kp-agents@kp-agents`)
 - Conservation de la source unique : un agent se modifie à un seul endroit (`agents/<nom>.md`)
 - Simplification de `sync.sh` : retrait de la cible Claude (gérée par le mécanisme plugin natif)
 - Support du versioning semver (sémantique de releases)
@@ -31,7 +31,7 @@ L'architecture marketplace permet d'ajouter d'autres plugins à l'avenir (ex: `k
 ### Contraintes techniques
 - **Cache d'installation** : Claude Code copie chaque plugin dans `~/.claude/plugins/cache/…`. Aucun fichier hors du dossier du plugin n'est accessible. → les `{{include:xxx}}` doivent être résolus avant commit
 - **Hébergement public obligatoire** : consommateurs externes sans compte GitLab → repo GitLab KeyProd en visibilité publique (HTTPS anonyme)
-- **Namespacing imposé** : les skills sont préfixés du nom du plugin (`/kp-core:brainstorm`, pas `/kp-brainstorm`)
+- **Namespacing imposé** : les skills sont préfixés du nom du plugin (`/kp-agents:brainstorm`, pas `/kp-brainstorm`)
 - **Versioning détecté par `plugin.json`** : Claude Code détecte les mises à jour via le champ `version`. Un nouveau commit sans bump ne déclenche pas d'update
 - **Contenu commité** : tous les fichiers nécessaires à l'installation (dont le dossier `plugins/`) doivent être versionnés dans git
 
@@ -49,9 +49,9 @@ kp-agents/
 ├── .claude-plugin/
 │   └── marketplace.json                    # catalogue : référence les 2 plugins
 ├── plugins/                                # GÉNÉRÉ par sync.sh, COMMITÉ
-│   └── kp-core/
+│   └── kp-agents/
 │       ├── .claude-plugin/
-│       │   └── plugin.json                 # name: kp-core, version, description
+│       │   └── plugin.json                 # name: kp-agents, version, description
 │       └── skills/
 │           ├── brainstorm/
 │           │   └── SKILL.md                # includes résolus, markdown final
@@ -87,7 +87,7 @@ flowchart LR
     SYNC["sync.sh"]
     SRC --> SYNC
 
-    SYNC --> PLUGINS["plugins/kp-core/"]
+    SYNC --> PLUGINS["plugins/kp-agents/"]
     SYNC --> CURSOR["dist/cursor/"]
     SYNC --> CODEX["dist/codex/"]
 
@@ -117,7 +117,7 @@ Légende :
 - **Responsabilité** : définir un agent (prompt, rôle, règles) dans un format enrichi propre au projet
 - **Format** : frontmatter YAML (`name`, `description`, `short_description`, `default_prompt`) + corps markdown avec directives `{{include:nom}}`
 - **Source de vérité** : ce dossier est la seule source modifiée à la main
-- **Fichiers** : 7 agents dans scope `kp-core`
+- **Fichiers** : 7 agents dans scope `kp-agents`
 
 ### `includes/*.md` — Templates partagés
 
@@ -134,13 +134,13 @@ Légende :
 
 ### `plugins/` — Artefacts plugin Claude
 
-- **Responsabilité** : contenir le plugin `kp-core` au format Claude Code natif, prêt à être installé
+- **Responsabilité** : contenir le plugin `kp-agents` au format Claude Code natif, prêt à être installé
 - **Statut git** : **commité** (contrairement à `dist/`). Les consommateurs reçoivent ce dossier via git clone
 - **Cohérence** : doit être à jour par rapport à `agents/` à chaque commit → garde-fou à mettre en place (pre-commit ou CI)
 
 ### `.claude-plugin/marketplace.json` — Catalogue
 
-- **Responsabilité** : déclarer le plugin `kp-core` et son emplacement relatif (structure prête à accueillir d'autres plugins à l'avenir)
+- **Responsabilité** : déclarer le plugin `kp-agents` et son emplacement relatif (structure prête à accueillir d'autres plugins à l'avenir)
 - **Statut git** : commité, statique (ne change que si on ajoute/retire un plugin)
 
 ### `dist/` — Artefacts Cursor + Codex
@@ -175,8 +175,8 @@ default_prompt: "..."               # prompt suggéré (Codex)
   },
   "plugins": [
     {
-      "name": "kp-core",
-      "source": "./plugins/kp-core",
+      "name": "kp-agents",
+      "source": "./plugins/kp-agents",
       "description": "Agents génériques : brainstorm, product, architect, developer, review, documentation, ux-ui",
       "version": "0.1.0",
       "author": {
@@ -194,7 +194,7 @@ default_prompt: "..."               # prompt suggéré (Codex)
 
 ```json
 {
-  "name": "kp-core",
+  "name": "kp-agents",
   "description": "KeyProd agents génériques pour workflow de développement",
   "version": "0.1.0",
   "author": {
@@ -215,7 +215,7 @@ description: "<description longue issue de agents/<nom>.md>"
 <corps markdown, includes résolus>
 ```
 
-Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise pour décider d'invoquer le skill). Pas de `disable-model-invocation` → les skills sont à la fois user-invocables (`/kp-core:brainstorm`) et model-invocables (Claude peut décider d'utiliser `brainstorm` selon contexte).
+Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise pour décider d'invoquer le skill). Pas de `disable-model-invocation` → les skills sont à la fois user-invocables (`/kp-agents:brainstorm`) et model-invocables (Claude peut décider d'utiliser `brainstorm` selon contexte).
 
 ## Décisions techniques
 
@@ -223,7 +223,7 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
 
 - **Statut** : accepted (révisé 2026-04-17)
 - **Contexte** : le projet expose 7 agents génériques. L'architecture initiale prévoyait un second plugin `kp-recettemoi`, finalement retiré du périmètre. La structure marketplace reste cependant utile pour une extensibilité future (ex: plugins clients, agents métier spécifiques).
-- **Décision** : la marketplace `kp-agents` contient **1 plugin** `kp-core` (7 skills). La structure marketplace + `plugins/<nom>/` permet d'en ajouter d'autres sans refonte.
+- **Décision** : la marketplace `kp-agents` contient **1 plugin** `kp-agents` (7 skills). La structure marketplace + `plugins/<nom>/` permet d'en ajouter d'autres sans refonte.
 - **Conséquences** :
   - ✅ Extensibilité native : ajouter un futur plugin se résume à créer `plugins/<nom>/` + ligne dans `marketplace.json`
   - ✅ Namespaces distincts possibles si plusieurs plugins coexistent
@@ -231,7 +231,7 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
   - ⚠️ Reste à définir une convention de nommage pour les futurs plugins
 - **Alternatives rejetées** :
   - **Plugin unique sans marketplace** : enlève l'extensibilité future, oblige à refactorer si on ajoute un plugin
-  - **Split en 2 plugins dès aujourd'hui (kp-core + kp-recettemoi)** : rejeté suite au retrait des agents RecetteMoi du périmètre
+  - **Split en 2 plugins dès aujourd'hui (kp-agents + kp-recettemoi)** : rejeté suite au retrait des agents RecetteMoi du périmètre
 
 ### ADR-002 — `agents/` reste source, `plugins/` est généré et commité
 
@@ -262,7 +262,7 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
 
 - **Statut** : accepted
 - **Contexte** : Claude Code détecte les mises à jour d'un plugin via le champ `version` de `plugin.json`. Sans bump, un nouveau commit ne déclenchera pas d'update chez les clients.
-- **Décision** : adopter **semver manuel** au départ. Le plugin `kp-core` a sa version dans son `plugin.json`. Le dev bump à la main (patch par défaut, mineur si ajout d'agent, majeur si rupture comportementale). Un tag git correspondant est poussé (`kp-core-v0.2.0`). Évolution possible vers auto-bump basé sur hash du skill.
+- **Décision** : adopter **semver manuel** au départ. Le plugin `kp-agents` a sa version dans son `plugin.json`. Le dev bump à la main (patch par défaut, mineur si ajout d'agent, majeur si rupture comportementale). Un tag git correspondant est poussé (`kp-agents-v0.2.0`). Évolution possible vers auto-bump basé sur hash du skill.
 - **Conséquences** :
   - ✅ Simplicité : pas d'outillage à mettre en place
   - ✅ Contrôle humain sur les ruptures communiquées
@@ -294,8 +294,8 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
   2. Lancer `./sync.sh`
   3. Vérifier `git diff plugins/`
   4. Bumper la version dans le `plugin.json` du plugin impacté
-  5. Commit (`feat(kp-core): ...` ou `fix(kp-core): ...`)
-  6. Tag (`git tag kp-core-v0.2.1`)
+  5. Commit (`feat(kp-agents): ...` ou `fix(kp-agents): ...`)
+  6. Tag (`git tag kp-agents-v0.2.1`)
   7. Push + push tags
 - **Rollback** : `git revert` du commit problématique + bump de version (semver ne permet pas de descendre)
 - **CI recommandée** (après v0.1.0) : un job qui relance `sync.sh` et échoue si `git diff plugins/` produit un delta (garantit la synchronisation source/généré)
@@ -306,7 +306,7 @@ Objectif : valider **avant refonte complète** que le pipeline marketplace + plu
 
 ### Portée du spike
 
-- **1 plugin** : `kp-core-spike`
+- **1 plugin** : `kp-agents-spike`
 - **1 skill** : `brainstorm` (reprend le contenu actuel de `dist/codex/kp-brainstorm/SKILL.md`)
 - **Branche git dédiée** : `spike-plugin` (permet de ne pas polluer `main`)
 
@@ -316,7 +316,7 @@ Objectif : valider **avant refonte complète** que le pipeline marketplace + plu
 <racine>/
 ├── .claude-plugin/marketplace.json
 └── plugins/
-    └── kp-core-spike/
+    └── kp-agents-spike/
         ├── .claude-plugin/plugin.json
         └── skills/
             └── brainstorm/SKILL.md
@@ -333,25 +333,25 @@ Contenu `.claude-plugin/marketplace.json` :
   },
   "plugins": [
     {
-      "name": "kp-core-spike",
-      "source": "kp-core-spike",
+      "name": "kp-agents-spike",
+      "source": "kp-agents-spike",
       "description": "Plugin de spike — 1 seul agent (brainstorm)"
     }
   ]
 }
 ```
 
-Contenu `plugins/kp-core-spike/.claude-plugin/plugin.json` :
+Contenu `plugins/kp-agents-spike/.claude-plugin/plugin.json` :
 ```json
 {
-  "name": "kp-core-spike",
+  "name": "kp-agents-spike",
   "description": "Spike de faisabilité KeyProd",
   "version": "0.0.1",
   "author": { "name": "KeyProd" }
 }
 ```
 
-Contenu `plugins/kp-core-spike/skills/brainstorm/SKILL.md` :
+Contenu `plugins/kp-agents-spike/skills/brainstorm/SKILL.md` :
 ```markdown
 ---
 description: "KeyProd Brainstorm: explore approaches, challenge assumptions, and structure next steps"
@@ -366,9 +366,9 @@ description: "KeyProd Brainstorm: explore approaches, challenge assumptions, and
 2. Depuis un poste "vierge" (un autre dev, ou machine sans authentification GitLab) :
    ```
    /plugin marketplace add https://<gitlab-keyprod>/kp-agents.git#spike-plugin
-   /plugin install kp-core-spike@kp-agents-spike
+   /plugin install kp-agents-spike@kp-agents-spike
    /reload-plugins
-   /kp-core-spike:brainstorm
+   /kp-agents-spike:brainstorm
    ```
 3. Vérifier que :
    - ✅ `/plugin marketplace add` réussit sans authentification
@@ -394,7 +394,7 @@ description: "KeyProd Brainstorm: explore approaches, challenge assumptions, and
 |---|---|---|---|
 | Visibilité publique GitLab KeyProd indisponible (conf admin) | Moyenne | Élevé | Spike HC-2 vérifie en amont. Fallback : miroir GitHub public |
 | Désynchronisation `agents/` ↔ `plugins/` | Élevée | Moyen | Pre-commit hook + CI check |
-| Namespacing différent de `/kp-core:brainstorm` (shorthand ?) | Faible | Faible | Spike vérifie. Doc officielle suggère exact match |
+| Namespacing différent de `/kp-agents:brainstorm` (shorthand ?) | Faible | Faible | Spike vérifie. Doc officielle suggère exact match |
 | Oubli de bump version | Moyenne | Moyen | CHANGELOG obligatoire + lint de version |
 | Migration des utilisateurs actuels (ceux qui ont fait `sync.sh`) | Faible | Faible | Script one-shot + message dans `sync.sh` pendant 2-3 semaines |
 
@@ -403,7 +403,7 @@ description: "KeyProd Brainstorm: explore approaches, challenge assumptions, and
 - Nom exact du domaine GitLab KeyProd (pour la doc et le spike)
 - Email owner à mettre dans `marketplace.json`
 - Stratégie de pre-commit : hook local ou CI uniquement ?
-- Nom définitif du plugin de spike (`kp-core-spike` est un placeholder)
+- Nom définitif du plugin de spike (`kp-agents-spike` est un placeholder)
 
 ## Références
 

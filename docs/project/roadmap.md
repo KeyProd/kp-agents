@@ -11,7 +11,7 @@ author: product-agent
 
 **Objectif** : faire de kp-agents une **marketplace Claude Code native** installable via URL git, tout en conservant la compatibilité Cursor/Codex via `sync.sh`. Supprimer la cible d'installation Claude locale désormais redondante.
 
-**Jalon** : release `kp-core-v0.1.0` publiée sur GitHub, installable et fonctionnelle pour tout dev KeyProd.
+**Jalon** : release `kp-agents-v0.1.0` publiée sur GitHub, installable et fonctionnelle pour tout dev KeyProd.
 
 **Pré-requis** : ✅ Spike de faisabilité validé GO (2026-04-17) — marketplace + plugin + GitHub privé + token d'org fonctionnent.
 
@@ -21,19 +21,19 @@ author: product-agent
 
 ### Critères de sortie de phase
 
-- [ ] `./sync.sh` produit les 3 cibles (`plugins/kp-core/`, `dist/cursor/`, `dist/codex/`) sans toucher `~/.claude/commands/`
-- [ ] `plugins/kp-core/` contient les 7 agents sous forme de skills au format Claude Code natif
+- [ ] `./sync.sh` produit les 3 cibles (`plugins/kp-agents/`, `dist/cursor/`, `dist/codex/`) sans toucher `~/.claude/commands/`
+- [ ] `plugins/kp-agents/` contient les 7 agents sous forme de skills au format Claude Code natif
 - [ ] `./sync.sh --clean` et `--clean-all` sont adaptés au nouveau périmètre
-- [ ] `/plugin install kp-core@kp-agents` fonctionne depuis un poste vierge
-- [ ] `/kp-core:brainstorm` (et les 6 autres) sont invocables et répondent correctement
+- [ ] `/plugin install kp-agents@kp-agents` fonctionne depuis un poste vierge
+- [ ] `/kp-agents:brainstorm` (et les 6 autres) sont invocables et répondent correctement
 - [ ] Documentation à jour : README, CLAUDE.md, docs/agents.md, docs/INDEX.md
-- [ ] Tag `kp-core-v0.1.0` poussé sur GitHub + GitLab
+- [ ] Tag `kp-agents-v0.1.0` poussé sur GitHub + GitLab
 
 ---
 
 ## Phase 2 - Ouverture publique et extension (Priorité: COULD)
 
-**Objectif** : permettre à des collaborateurs externes à KeyProd d'utiliser `kp-core` sans friction d'authentification, et préparer l'accueil de futurs plugins (ex: plugins métier spécifiques par projet).
+**Objectif** : permettre à des collaborateurs externes à KeyProd d'utiliser `kp-agents` sans friction d'authentification, et préparer l'accueil de futurs plugins (ex: plugins métier spécifiques par projet).
 
 **Hypothèses à valider avant d'engager** :
 - Le repo peut être passé en visibilité publique sans exposer de données sensibles

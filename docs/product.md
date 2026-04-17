@@ -34,11 +34,11 @@ kp-agents est un système de **distribution d'agents IA** pour les environnement
 - Un agent a une définition unique dans `agents/<nom>.md` (frontmatter + corps markdown + directives `{{include:xxx}}`)
 - Les directives `{{include:xxx}}` sont résolues au moment de la génération (pas de dépendance runtime)
 - Le préfixe `kp-` identifie les agents issus de ce projet dans toutes les cibles
-- Les agents génériques (non spécifiques à un métier KeyProd) sont regroupés dans le plugin `kp-core`
+- Les agents génériques (non spécifiques à un métier KeyProd) sont regroupés dans le plugin `kp-agents`
 
 ## Parcours et cas d'usage clés
 
-- **Consommateur Claude Code** : `/plugin marketplace add KeyProd/kp-agents` → `/plugin install kp-core@kp-agents` → `/kp-core:brainstorm` disponible
+- **Consommateur Claude Code** : `/plugin marketplace add KeyProd/kp-agents` → `/plugin install kp-agents@kp-agents` → `/kp-agents:brainstorm` disponible
 - **Consommateur Cursor / Codex** : `git clone kp-agents` → `./sync.sh` → règles/skills installées localement
 - **Contributeur** : `edit agents/<nom>.md` → `./sync.sh` → commit + bump `plugin.json` → push → les utilisateurs reçoivent la mise à jour au prochain `/plugin marketplace update`
 
@@ -63,7 +63,7 @@ kp-agents est un système de **distribution d'agents IA** pour les environnement
 
 - **Distribution interne** : le repo est actuellement privé. Ouverture publique à terme possible (agents génériques uniquement)
 - **Pas de données sensibles** : aucun secret, aucune URL interne, aucun token dans les agents
-- **Format Claude plugin imposé** : namespaces `/kp-core:<nom>`, structure `.claude-plugin/` obligatoire
+- **Format Claude plugin imposé** : namespaces `/kp-agents:<nom>`, structure `.claude-plugin/` obligatoire
 
 ## Mesure du succès
 

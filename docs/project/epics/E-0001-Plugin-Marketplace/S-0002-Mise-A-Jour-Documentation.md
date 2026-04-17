@@ -1,7 +1,7 @@
 ---
 title: Mise à jour de la documentation projet
 date: 2026-04-17
-status: TODO
+status: REVIEW
 author: product-agent
 story-id: S-0002
 epic-id: E-0001
@@ -112,17 +112,108 @@ La refonte (S-0001) modifie la manière d'installer et d'invoquer les agents Cla
 
 ## Implémentation
 
-*à compléter par l'agent Developer (ou Documentation si passage d'agent)*
+**Date** : 2026-04-17
+**Branche** : `feat/E-0001-Plugin-Marketplace`
 
-- Fichiers créés / modifiés :
-  - `README.md`
-  - `CLAUDE.md`
-  - `docs/agents.md`
-- Commandes de test :
-  - `grep -r "recettemoi\|kp-brainstorm[^:]" README.md CLAUDE.md docs/agents.md`
-  - Rendu Mermaid des schémas modifiés (visuel)
-- Notes de review :
+### Fichiers modifiés
+
+- **`README.md`** (réécriture complète)
+  - Section "Principe" : nouveau diagramme flux avec `plugins/kp-core/` + `dist/cursor/` + `dist/codex/`
+  - Section "Utilisation" scindée en 2 blocs distincts : **Claude Code (plugin marketplace)** avec `/plugin marketplace add KeyProd/kp-agents` puis `/plugin install kp-core@kp-agents`, et **Cursor/Codex (via sync.sh)** conservé
+  - Sous-section sur la publication d'une mise à jour Claude (bump semver + tag git)
+  - Section "Structure" mise à jour : introduction de `.claude-plugin/marketplace.json` et `plugins/kp-core/`, clarification `dist/` non commité
+  - Table des agents : 7 agents génériques (RecetteMoi retiré), flux simplifié
+  - **Nouvelle section Troubleshooting** intégrant la recommandation P2.1 de la review S-0001 : purge cache plugin + bascule vers namespace `/kp-core:<nom>` + install branche feature
+- **`CLAUDE.md`** (réécriture complète)
+  - Ajout section "Distribution" qui distingue les 3 cibles (plugin Claude, Cursor, Codex)
+  - Structure du projet : ajout `.claude-plugin/`, `plugins/kp-core/skills/`, clarification `dist/` non commité
+  - "Ajouter ou modifier un agent" étendu avec étape de publication (bump semver + tag)
+  - Table des flags mise à jour (retrait référence `~/.claude`)
+  - "Règles critiques" alignées sur la nouvelle architecture
+  - Diagramme Mermaid du workflow inter-agents : noms complets `/kp-core:<nom>`
+  - Table des agents disponibles enrichie d'une colonne "Invocation Claude"
+  - Suppression complète de la section "Agents RecetteMoi"
+- **`docs/agents.md`** (réécriture complète)
+  - Frontmatter : date mise à jour à 2026-04-17
+  - "Vue d'ensemble" : 7 agents génériques (plus de "deux pipelines")
+  - Diagramme pipeline développement : noms complets `/kp-core:<nom>`
+  - **Suppression complète de la section "Pipeline RecetteMoi"** et des 3 fiches détaillées (sections 8/9/10)
+  - 7 schémas Mermaid détaillés adaptés aux namespaces `/kp-core:<nom>` (labels de nœuds mis à jour, références inter-agents dans les "Relais")
+  - Légende : retrait de l'entrée "Fond rose clair (RecetteMoi)"
+
+### Commandes de test (vérification automatisée)
+
+```bash
+# Aucune mention résiduelle de recettemoi
+grep -ril "recettemoi" README.md CLAUDE.md docs/agents.md
+# → vide
+
+# Aucune référence à ~/.claude/commands/ ou dist/claude/ hors du contexte de cleanup
+grep -n "\.claude/commands\|dist/claude" README.md CLAUDE.md docs/agents.md
+# → 3 matches, tous volontairement dans des phrases de type "ne dépose plus rien dans …" ou "cleanup de …"
+
+# Les slash commands anciens /kp-xxx (sans :) n'apparaissent que dans la section Troubleshooting
+grep -n "/kp-\(brainstorm\|product\|architect\|developer\|review\|documentation\|ux-ui\)\b" README.md CLAUDE.md docs/agents.md
+# → 2 matches dans README, tous dans la section Troubleshooting qui explique la migration
+```
+
+### Écarts avec la spec
+
+Aucun écart avec la spec. Point d'attention ajouté : la recommandation P2.1 de la review S-0001 (section Troubleshooting pour le cache plugin) a été intégrée comme convenu.
+
+### Notes de review
+
+- Pas de diff massif : les 3 fichiers ont été réécrits entièrement via `Write`, car le volume de changements (retrait recettemoi, namespaces, restructuration) dépassait le ROI des Edits ciblés
+- Les schémas Mermaid ont tous été vérifiés visuellement via Read : 12 schémas dans `docs/agents.md` (7 détaillés + 1 pipeline global) + 2 dans `CLAUDE.md`/`README.md`
+- `docs/INDEX.md` **non touché** (périmètre de l'agent Documentation uniquement) — à mettre à jour en fin de story
 
 ## Validation par critère
 
-*à compléter lors de la review*
+- **[✅] `README.md` section "Utilisation" documente l'installation Claude via plugin marketplace**
+  - Implémentation : nouvelle sous-section "Claude Code (plugin marketplace)" avec commandes `/plugin marketplace add` + `/plugin install`
+  - Preuve : voir `README.md` lignes 15-40
+
+- **[✅] `README.md` section "Utilisation" distingue clairement Claude (plugin) vs Cursor/Codex (`sync.sh`)**
+  - Implémentation : deux sous-sections séparées `### Claude Code (plugin marketplace)` et `### Cursor et Codex (via sync.sh)`
+  - Preuve : structure visuelle de README
+
+- **[✅] `README.md` ne mentionne plus `--clean` ou `--clean-all` touchant Claude local**
+  - Implémentation : le bloc `--clean` et `--clean-all` a été reformulé : "retire chirurgicalement chaque agent (plugin skills + Cursor + Codex)" — plus de mention Claude local
+  - Preuve : `grep "\.claude/commands" README.md` ne retourne que les 1 mention dans la section "Note" / Troubleshooting (explication, pas usage)
+
+- **[✅] `README.md` liste les 7 agents (plus de section "Workflow RecetteMoi")**
+  - Implémentation : table unique "Agents" avec 7 lignes
+  - Preuve : `grep -i "recettemoi" README.md` retourne 0 match
+
+- **[✅] `CLAUDE.md` section "Structure du projet" documente `plugins/` commité**
+  - Implémentation : arborescence mise à jour avec commentaires `← GÉNÉRÉ par sync.sh, COMMITÉ dans git` pour `plugins/`
+  - Preuve : voir `CLAUDE.md` section "Structure du projet"
+
+- **[✅] `CLAUDE.md` section "Ajouter ou modifier un agent" inclut le bump semver et le tag**
+  - Implémentation : étape 5 ajoutée avec bump de `plugin.json`, commit, tag `kp-core-v<X.Y.Z>`, push
+  - Preuve : voir `CLAUDE.md` section "Ajouter ou modifier un agent" étape 5
+
+- **[✅] `CLAUDE.md` retire la table des agents RecetteMoi**
+  - Implémentation : table unique "Agents disponibles" avec 7 lignes
+  - Preuve : `grep -i "recettemoi" CLAUDE.md` retourne 0 match
+
+- **[✅] `CLAUDE.md` met à jour le diagramme Mermaid du workflow inter-agents (7 agents)**
+  - Implémentation : diagramme réécrit avec nœuds namespacés `/kp-core:brainstorm`, etc. (7 agents au total)
+  - Preuve : voir `CLAUDE.md` section "Workflow inter-agents"
+
+- **[✅] `docs/agents.md` retire la section "Pipeline RecetteMoi" complète**
+  - Implémentation : sections 8/9/10 entièrement supprimées, la section "Pipeline RecetteMoi — Vue globale" également
+  - Preuve : `grep -i "recettemoi" docs/agents.md` retourne 0 match
+
+- **[✅] `docs/agents.md` met à jour la légende et les schémas pour refléter les namespaces `/kp-core:<nom>`**
+  - Implémentation : 7 schémas détaillés + 1 schéma pipeline global mis à jour ; légende simplifiée (retrait entrée rose RecetteMoi)
+  - Preuve : lecture des 7 sections d'agents (toutes utilisent le namespace `/kp-core:<nom>`)
+
+- **[✅] Aucune mention résiduelle de `recettemoi-*`, `kp-recettemoi-*`, ni de `~/.claude/commands/` dans les 3 docs**
+  - Implémentation : réécriture ciblée
+  - Preuve : les greps exécutés en fin de story ne retournent que les mentions **volontaires** dans la section Troubleshooting (explication de la migration)
+
+- **[✅] La story finit par déclencher explicitement un passage vers l'agent `/kp-core:documentation` pour maintenir `docs/INDEX.md`**
+  - Implémentation : ce point est adressé dans la section "Suite" du bilan de story (voir la réponse de Developer après commit)
+  - Preuve : handoff vers `/kp-core:documentation` explicité en fin de bilan
+

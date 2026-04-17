@@ -1,43 +1,71 @@
 # kp-agents
 
-Système de distribution multi-cibles pour agents IA. Définir un agent une seule fois, le déployer sur Claude Code, Cursor et Codex.
+Système de distribution multi-cibles pour agents IA KeyProd. Définir un agent une seule fois, le déployer sur **Claude Code** (via un plugin marketplace installable), **Cursor** (règles importées localement) et **Codex** (skills importées localement).
 
 ## Principe
 
 ```
-agents/*.md  ──→  sync.sh  ──→  dist/claude/    → ~/.claude/commands/
-                            ──→  dist/cursor/    → ~/.cursor/rules/
-                            ──→  dist/codex/     → ~/.codex/skills/
+agents/*.md  ──→  sync.sh  ──→  plugins/kp-core/  → commit/push → Claude Code via marketplace
+                            ──→  dist/cursor/      → ~/.cursor/rules/
+                            ──→  dist/codex/       → ~/.codex/skills/
 ```
 
-Un seul fichier source par agent dans `agents/`. Le script `sync.sh` génère les artefacts pour chaque plateforme et les installe dans les répertoires utilisateur.
+Un seul fichier source par agent dans `agents/`. Le script `sync.sh` :
+- **Génère le plugin `kp-core`** dans `plugins/kp-core/` (versionné dans git, distribué via le marketplace Claude Code)
+- **Installe les règles Cursor** dans `~/.cursor/rules/`
+- **Installe les skills Codex** dans `~/.codex/skills/`
 
 ## Utilisation
 
+### Claude Code (plugin marketplace)
+
+L'installation se fait directement depuis le repo git — aucun clone ni `sync.sh` nécessaire côté consommateur :
+
+```
+/plugin marketplace add KeyProd/kp-agents
+/plugin install kp-core@kp-agents
+/reload-plugins
+```
+
+Puis invoque les agents avec le namespace `kp-core:` :
+
+```
+/kp-core:brainstorm
+/kp-core:product
+/kp-core:architect
+/kp-core:developer
+/kp-core:review
+/kp-core:documentation
+/kp-core:ux-ui
+```
+
+### Cursor et Codex (via sync.sh)
+
 ```bash
-# Générer et installer
+# Cloner le repo, puis générer et installer
 ./sync.sh
 
-# Générer sans installer (dist/ uniquement)
+# Générer sans installer (artefacts dans plugins/ et dist/ uniquement)
 ./sync.sh --dist-only
 
 # Nettoyer les agents installés lors du précédent sync (via manifeste)
 ./sync.sh --clean
 
-# Nettoyer TOUS les skills kp-* (glob, indépendant du manifeste)
+# Nettoyer TOUS les artefacts kp-* (glob, indépendant du manifeste)
 ./sync.sh --clean-all
 ```
 
 Après sync :
-- **Claude Code** : `/kp-brainstorm`, `/kp-product`, `/kp-developer`, etc.
 - **Cursor** : `@kp-brainstorm` via le sélecteur de règles
-- **Codex** : skills auto-détectées
+- **Codex** : skills auto-détectées (`kp-brainstorm`, `kp-product`, etc.)
+
+**Note** : `sync.sh` ne dépose plus rien dans `~/.claude/commands/` — la distribution Claude Code passe exclusivement par le plugin marketplace. Si tu avais des `kp-*.md` installés par une version antérieure de `sync.sh`, ils sont automatiquement purgés au premier run.
 
 ### Manifeste de synchronisation
 
 À chaque run, `sync.sh` écrit la liste des agents installés dans `.installed-agents` (fichier local, non versionné). Cela permet au run suivant de supprimer proprement les agents qui ont été retirés de `agents/` entre-temps.
 
-- `--clean` lit ce manifeste et retire chirurgicalement chaque agent précédemment installé
+- `--clean` lit ce manifeste et retire chirurgicalement chaque agent (plugin skills + Cursor + Codex)
 - `--clean-all` ignore le manifeste et supprime tout ce qui commence par `kp-*` dans les 3 cibles (utile pour repartir de zéro)
 
 ## Créer un agent
@@ -57,7 +85,15 @@ default_prompt: "Prompt suggéré à l'utilisateur."
 Instructions, processus, règles...
 ```
 
-Lancer `./sync.sh` — le script préfixe automatiquement avec `kp-`, donc l'agent sera disponible comme `/kp-mon-agent`.
+Lancer `./sync.sh` — le plugin Claude exposera l'agent comme `/kp-core:mon-agent`, Cursor comme `@kp-mon-agent`, Codex avec la skill `kp-mon-agent`.
+
+### Publier une mise à jour Claude Code
+
+1. Modifier l'agent source dans `agents/<nom>.md`
+2. Lancer `./sync.sh` pour régénérer `plugins/kp-core/skills/<nom>/SKILL.md`
+3. Bumper la version dans `plugins/kp-core/.claude-plugin/plugin.json` (semver — patch, mineur ou majeur selon la nature du changement)
+4. `git add agents/ plugins/ && git commit && git tag kp-core-v<X.Y.Z> && git push --tags`
+5. Les utilisateurs reçoivent la mise à jour au prochain `/plugin marketplace update` (ou automatiquement selon leur config)
 
 ## Includes
 
@@ -67,23 +103,28 @@ Les agents peuvent réutiliser des blocs partagés avec `{{include:nom}}` :
 {{include:docs-structure}}
 ```
 
-Les fichiers d'include sont dans `includes/*.md`.
+Les fichiers d'include sont dans `includes/*.md`. Les directives sont **résolues par `sync.sh`** — les artefacts générés dans `plugins/`, `dist/cursor/` et `dist/codex/` contiennent du markdown final sans dépendances.
 
 ## Structure
 
 ```
-agents/          Source de vérité (un .md par agent)
-includes/        Templates partagés ({{include:nom}})
-dist/            Artefacts générés (ne pas modifier)
-  claude/        Commandes Claude Code (.md)
-  cursor/        Règles Cursor (.mdc)
-  codex/         Skills Codex (SKILL.md + openai.yaml)
-sync.sh          Script de synchronisation
+agents/            Source de vérité (un .md par agent)
+includes/          Templates partagés ({{include:nom}})
+.claude-plugin/
+  marketplace.json Catalogue du marketplace Claude Code (statique)
+plugins/           Plugins Claude Code (COMMITÉS dans git)
+  kp-core/
+    .claude-plugin/plugin.json  Manifeste statique (name, version, description)
+    skills/        Skills générés par sync.sh (SKILL.md par agent)
+dist/              Artefacts Cursor / Codex (NON commités, .gitignore)
+  cursor/          Règles Cursor (.mdc)
+  codex/           Skills Codex (SKILL.md + openai.yaml)
+sync.sh            Script de synchronisation
+docs/              Documentation projet (vision, architecture, epics, stories)
 ```
 
 ## Agents
 
-### Workflow développement
 | Agent | Description |
 |-------|-------------|
 | `brainstorm` | Explorer des idées, challenger des hypothèses |
@@ -94,20 +135,44 @@ sync.sh          Script de synchronisation
 | `documentation` | Analyser et maintenir la documentation |
 | `ux-ui` | Designer UX/UI et identité visuelle |
 
-### Workflow RecetteMoi (tickets support)
-| Agent | Description |
-|-------|-------------|
-| `recettemoi-support` | Triage et recommandation de tickets |
-| `recettemoi-dev` | Traitement technique (BUG/IMPROVEMENT) |
-| `recettemoi-review` | Validation et réponse utilisateur |
-
 ### Flux entre agents
 
 ```
 brainstorm → product → architect → developer → review → documentation
                                        ↑                    ↓
                                        └────────────────────┘
+```
 
-recettemoi-support → recettemoi-dev → recettemoi-review
-                   → recettemoi-review (direct si fonctionnel)
+Détails dans [docs/agents.md](docs/agents.md).
+
+## Troubleshooting
+
+### `0 skills` au reload-plugins après install
+
+Si `/reload-plugins` annonce `0 skills` au lieu du nombre attendu juste après `/plugin install kp-core@kp-agents`, le cache local du plugin est sans doute stale (typiquement après un renommage ou un changement de source du plugin). Purge le cache puis réinstalle :
+
+```bash
+rm -rf ~/.claude/plugins/cache/kp-agents
+```
+
+Puis dans Claude Code :
+
+```
+/plugin marketplace remove kp-agents
+/plugin marketplace add KeyProd/kp-agents
+/plugin install kp-core@kp-agents
+/reload-plugins
+```
+
+### Les anciens `/kp-brainstorm` (sans namespace) ne répondent plus
+
+Normal : la distribution Claude Code se fait désormais via le plugin marketplace. Les namespaces sont imposés sous la forme `/kp-core:<nom>`. L'ancien install local via `sync.sh` a été automatiquement purgé au premier run de la nouvelle version.
+
+Utilise `/kp-core:brainstorm` à la place de `/kp-brainstorm`, etc.
+
+### Installer une branche feature (pour tester)
+
+```
+/plugin marketplace add KeyProd/kp-agents@feat/ma-branche
+/plugin install kp-core@kp-agents
 ```

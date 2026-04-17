@@ -1,6 +1,6 @@
 ---
 title: Guide des agents
-date: 2026-04-15
+date: 2026-04-17
 status: active
 author: documentation-agent
 ---
@@ -10,14 +10,13 @@ author: documentation-agent
 > Description de chaque agent et visualisation de leurs workflows.
 > Les traits pleins (`-->`) indiquent les chemins **obligatoires**. Les traits pointillés (`-.->`) indiquent les chemins **facultatifs**.
 
+> **Invocation** : via le plugin Claude Code, les agents sont namespacés sous la forme `/kp-core:<nom>`. Dans Cursor, ils apparaissent sous `@kp-<nom>`. Dans Codex, ce sont les skills `kp-<nom>`.
+
 ---
 
 ## Vue d'ensemble
 
-Le projet comprend deux pipelines d'agents :
-
-- **Pipeline développement** (7 agents) : workflow complet de l'idée au code validé
-- **Pipeline RecetteMoi** (3 agents) : gestion des tickets de support utilisateur
+Le projet expose **7 agents génériques** pour le workflow de développement : de l'exploration d'une idée à la validation du code implémenté. Les agents sont indépendants mais chaînables via un bloc de handoff structuré.
 
 ---
 
@@ -25,13 +24,13 @@ Le projet comprend deux pipelines d'agents :
 
 ```mermaid
 flowchart LR
-    B["/kp-brainstorm"]
-    P["/kp-product"]
-    A["/kp-architect"]
-    D["/kp-developer"]
-    R["/kp-review"]
-    UX["/kp-ux-ui"]
-    DOC["/kp-documentation"]
+    B["/kp-core:brainstorm"]
+    P["/kp-core:product"]
+    A["/kp-core:architect"]
+    D["/kp-core:developer"]
+    R["/kp-core:review"]
+    UX["/kp-core:ux-ui"]
+    DOC["/kp-core:documentation"]
     FIN((DONE))
 
     B -->|idée qualifiée| P
@@ -62,37 +61,11 @@ flowchart LR
 
 ---
 
-## Pipeline RecetteMoi — Vue globale
-
-```mermaid
-flowchart LR
-    S["/kp-recettemoi-support"]
-    DEV["/kp-recettemoi-dev"]
-    REV["/kp-recettemoi-review"]
-    FIN((Ticket traité))
-
-    S -->|ticket technique| DEV
-    S -->|ticket fonctionnel| REV
-    DEV -->|rapport de traitement| REV
-    REV -->|réponse envoyée| FIN
-    REV -.->|autre ticket| S
-
-    style S fill:#fce4ec,stroke:#E91E63
-    style DEV fill:#fce4ec,stroke:#E91E63
-    style REV fill:#fce4ec,stroke:#E91E63
-    style FIN fill:#c8e6c9,stroke:#4CAF50
-```
-
-**Chemin obligatoire** : toujours commencer par support, puis dev (technique) ou review (fonctionnel)
-**Retour facultatif** : review peut relancer support pour un nouveau ticket
+## Agents — Détail
 
 ---
 
-## Agents génériques — Détail
-
----
-
-### 1. Brainstorm (`/kp-brainstorm`)
+### 1. Brainstorm (`/kp-core:brainstorm`)
 
 **Rôle** : facilitateur de brainstorming. Explore une idée sous tous ses angles, propose des approches créatives et structure la réflexion pour la faire avancer concrètement.
 
@@ -121,8 +94,8 @@ flowchart TD
     STRUCT --> OUT
 
     OUT{Relais ?}
-    OUT -->|sujet mature| PRODUCT["/kp-product"]
-    OUT -.->|incertitudes techniques| ARCHITECT["/kp-architect"]
+    OUT -->|sujet mature| PRODUCT["/kp-core:product"]
+    OUT -.->|incertitudes techniques| ARCHITECT["/kp-core:architect"]
 
     style COMP fill:#e3f2fd,stroke:#1976D2
     style EXPLO fill:#e3f2fd,stroke:#1976D2
@@ -134,7 +107,7 @@ flowchart TD
 
 ---
 
-### 2. Product (`/kp-product`)
+### 2. Product (`/kp-core:product`)
 
 **Rôle** : Product Manager. Transforme des idées brutes en spécifications produit actionnables : vision, roadmap, epics et stories avec critères d'acceptation.
 
@@ -165,9 +138,9 @@ flowchart TD
     PRODUCT_MD --> OUT
 
     OUT{Relais ?}
-    OUT -->|design technique| ARCHITECT["/kp-architect"]
-    OUT -.->|besoin UX| UX["/kp-ux-ui"]
-    OUT -.->|doc à mettre à jour| DOC["/kp-documentation"]
+    OUT -->|design technique| ARCHITECT["/kp-core:architect"]
+    OUT -.->|besoin UX| UX["/kp-core:ux-ui"]
+    OUT -.->|doc à mettre à jour| DOC["/kp-core:documentation"]
 
     style CADRAGE fill:#e3f2fd,stroke:#1976D2
     style ROADMAP fill:#e3f2fd,stroke:#1976D2
@@ -182,7 +155,7 @@ flowchart TD
 
 ---
 
-### 3. Architect (`/kp-architect`)
+### 3. Architect (`/kp-core:architect`)
 
 **Rôle** : Architecte logiciel senior. Conçoit des solutions techniques solides, évalue les compromis et documente les décisions d'architecture (ADR).
 
@@ -214,9 +187,9 @@ flowchart TD
     ADR --> OUT
 
     OUT{Relais ?}
-    OUT -->|implémentation| DEV["/kp-developer"]
-    OUT -.->|questions produit| PRODUCT["/kp-product"]
-    OUT -.->|doc obsolète| DOC["/kp-documentation"]
+    OUT -->|implémentation| DEV["/kp-core:developer"]
+    OUT -.->|questions produit| PRODUCT["/kp-core:product"]
+    OUT -.->|doc obsolète| DOC["/kp-core:documentation"]
 
     style ANALYSE fill:#e3f2fd,stroke:#1976D2
     style OPTIONS fill:#e3f2fd,stroke:#1976D2
@@ -229,7 +202,7 @@ flowchart TD
 
 ---
 
-### 4. Developer (`/kp-developer`)
+### 4. Developer (`/kp-core:developer`)
 
 **Rôle** : Développeur senior. Implémente les fonctionnalités en suivant rigoureusement les spécifications produit et techniques documentées.
 
@@ -268,8 +241,8 @@ flowchart TD
     BILAN --> OUT
 
     OUT{Relais ?}
-    OUT -->|review recommandée| REVIEW["/kp-review"]
-    OUT -.->|écarts documentaires| DOC["/kp-documentation"]
+    OUT -->|review recommandée| REVIEW["/kp-core:review"]
+    OUT -.->|écarts documentaires| DOC["/kp-core:documentation"]
 
     style CADRAGE fill:#e3f2fd,stroke:#1976D2
     style CTX fill:#e3f2fd,stroke:#1976D2
@@ -284,7 +257,7 @@ flowchart TD
 
 ---
 
-### 5. Review (`/kp-review`)
+### 5. Review (`/kp-core:review`)
 
 **Rôle** : Reviewer senior. Relit, teste et valide le code produit par le Developer. Émet un verdict GO/NO-GO et écrit les recommandations d'amélioration dans la story.
 
@@ -321,8 +294,8 @@ flowchart TD
 
     OUT{Relais ?}
     VERDICT -->|GO, story DONE| FIN((DONE))
-    VERDICT -->|NO-GO, story IN PROGRESS| DEV["/kp-developer"]
-    WRITE -.->|écarts documentaires| DOC["/kp-documentation"]
+    VERDICT -->|NO-GO, story IN PROGRESS| DEV["/kp-core:developer"]
+    WRITE -.->|écarts documentaires| DOC["/kp-core:documentation"]
 
     style CTX fill:#e3f2fd,stroke:#1976D2
     style AUTO fill:#e3f2fd,stroke:#1976D2
@@ -338,7 +311,7 @@ flowchart TD
 
 ---
 
-### 6. Documentation (`/kp-documentation`)
+### 6. Documentation (`/kp-core:documentation`)
 
 **Rôle** : responsable documentation technique et produit. Analyse la documentation existante, identifie les divergences avec le code, propose des corrections et maintient la documentation après validation.
 
@@ -373,8 +346,8 @@ flowchart TD
     INDEX --> OUT
 
     OUT{Relais ?}
-    OUT -.->|spécification future| PRODUCT["/kp-product"]
-    OUT -.->|décision technique| ARCHITECT["/kp-architect"]
+    OUT -.->|spécification future| PRODUCT["/kp-core:product"]
+    OUT -.->|décision technique| ARCHITECT["/kp-core:architect"]
 
     style ANALYSE fill:#e3f2fd,stroke:#1976D2
     style AUDIT fill:#e3f2fd,stroke:#1976D2
@@ -387,7 +360,7 @@ flowchart TD
 
 ---
 
-### 7. UX/UI (`/kp-ux-ui`)
+### 7. UX/UI (`/kp-core:ux-ui`)
 
 **Rôle** : Designer UX/UI senior. Conçoit des interfaces intuitives et visuellement distinctives. Travaille entre Product et Developer.
 
@@ -421,9 +394,9 @@ flowchart TD
     SPECS --> OUT
 
     OUT{Relais ?}
-    OUT -->|specs prêtes| DEV["/kp-developer"]
-    OUT -.->|choix produit non tranchés| PRODUCT["/kp-product"]
-    OUT -.->|implications techniques fortes| ARCHITECT["/kp-architect"]
+    OUT -->|specs prêtes| DEV["/kp-core:developer"]
+    OUT -.->|choix produit non tranchés| PRODUCT["/kp-core:product"]
+    OUT -.->|implications techniques fortes| ARCHITECT["/kp-core:architect"]
 
     style USERS fill:#e3f2fd,stroke:#1976D2
     style PARCOURS fill:#e3f2fd,stroke:#1976D2
@@ -437,142 +410,6 @@ flowchart TD
 
 ---
 
-## Agents RecetteMoi — Détail
-
----
-
-### 8. RecetteMoi Support (`/kp-recettemoi-support`)
-
-**Rôle** : porte d'entrée unique de la gestion des tickets RecetteMoi. Trie les tickets, filtre ceux en attente, analyse la nature du ticket et passe le relais au skill adapté.
-
-**Types de tickets** : BUG, IMPROVEMENT, IDEA, QUESTION, COMPLIMENT.
-
-```mermaid
-flowchart TD
-    START([Demande ticket]) --> MODE{ID de ticket fourni ?}
-    MODE -->|non| RECO
-
-    RECO[1. Recommandation — scoring et filtrage mémoire]
-    RECO --> PRESENT[Présenter 2-3 recommandations]
-    PRESENT --> CHOIX[Utilisateur choisit un ticket]
-    CHOIX --> LECTURE
-
-    MODE -->|oui| LECTURE
-
-    LECTURE[2. Lecture et analyse — résumé, classification]
-    LECTURE --> NATURE{Nature du ticket ?}
-
-    NATURE -->|incomplet| CLARIF
-
-    CLARIF[3. Clarification — max 3 questions, tutoiement]
-    CLARIF --> CONFIRM{Confirmation admin ?}
-    CONFIRM -->|oui| SEND[Envoyer le message]
-    SEND -.->|autre ticket| RECO
-
-    NATURE -->|technique| DEV["/kp-recettemoi-dev"]
-    NATURE -->|fonctionnel| REV["/kp-recettemoi-review"]
-
-    style RECO fill:#fce4ec,stroke:#E91E63
-    style PRESENT fill:#fce4ec,stroke:#E91E63
-    style LECTURE fill:#fce4ec,stroke:#E91E63
-    style CLARIF fill:#fce4ec,stroke:#E91E63
-    style DEV fill:#c8e6c9,stroke:#4CAF50
-    style REV fill:#c8e6c9,stroke:#4CAF50
-```
-
-**Chemin obligatoire** : lecture du ticket --> classification --> handoff (dev ou review)
-**Chemins facultatifs** : recommandation (si pas d'ID), clarification (si ticket incomplet)
-
----
-
-### 9. RecetteMoi Dev (`/kp-recettemoi-dev`)
-
-**Rôle** : traitement technique des tickets BUG ou IMPROVEMENT avec impact code. Analyse, crée une branche, implémente via `/kp-developer`, commit/push, puis passe le relais à recettemoi-review.
-
-**Entrée obligatoire** : contexte transmis depuis recettemoi-support.
-
-```mermaid
-flowchart TD
-    START([Contexte depuis recettemoi-support]) --> ANALYSE
-
-    ANALYSE[D1. Analyse technique — fichiers, complexité, faisabilité]
-    ANALYSE --> STATUS[Passer le ticket En cours]
-    STATUS --> PLAN[Présenter le plan]
-    PLAN --> CONFIRM{Confirmation admin ?}
-    CONFIRM -->|oui| BRANCHE
-
-    BRANCHE[D2. Préparation de la branche — hotfix ou feature]
-    BRANCHE --> MODE{Mode ?}
-
-    MODE -->|automatique| AUTO[D3a. Agent /kp-developer — implémentation autonome]
-    MODE -->|manuel| MANUAL[D3b. Guidage pas à pas]
-
-    AUTO --> HANDOFF
-    MANUAL --> HANDOFF
-
-    HANDOFF["/kp-recettemoi-review"]
-
-    style ANALYSE fill:#fce4ec,stroke:#E91E63
-    style STATUS fill:#fce4ec,stroke:#E91E63
-    style PLAN fill:#fce4ec,stroke:#E91E63
-    style BRANCHE fill:#fce4ec,stroke:#E91E63
-    style AUTO fill:#fce4ec,stroke:#E91E63
-    style MANUAL fill:#fce4ec,stroke:#E91E63
-    style HANDOFF fill:#c8e6c9,stroke:#4CAF50
-```
-
-**Chemin obligatoire** : analyse --> branche --> implémentation --> handoff review
-**Choix interne** : mode automatique (agent) ou manuel (guidé)
-
----
-
-### 10. RecetteMoi Review (`/kp-recettemoi-review`)
-
-**Rôle** : validation et réponse utilisateur. Rédige une réponse fonctionnelle (depuis support) ou valide le rapport technique (depuis dev) et prépare la communication utilisateur. Conclut le cycle de vie du ticket.
-
-**Entrée obligatoire** : contexte transmis depuis recettemoi-support ou recettemoi-dev.
-
-```mermaid
-flowchart TD
-    START([Contexte depuis support ou dev]) --> ORIGINE{Origine ?}
-
-    ORIGINE -->|support, fonctionnel| R1
-
-    R1[R1. Réponse fonctionnelle — analyser et formuler]
-    R1 --> R1_CHECK[Review interne de la réponse]
-    R1_CHECK --> R1_PRESENT[Présenter à l'admin]
-    R1_PRESENT --> CONFIRM1{Confirmation ?}
-    CONFIRM1 -->|oui| SEND1[Envoyer le message]
-
-    ORIGINE -->|dev, technique| R2
-
-    R2[R2. Validation technique — branche, commit, cohérence]
-    R2 --> R2_PRESENT[Présenter le rapport à l'admin]
-    R2_PRESENT --> R2_MSG[Rédiger le message utilisateur]
-    R2_MSG --> CONFIRM2{Confirmation ?}
-    CONFIRM2 -->|oui| SEND2[Envoyer le message]
-
-    SEND1 --> CLOTURE
-    SEND2 --> CLOTURE
-
-    CLOTURE[R3. Clôture — récapitulatif et statut]
-    CLOTURE -.->|autre ticket| SUPPORT["/kp-recettemoi-support"]
-
-    style R1 fill:#fce4ec,stroke:#E91E63
-    style R1_CHECK fill:#fce4ec,stroke:#E91E63
-    style R1_PRESENT fill:#fce4ec,stroke:#E91E63
-    style R2 fill:#fce4ec,stroke:#E91E63
-    style R2_PRESENT fill:#fce4ec,stroke:#E91E63
-    style R2_MSG fill:#fce4ec,stroke:#E91E63
-    style CLOTURE fill:#fce4ec,stroke:#E91E63
-    style SUPPORT fill:#fff3e0,stroke:#FF9800
-```
-
-**Chemin obligatoire** : selon l'origine, R1 (fonctionnel) ou R2 (technique) --> clôture
-**Chemin facultatif** : retour vers support pour un autre ticket
-
----
-
 ## Légende des schémas
 
 | Élément | Signification |
@@ -580,7 +417,6 @@ flowchart TD
 | Trait plein (`-->`) | Chemin **obligatoire** |
 | Trait pointillé (`-.->`) | Chemin **facultatif** |
 | Fond bleu clair | Étape interne de l'agent |
-| Fond rose clair | Étape interne (agents RecetteMoi) |
 | Fond vert | Sortie obligatoire / destination principale |
 | Fond orange | Sortie facultative / relais conditionnel |
 | Fond rouge clair | Point bloquant |

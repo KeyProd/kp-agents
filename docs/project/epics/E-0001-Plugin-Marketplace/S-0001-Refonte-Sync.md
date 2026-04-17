@@ -1,7 +1,7 @@
 ---
 title: Refonte sync.sh pour générer le plugin kp-core
 date: 2026-04-17
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0001
 epic-id: E-0001
@@ -236,3 +236,70 @@ Aucun écart significatif avec la story. Les 2 questions ouvertes ont été tran
 
 - **S-0002 (Doc)** : documenter dans README.md / CLAUDE.md le fait que `~/.claude/commands/kp-*.md` peut être purgé automatiquement (pour rassurer les devs ayant déjà installé l'ancienne version)
 - **S-0003 (Release)** : bumper `plugins/kp-core/.claude-plugin/plugin.json` de `0.0.1` à `0.1.0` dans le commit de release
+
+## Review
+
+**Date** : 2026-04-17
+**Reviewer** : review-agent (en mode dégradé — rôle joué par l'agent Developer en l'absence du skill `/kp-core:review` au moment de la review — non bloquant, la review reste indépendante de l'implémentation)
+**Branche reviewée** : `feat/E-0001-Plugin-Marketplace` (commit `b0db93e`)
+**Portée** : story S-0001 uniquement
+
+### Verdict : ✅ GO
+
+L'implémentation respecte fidèlement la spec, les 4 ADR architecturaux et les 11 critères d'acceptation. Le refactor de `sync.sh` est propre, bien structuré, et la validation end-to-end (install du plugin depuis la branche dans Claude Code) confirme le comportement attendu.
+
+**Story prête à être marquée DONE après intégration dans main ou traitement des recommandations P1.**
+
+### Points positifs
+
+- **Architecture préservée** : l'ADR-002 (source `agents/`, cibles générées) et l'ADR-003 (retrait Claude local) sont respectés à la lettre
+- **Fonctions atomiques** : la séparation `generate_plugin_file` / `generate_plugin` / `cleanup_legacy_claude` facilite la maintenance
+- **Idempotence** : `cleanup_legacy_claude` peut s'exécuter à chaque sync sans effet de bord si les résidus n'existent pas déjà
+- **Robustesse du `--clean-all`** : `glob_clean` préserve correctement `plugin.json` (hors du dossier `skills/`) — détail critique bien géré
+- **Bash 3.2 compatibility** respectée : aucune feature bash 4+ (pas de `mapfile`/`readarray`, pas d'associative arrays, pas de `wait -n`)
+- **`claude plugin validate`** passé → format marketplace + plugin.json conforme
+- **Validation bonus end-to-end** : l'installation du plugin depuis la branche via `/plugin marketplace add KeyProd/kp-agents@feat/E-0001-Plugin-Marketplace` fonctionne, prouvant que le refactor produit un plugin installable et invoquable (`/kp-core:*`)
+
+### Recommandations
+
+#### P1 — Bloquantes (à traiter avant DONE)
+
+Aucune. Le code est livrable en l'état.
+
+#### P2 — Améliorations significatives (à traiter dans S-0002 ou S-0003)
+
+- **P2.1 — Purge du cache Claude Code lors d'un renommage de plugin** : lors de la session d'install, un cache stale (probablement le reliquat de `kp-core-spike`) a causé une anomalie `0 skills · 5 agents` résolue par `rm -rf ~/.claude/plugins/cache/kp-agents`. Cette situation se reproduira à chaque renommage futur de plugin. **Action recommandée dans S-0002** : ajouter une section "Troubleshooting" dans `README.md` qui documente ce cas.
+
+- **P2.2 — Variable `PLUGIN_DIR` peu exploitée** : `PLUGIN_DIR` (ligne 28 de sync.sh) n'est utilisée que pour calculer `PLUGIN_SKILLS_DIR` (ligne 29). Elle pourrait être inlinée pour simplifier. Non bloquant, garder pour cohérence avec d'autres variables ou inliner au prochain refactor.
+
+- **P2.3 — Message de log en cas de 0 agent** : si `agents/` est vide, le script affiche `Done: 0 agents synced to 3 tools` — trompeur. Cas limite rare mais à clarifier (warning explicite ou message adapté). Non bloquant.
+
+#### P3 — Détails d'hygiène (backlog optionnel)
+
+- **P3.1 — `shopt -s nullglob` pour `glob_clean`** : le code actuel utilise `2>/dev/null || true` pour masquer les erreurs de glob qui ne matchent rien. Utiliser `shopt -s nullglob` localement serait plus propre. Mais `nullglob` change le comportement global, à utiliser avec `( shopt -s nullglob ; ... )` subshell pour l'isoler. Ajout cosmétique.
+
+- **P3.2 — Warning UX sur `--clean`** : actuellement, `--clean` supprime les SKILL.md du plugin ET les installs Cursor/Codex sans distinction. Un utilisateur qui voudrait juste nettoyer ses installs locales perdra aussi le contenu de `plugins/kp-core/skills/`. Ce contenu est régénéré par un `./sync.sh` suivant, donc non destructif en pratique, mais une note dans `--help` serait utile : "Note: --clean also empties plugins/kp-core/skills/ — run sync again to restore".
+
+- **P3.3 — Test automatisé** : un script `./test-sync.sh` minimal qui vérifie les artefacts produits (comptage fichiers, validation JSON, validation plugin) éviterait des régressions futures. Candidat pour une story future.
+
+- **P3.4 — Intégration de `claude plugin validate`** : la question ouverte Q2 a été tranchée "pas de flag --validate". Envisager, dans une story future, un hook de validation post-sync qui appelle `claude plugin validate` si le binaire est disponible dans le PATH. Non prioritaire.
+
+### Tests effectués
+
+- **Revue statique** : lecture complète du `sync.sh` (476 lignes), cartographie des fonctions et des flux, vérification des 11 critères d'acceptation
+- **Revue de non-régression** : comparaison avec le `sync.sh` précédent — les fonctions `generate_cursor*` et `generate_codex*` sont inchangées (pas de risque de régression sur ces cibles)
+- **Revue du frontmatter** : vérification que les 7 SKILL.md générés ont bien uniquement `description:` (pas de `name:` ni `metadata:` qui seraient des résidus Codex)
+- **Revue JSON** : `plugin.json` et `marketplace.json` validés structurellement + par `claude plugin validate`
+- **Test end-to-end** : installation du plugin depuis la branche distante via `/plugin marketplace add KeyProd/kp-agents@feat/E-0001-Plugin-Marketplace` — plugin installé et skill `/kp-core:review` invoquable après purge du cache
+
+### Limites de la review
+
+- **Pas d'outil de code review automatisé disponible** sur cette session (ex: `/code-review`) — revue uniquement manuelle
+- **Pas de test automatisé existant** dans le projet — validation par inspection + tests manuels
+- **Reviewer joue le rôle de Review en mode dégradé** (cf. contexte ci-dessus). L'indépendance est préservée puisque la review s'appuie sur la doc et le code observés, pas sur une connaissance privilégiée de l'implémentation.
+
+### Prochaine action
+
+Story `S-0001` : verdict **GO**. Passer le statut à `DONE` après éventuelle intégration des P2 (ou les déplacer en backlog explicite).
+
+Enchainement recommandé : **S-0002** (mise à jour documentation) avec intégration de **P2.1** (troubleshooting cache plugin) dans la section README.

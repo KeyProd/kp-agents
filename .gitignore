@@ -1,0 +1,8 @@
+# Generated artifacts (rebuild with ./sync.sh)
+dist/
+
+# Sync state (tracks previously installed agents)
+.installed-agents
+
+# Claude Code local config
+.claude/

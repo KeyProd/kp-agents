@@ -3,7 +3,14 @@ set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────
 # sync.sh - Synchronize agents from canonical source to
-#           Claude Code, Cursor, and Codex
+#           Claude Code plugin (kp-core), Cursor, and Codex
+#
+# The Claude Code plugin is generated into ./plugins/kp-core/
+# and committed to git. Users install it via:
+#   /plugin marketplace add KeyProd/kp-agents
+#   /plugin install kp-core@kp-agents
+#
+# Cursor and Codex keep the local install model via this script.
 # ─────────────────────────────────────────────────────────────
 
 AGENTS_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -12,18 +19,21 @@ INCLUDES_DIR="$AGENTS_DIR/includes"
 DIST_DIR="$AGENTS_DIR/dist"
 
 # Target directories
-CLAUDE_DIR="$HOME/.claude/commands"
 CURSOR_DIR="$HOME/.cursor/rules"
 CODEX_DIR="$HOME/.codex/skills"
-DIST_CLAUDE_DIR="$DIST_DIR/claude"
 DIST_CURSOR_DIR="$DIST_DIR/cursor"
 DIST_CODEX_DIR="$DIST_DIR/codex"
+
+# Claude plugin target (committed to git, not installed locally)
+PLUGIN_DIR="$AGENTS_DIR/plugins/kp-core"
+PLUGIN_SKILLS_DIR="$PLUGIN_DIR/skills"
+
 MANIFEST_FILE="$AGENTS_DIR/.installed-agents"
 INSTALL_TARGETS=true
 CLEAN_ONLY=false
 CLEAN_ALL=false
 
-PREFIX="kp"  # Prefix for generated commands (kp-brainstorm, kp-product...)
+PREFIX="kp"  # Prefix for Cursor/Codex artefacts (kp-brainstorm, kp-product...)
 
 # Colors
 GREEN='\033[0;32m'
@@ -61,10 +71,21 @@ parse_args() {
                 cat <<'HELP_EOF'
 Usage: ./sync.sh [--dist-only] [--clean | --clean-all]
 
+Generates the Claude Code plugin (plugins/kp-core/) from agents/*.md,
+and installs Cursor rules + Codex skills locally.
+
 Options:
-  --dist-only   Generate artefacts only in ./dist without installing to ~/.claude, ~/.cursor, ~/.codex
-  --clean       Remove previously installed agents (based on manifest) and exit without syncing
-  --clean-all   Remove ALL kp-* skills via glob (ignores manifest), then exit without syncing
+  --dist-only   Generate artefacts only in ./plugins and ./dist without
+                installing to ~/.cursor and ~/.codex
+  --clean       Remove previously installed Cursor/Codex agents (based on manifest)
+                and strip their skill folders from plugins/kp-core/, then exit
+  --clean-all   Remove ALL kp-* Cursor/Codex artefacts via glob (ignores manifest)
+                and clear plugins/kp-core/skills/, then exit
+
+Notes:
+  - The Claude plugin in plugins/kp-core/ is versioned in git and distributed
+    via the marketplace (.claude-plugin/marketplace.json). This script does NOT
+    install anything to ~/.claude/commands/.
 HELP_EOF
                 exit 0
                 ;;
@@ -165,30 +186,30 @@ resolve_includes() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Generate for Claude Code (~/.claude/commands/)
-# Format: .md with YAML frontmatter (description)
+# Generate Claude Code plugin skill (plugins/kp-core/skills/<name>/SKILL.md)
+# Format: minimal YAML frontmatter (description only) + body
+# Committed to git, distributed via plugin marketplace.
 # ─────────────────────────────────────────────────────────────
-generate_claude_file() {
+generate_plugin_file() {
     local outfile="$1" desc="$2" body="$3"
 
-    cat > "$outfile" <<CLAUDE_EOF
+    cat > "$outfile" <<PLUGIN_EOF
 ---
 description: $(yaml_quote "$desc")
 ---
+
 ${body}
-CLAUDE_EOF
+PLUGIN_EOF
 }
 
-generate_claude() {
+generate_plugin() {
     local name="$1" desc="$2" body="$3"
-    local dist_outfile="$DIST_CLAUDE_DIR/${PREFIX}-${name}.md"
-    local install_outfile="$CLAUDE_DIR/${PREFIX}-${name}.md"
+    local skill_dir="$PLUGIN_SKILLS_DIR/${name}"
+    local outfile="$skill_dir/SKILL.md"
 
-    generate_claude_file "$dist_outfile" "$desc" "$body"
-    if $INSTALL_TARGETS; then
-        cp "$dist_outfile" "$install_outfile"
-    fi
-    ok "Claude  → /$(basename "$install_outfile" .md)"
+    mkdir -p "$skill_dir"
+    generate_plugin_file "$outfile" "$desc" "$body"
+    ok "Plugin  → plugins/kp-core/skills/${name}/SKILL.md"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -275,15 +296,49 @@ generate_codex() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Remove a single agent's artefacts (dist + install targets)
+# One-shot cleanup of legacy Claude local install
+# Removes dist/claude/ and ~/.claude/commands/kp-*.md from previous versions
+# of sync.sh. Claude is now distributed via the plugin marketplace.
+# ─────────────────────────────────────────────────────────────
+cleanup_legacy_claude() {
+    local changed=false
+
+    if [[ -d "$DIST_DIR/claude" ]]; then
+        rm -rf "$DIST_DIR/claude"
+        log "Removed legacy dist/claude/ (Claude now distributed via plugin marketplace)"
+        changed=true
+    fi
+
+    if $INSTALL_TARGETS; then
+        local legacy_claude="$HOME/.claude/commands"
+        if [[ -d "$legacy_claude" ]]; then
+            local found
+            found=$(find "$legacy_claude" -maxdepth 1 -name "${PREFIX}-*.md" 2>/dev/null | head -1)
+            if [[ -n "$found" ]]; then
+                rm -f "$legacy_claude"/${PREFIX}-*.md 2>/dev/null || true
+                log "Removed legacy ${PREFIX}-*.md from ~/.claude/commands/ (use plugin marketplace instead)"
+                changed=true
+            fi
+        fi
+    fi
+
+    if $changed; then
+        echo ""
+    fi
+}
+
+# ─────────────────────────────────────────────────────────────
+# Remove a single agent's artefacts (plugin skill + Cursor/Codex dist and installs)
 # ─────────────────────────────────────────────────────────────
 remove_agent() {
     local name="$1"
-    rm -f "$DIST_CLAUDE_DIR/${PREFIX}-${name}.md"
+    # Plugin skill (committed to git, removed here because the agent no longer exists)
+    rm -rf "$PLUGIN_SKILLS_DIR/${name}"
+    # Cursor dist + install
     rm -f "$DIST_CURSOR_DIR/${PREFIX}-${name}.mdc"
+    # Codex dist + install
     rm -rf "$DIST_CODEX_DIR/${PREFIX}-${name}"
     if $INSTALL_TARGETS; then
-        rm -f "$CLAUDE_DIR/${PREFIX}-${name}.md"
         rm -f "$CURSOR_DIR/${PREFIX}-${name}.mdc"
         rm -rf "$CODEX_DIR/${PREFIX}-${name}"
     fi
@@ -294,11 +349,12 @@ remove_agent() {
 # Falls back to kp-* glob if manifest is missing.
 # ─────────────────────────────────────────────────────────────
 glob_clean() {
-    rm -f "$DIST_CLAUDE_DIR"/${PREFIX}-*.md 2>/dev/null || true
+    # Plugin skills (but NOT .claude-plugin/plugin.json which is static)
+    rm -rf "$PLUGIN_SKILLS_DIR"/*/ 2>/dev/null || true
+    # Cursor & Codex dist
     rm -f "$DIST_CURSOR_DIR"/${PREFIX}-*.mdc 2>/dev/null || true
     rm -rf "$DIST_CODEX_DIR"/${PREFIX}-*/ 2>/dev/null || true
     if $INSTALL_TARGETS; then
-        rm -f "$CLAUDE_DIR"/${PREFIX}-*.md 2>/dev/null || true
         rm -f "$CURSOR_DIR"/${PREFIX}-*.mdc 2>/dev/null || true
         rm -rf "$CODEX_DIR"/${PREFIX}-*/ 2>/dev/null || true
     fi
@@ -306,9 +362,9 @@ glob_clean() {
 
 clean() {
     if $CLEAN_ALL; then
-        log "Force cleaning ALL ${PREFIX}-* skills via glob..."
+        log "Force cleaning ALL ${PREFIX}-* artefacts via glob..."
         glob_clean
-        ok "All ${PREFIX}-* skills removed"
+        ok "All ${PREFIX}-* artefacts removed (plugin skills + Cursor + Codex)"
         return
     fi
 
@@ -341,10 +397,13 @@ main() {
     echo -e "${BLUE}━━━ kp-agents sync ━━━${NC}"
     echo ""
 
+    # One-shot legacy cleanup (runs on every invocation, idempotent)
+    cleanup_legacy_claude
+
     # Ensure target dirs exist
-    mkdir -p "$DIST_CLAUDE_DIR" "$DIST_CURSOR_DIR" "$DIST_CODEX_DIR"
+    mkdir -p "$DIST_CURSOR_DIR" "$DIST_CODEX_DIR" "$PLUGIN_SKILLS_DIR"
     if $INSTALL_TARGETS; then
-        mkdir -p "$CLAUDE_DIR" "$CURSOR_DIR" "$CODEX_DIR"
+        mkdir -p "$CURSOR_DIR" "$CODEX_DIR"
     fi
 
     # Clean previously installed agents (from manifest)
@@ -379,7 +438,7 @@ main() {
         body=$(resolve_includes "$body")
 
         # Generate for each tool
-        generate_claude "$AGENT_NAME" "$AGENT_DESC" "$body"
+        generate_plugin "$AGENT_NAME" "$AGENT_DESC" "$body"
         generate_cursor "$AGENT_NAME" "$AGENT_DESC" "$body"
         generate_codex  "$AGENT_NAME" "$AGENT_DESC" "$body" "$AGENT_SHORT_DESC" "$AGENT_DEFAULT_PROMPT"
 
@@ -395,13 +454,16 @@ main() {
         rm -f "$MANIFEST_FILE"
     fi
 
-    echo -e "${GREEN}━━━ Done: ${count} agents synced to 3 tools ━━━${NC}"
+    echo -e "${GREEN}━━━ Done: ${count} agents synced to 3 tools (plugin + cursor + codex) ━━━${NC}"
     echo ""
     echo "Usage:"
-    echo "  Claude Code : /kp-brainstorm, /kp-product, /kp-architect, /kp-developer"
+    echo "  Claude Code : install plugin via '/plugin marketplace add KeyProd/kp-agents'"
+    echo "                + '/plugin install kp-core@kp-agents', then invoke with"
+    echo "                '/kp-core:brainstorm', '/kp-core:product', '/kp-core:developer', ..."
     echo "  Cursor      : @kp-brainstorm (via rules picker)"
     echo "  Codex       : skills auto-détectées (kp-brainstorm, kp-product...)"
-    echo "  Dist        : artefacts générés dans ./dist/{claude,cursor,codex}"
+    echo "  Plugin      : artefacts générés dans ./plugins/kp-core/skills/ (commit + push pour distribuer)"
+    echo "  Dist        : artefacts générés dans ./dist/{cursor,codex}"
     if ! $INSTALL_TARGETS; then
         echo "  Install     : désactivée (--dist-only)"
     fi

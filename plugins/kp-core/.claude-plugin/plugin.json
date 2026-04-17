@@ -1,0 +1,11 @@
+{
+  "name": "kp-core",
+  "description": "KeyProd generic agents for the development workflow: brainstorm, product, architect, developer, review, documentation, ux-ui",
+  "version": "0.0.1",
+  "author": {
+    "name": "KeyProd",
+    "email": "contact@keyprod.com"
+  },
+  "homepage": "https://github.com/KeyProd/kp-agents",
+  "repository": "https://github.com/KeyProd/kp-agents"
+}

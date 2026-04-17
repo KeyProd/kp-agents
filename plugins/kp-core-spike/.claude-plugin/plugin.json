@@ -1,9 +1,0 @@
-{
-  "name": "kp-core-spike",
-  "description": "KeyProd spike plugin — Brainstorm agent for feasibility validation",
-  "version": "0.0.1",
-  "author": {
-    "name": "KeyProd",
-    "email": "contact@keyprod.com"
-  }
-}

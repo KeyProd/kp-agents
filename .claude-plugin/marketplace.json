@@ -5,13 +5,12 @@
     "email": "contact@keyprod.com"
   },
   "metadata": {
-    "description": "Spike de faisabilité — marketplace kp-agents pour Claude Code (à ne pas utiliser en production tant que non validé)",
-    "pluginRoot": "./plugins"
+    "description": "Spike de faisabilité — marketplace kp-agents pour Claude Code (à ne pas utiliser en production tant que non validé)"
   },
   "plugins": [
     {
       "name": "kp-core-spike",
-      "source": "kp-core-spike",
+      "source": "./plugins/kp-core-spike",
       "description": "Plugin spike de faisabilité — un seul agent (brainstorm) pour valider le pipeline marketplace end-to-end",
       "version": "0.0.1",
       "author": {

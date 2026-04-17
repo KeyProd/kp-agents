@@ -15,11 +15,10 @@ kp-agents est un système de distribution multi-cibles d'agents IA. Une source u
 - **Cursor** : règles `.mdc` installées dans `~/.cursor/rules/`
 - **Codex** : skills `SKILL.md` installées dans `~/.codex/skills/`
 
-La marketplace Claude expose **deux plugins distincts** :
+La marketplace Claude expose **un plugin** :
 - `kp-core` — 7 agents génériques (brainstorm, product, architect, developer, review, documentation, ux-ui)
-- `kp-recettemoi` — 3 agents RecetteMoi (support, dev, review)
 
-L'indépendance des deux plugins permet à un consommateur externe d'installer uniquement `kp-core` sans récupérer les agents métier internes.
+L'architecture marketplace permet d'ajouter d'autres plugins à l'avenir (ex: `kp-projet-X` pour des agents métier spécifiques) sans refonte structurante. Les agents RecetteMoi initialement prévus comme second plugin ont été retirés du périmètre (décision 2026-04-17).
 
 ## Objectifs et contraintes
 
@@ -50,29 +49,22 @@ kp-agents/
 ├── .claude-plugin/
 │   └── marketplace.json                    # catalogue : référence les 2 plugins
 ├── plugins/                                # GÉNÉRÉ par sync.sh, COMMITÉ
-│   ├── kp-core/
-│   │   ├── .claude-plugin/
-│   │   │   └── plugin.json                 # name: kp-core, version, description
-│   │   └── skills/
-│   │       ├── brainstorm/
-│   │       │   └── SKILL.md                # includes résolus, markdown final
-│   │       ├── product/SKILL.md
-│   │       ├── architect/SKILL.md
-│   │       ├── developer/SKILL.md
-│   │       ├── review/SKILL.md
-│   │       ├── documentation/SKILL.md
-│   │       └── ux-ui/SKILL.md
-│   └── kp-recettemoi/
+│   └── kp-core/
 │       ├── .claude-plugin/
-│       │   └── plugin.json                 # name: kp-recettemoi, version, description
+│       │   └── plugin.json                 # name: kp-core, version, description
 │       └── skills/
-│           ├── support/SKILL.md
-│           ├── dev/SKILL.md
-│           └── review/SKILL.md
+│           ├── brainstorm/
+│           │   └── SKILL.md                # includes résolus, markdown final
+│           ├── product/SKILL.md
+│           ├── architect/SKILL.md
+│           ├── developer/SKILL.md
+│           ├── review/SKILL.md
+│           ├── documentation/SKILL.md
+│           └── ux-ui/SKILL.md
 ├── agents/                                 # SOURCE de vérité (inchangé)
 │   ├── brainstorm.md
 │   ├── product.md
-│   └── ... (10 fichiers)
+│   └── ... (7 fichiers)
 ├── includes/                               # templates partagés (inchangé)
 │   ├── guardrails.md
 │   ├── handoff.md
@@ -95,7 +87,7 @@ flowchart LR
     SYNC["sync.sh"]
     SRC --> SYNC
 
-    SYNC --> PLUGINS["plugins/kp-core/<br/>plugins/kp-recettemoi/"]
+    SYNC --> PLUGINS["plugins/kp-core/"]
     SYNC --> CURSOR["dist/cursor/"]
     SYNC --> CODEX["dist/codex/"]
 
@@ -125,7 +117,7 @@ Légende :
 - **Responsabilité** : définir un agent (prompt, rôle, règles) dans un format enrichi propre au projet
 - **Format** : frontmatter YAML (`name`, `description`, `short_description`, `default_prompt`) + corps markdown avec directives `{{include:nom}}`
 - **Source de vérité** : ce dossier est la seule source modifiée à la main
-- **Fichiers** : 10 agents (7 dans scope `kp-core`, 3 dans scope `kp-recettemoi`)
+- **Fichiers** : 7 agents dans scope `kp-core`
 
 ### `includes/*.md` — Templates partagés
 
@@ -142,13 +134,13 @@ Légende :
 
 ### `plugins/` — Artefacts plugin Claude
 
-- **Responsabilité** : contenir les deux plugins au format Claude Code natif, prêts à être installés
+- **Responsabilité** : contenir le plugin `kp-core` au format Claude Code natif, prêt à être installé
 - **Statut git** : **commité** (contrairement à `dist/`). Les consommateurs reçoivent ce dossier via git clone
 - **Cohérence** : doit être à jour par rapport à `agents/` à chaque commit → garde-fou à mettre en place (pre-commit ou CI)
 
 ### `.claude-plugin/marketplace.json` — Catalogue
 
-- **Responsabilité** : déclarer les deux plugins disponibles et leurs emplacements relatifs
+- **Responsabilité** : déclarer le plugin `kp-core` et son emplacement relatif (structure prête à accueillir d'autres plugins à l'avenir)
 - **Statut git** : commité, statique (ne change que si on ajoute/retire un plugin)
 
 ### `dist/` — Artefacts Cursor + Codex
@@ -179,25 +171,24 @@ default_prompt: "..."               # prompt suggéré (Codex)
     "email": "<à définir>"
   },
   "metadata": {
-    "description": "Agents IA KeyProd pour Claude Code",
-    "pluginRoot": "./plugins"
+    "description": "Agents IA KeyProd pour Claude Code"
   },
   "plugins": [
     {
       "name": "kp-core",
-      "source": "kp-core",
-      "description": "Agents génériques : brainstorm, product, architect, developer, review, documentation, ux-ui"
-    },
-    {
-      "name": "kp-recettemoi",
-      "source": "kp-recettemoi",
-      "description": "Agents RecetteMoi : support, dev, review"
+      "source": "./plugins/kp-core",
+      "description": "Agents génériques : brainstorm, product, architect, developer, review, documentation, ux-ui",
+      "version": "0.1.0",
+      "author": {
+        "name": "KeyProd",
+        "email": "contact@keyprod.com"
+      }
     }
   ]
 }
 ```
 
-`pluginRoot` permet d'écrire des sources courtes (`"kp-core"` au lieu de `"./plugins/kp-core"`).
+**Note sur `pluginRoot`** : l'option `metadata.pluginRoot` existe mais ne fonctionne pas comme attendu sur la version Claude Code testée (2026-04-17) — le validateur refuse les sources courtes même avec `pluginRoot` défini. On utilise donc systématiquement le chemin complet `./plugins/<nom>`.
 
 ### Contrat `plugins/<plugin>/.claude-plugin/plugin.json`
 
@@ -228,19 +219,19 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
 
 ## Décisions techniques
 
-### ADR-001 — Marketplace avec 2 plugins distincts (vs plugin monolithique)
+### ADR-001 — Marketplace multi-plugins (1 plugin initial, architecture extensible)
 
-- **Statut** : accepted
-- **Contexte** : le projet expose 10 agents répartis en 2 domaines fonctionnels (7 génériques + 3 RecetteMoi). Les consommateurs externes à KeyProd n'ont besoin que des génériques.
-- **Décision** : la marketplace `kp-agents` contient 2 plugins indépendants : `kp-core` (7 skills) et `kp-recettemoi` (3 skills). Un utilisateur peut installer l'un sans l'autre.
+- **Statut** : accepted (révisé 2026-04-17)
+- **Contexte** : le projet expose 7 agents génériques. L'architecture initiale prévoyait un second plugin `kp-recettemoi`, finalement retiré du périmètre. La structure marketplace reste cependant utile pour une extensibilité future (ex: plugins clients, agents métier spécifiques).
+- **Décision** : la marketplace `kp-agents` contient **1 plugin** `kp-core` (7 skills). La structure marketplace + `plugins/<nom>/` permet d'en ajouter d'autres sans refonte.
 - **Conséquences** :
-  - ✅ Extensibilité : ajouter un futur plugin (ex: `kp-clients-projetX`) devient trivial
-  - ✅ Séparation de périmètres : les externes installent `kp-core` uniquement
-  - ✅ Namespaces distincts : pas de conflit possible entre les deux plugins
-  - ⚠️ Versioning à gérer séparément pour chaque plugin
+  - ✅ Extensibilité native : ajouter un futur plugin se résume à créer `plugins/<nom>/` + ligne dans `marketplace.json`
+  - ✅ Namespaces distincts possibles si plusieurs plugins coexistent
+  - ✅ Structure plus simple qu'un split contraint (moins de fichiers à maintenir pour le périmètre actuel)
+  - ⚠️ Reste à définir une convention de nommage pour les futurs plugins
 - **Alternatives rejetées** :
-  - **Plugin monolithique `kp-agents`** : oblige les externes à prendre les agents RecetteMoi qui n'ont aucun sens pour eux, couple les releases
-  - **Branches git séparées** (une par plugin) : complexité supérieure (2 refs à maintenir), rend l'architecture multi-plugins manifeste impossible, duplique les agents communs
+  - **Plugin unique sans marketplace** : enlève l'extensibilité future, oblige à refactorer si on ajoute un plugin
+  - **Split en 2 plugins dès aujourd'hui (kp-core + kp-recettemoi)** : rejeté suite au retrait des agents RecetteMoi du périmètre
 
 ### ADR-002 — `agents/` reste source, `plugins/` est généré et commité
 
@@ -271,7 +262,7 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
 
 - **Statut** : accepted
 - **Contexte** : Claude Code détecte les mises à jour d'un plugin via le champ `version` de `plugin.json`. Sans bump, un nouveau commit ne déclenchera pas d'update chez les clients.
-- **Décision** : adopter **semver manuel** au départ. Chaque plugin a sa propre version dans son `plugin.json`. Le dev bump à la main (patch par défaut, mineur si ajout d'agent, majeur si rupture comportementale). Un tag git correspondant est poussé (`kp-core-v0.2.0`, `kp-recettemoi-v0.1.0`). Évolution possible vers auto-bump basé sur hash du skill.
+- **Décision** : adopter **semver manuel** au départ. Le plugin `kp-core` a sa version dans son `plugin.json`. Le dev bump à la main (patch par défaut, mineur si ajout d'agent, majeur si rupture comportementale). Un tag git correspondant est poussé (`kp-core-v0.2.0`). Évolution possible vers auto-bump basé sur hash du skill.
 - **Conséquences** :
   - ✅ Simplicité : pas d'outillage à mettre en place
   - ✅ Contrôle humain sur les ruptures communiquées

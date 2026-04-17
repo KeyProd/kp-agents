@@ -77,17 +77,16 @@ Starbursting (inconnues cartographiées) → Exploration divergente (approches) 
 
 ## Approches envisagées
 
-### Approche retenue : B — Refonte native, avec split en 2 plugins
+### Approche retenue : B — Refonte native, 1 plugin `kp-core`
 
-- **Hébergement** : GitLab KeyProd, visibilité publique (repo accessible sans authentification via HTTPS)
+- **Hébergement** : GitHub `KeyProd/kp-agents` (privé pour l'instant, public à terme possible). GitLab `keyprod/tools/kp-agents` maintenu en miroir.
 - **Marketplace** : 1 catalogue exposé par `.claude-plugin/marketplace.json` à la racine
-- **Plugins** : 2 plugins **distincts et indépendants** pour maximiser l'extensibilité future
-  - `kp-core` → 7 agents génériques (brainstorm, product, architect, developer, review, documentation, ux-ui)
-  - `kp-recettemoi` → 3 agents RecetteMoi (support, dev, review)
-  - Un utilisateur externe peut installer uniquement `kp-core`
-  - Les deux plugins peuvent cohabiter sans conflit (namespaces distincts `kp-core:` vs `kp-recettemoi:`)
-- **Namespacing** : `/kp-brainstorm` → `/kp-core:brainstorm`, `/kp-recettemoi-support` → `/kp-recettemoi:support`
+- **Plugin** : 1 seul plugin `kp-core` contenant les 7 agents génériques (brainstorm, product, architect, developer, review, documentation, ux-ui)
+- **Extensibilité future** : l'architecture marketplace permet d'ajouter d'autres plugins (ex: `kp-projet-X`) sans refonte
+- **Namespacing** : `/kp-brainstorm` → `/kp-core:brainstorm`
 - **sync.sh** : ne gère plus que Cursor et Codex (plus d'install Claude)
+
+**Décision du 2026-04-17** : les agents RecetteMoi ont été retirés du repo. Le plugin `kp-recettemoi` prévu initialement n'est plus au périmètre.
 
 ### Structure cible du repo
 
@@ -129,17 +128,28 @@ kp-agents/
 
 ## Décision / Next steps
 
-### Étape 1 — Spike de faisabilité (1 skill, bout-en-bout)
+### Étape 1 — Spike de faisabilité ✅ GO (2026-04-17)
 
-**Objectif** : valider en conditions réelles que le flow marketplace Claude Code + GitLab public fonctionne, **avant** toute refonte structurante.
+**Résultat** : validé en conditions réelles. Les 4 hypothèses critiques sont confirmées :
+- ✅ HC-1 : flow marketplace end-to-end fonctionne (`/plugin marketplace add KeyProd/kp-agents` → `/plugin install kp-core-spike@kp-agents` → invocation OK)
+- ✅ HC-2 : hébergement GitHub privé accessible via token d'accès (alternative à GitLab public initialement prévu — GitHub retenu)
+- ✅ Le namespace `kp-core-spike:brainstorm` fonctionne comme attendu
+- ✅ Le skill se comporte bien : l'agent Brainstorm se présente correctement
 
-Livrables du spike :
-1. Créer la structure minimale à la racine : `.claude-plugin/marketplace.json` + `plugins/kp-core/.claude-plugin/plugin.json` + `plugins/kp-core/skills/brainstorm/SKILL.md` (contenu copié-collé du dist actuel)
-2. Pousser sur une branche GitLab KeyProd en visibilité publique
-3. Tester depuis un poste "vierge" : `/plugin marketplace add <url>` puis `/plugin install kp-core@kp-agents` puis `/kp-core:brainstorm`
-4. Vérifier que le skill répond correctement et que le namespace est bien `kp-core:`
+**Artéfacts produits** :
+- `.claude-plugin/marketplace.json` (validé par `claude plugin validate`)
+- `plugins/kp-core-spike/.claude-plugin/plugin.json`
+- `plugins/kp-core-spike/skills/brainstorm/SKILL.md`
+- Repo poussé sur GitHub (`KeyProd/kp-agents`) et GitLab (`keyprod/tools/kp-agents`)
+- Installation au niveau organisation GitHub réalisée
 
-**Résultat attendu** : GO (on enchaîne sur l'étape 2) ou NO-GO (retour brainstorm pour explorer une variante).
+**Corrections apportées pendant le spike** :
+- `source` doit être une path relative `./plugins/<name>` (pas le nom court même avec `pluginRoot`) — confirmé par `claude plugin validate`
+- `pluginRoot` retiré du marketplace.json (non fonctionnel comme espéré)
+
+**Dette à nettoyer avant refonte complète** :
+- Retirer le plugin `kp-core-spike` (remplacer par les vrais `kp-core` et `kp-recettemoi`)
+- Supprimer la description "Spike de faisabilité" du marketplace.json
 
 ### Étape 2 — Refonte structurante (si spike GO)
 

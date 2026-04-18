@@ -4,7 +4,7 @@ date: 2026-04-18
 status: TODO
 author: product-agent
 story-id: S-0005
-epic-id: E-0005
+epic-id: E-0003
 ---
 
 # S-0005 - Refonte de l'agent developer

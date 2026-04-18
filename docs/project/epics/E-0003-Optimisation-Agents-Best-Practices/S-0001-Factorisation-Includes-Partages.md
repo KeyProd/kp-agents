@@ -4,7 +4,7 @@ date: 2026-04-18
 status: TODO
 author: product-agent
 story-id: S-0001
-epic-id: E-0005
+epic-id: E-0003
 ---
 
 # S-0001 - Factorisation des blocs partagés via includes

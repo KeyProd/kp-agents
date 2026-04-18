@@ -4,7 +4,7 @@ date: 2026-04-18
 status: TODO
 author: product-agent
 story-id: S-0007
-epic-id: E-0005
+epic-id: E-0003
 ---
 
 # S-0007 - Mise en place de la structure d'évaluation
@@ -81,7 +81,7 @@ En tant que mainteneur du projet kp-agents, je veux disposer d'un dispositif d'�
 - Fichier modifié : `sync.sh` (ajout d'une règle d'exclusion si le glob actuel l'impose), `CLAUDE.md`.
 - Exemple de trigger query (pour documentation dans le README) :
   ```json
-  { "query": "implémente S-0003 de l'epic E-0005", "should_trigger": true }
+  { "query": "implémente S-0003 de l'epic E-0003", "should_trigger": true }
   { "query": "review ma PR #42", "should_trigger": false, "reason": "near-miss vers review-agent" }
   ```
 

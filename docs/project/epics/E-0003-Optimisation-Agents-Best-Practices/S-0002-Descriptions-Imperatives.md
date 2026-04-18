@@ -4,7 +4,7 @@ date: 2026-04-18
 status: TODO
 author: product-agent
 story-id: S-0002
-epic-id: E-0005
+epic-id: E-0003
 ---
 
 # S-0002 - Réécriture des descriptions en phrasing impératif
@@ -85,4 +85,4 @@ En tant qu'utilisateur de Claude Code avec le plugin kp-agents installé, je veu
 ## Questions ouvertes
 
 - Faut-il garder le préfixe "KeyProd" dans les descriptions ? Le préfixe est utile pour l'identité de la suite mais peut consommer des caractères sur la limite 1024. Proposition : le conserver dans `short_description` mais l'omettre dans `description` (lisible).
-- Variante francophone à prévoir ? Décision : si le projet cible exclusivement des users francophones, on peut écrire les descriptions en français. À trancher avec l'utilisateur avant d'implémenter.
+- ~~Variante francophone à prévoir ?~~ **Résolu 2026-04-18** : descriptions en anglais, conversation en langue utilisateur (via include `activation.md`).

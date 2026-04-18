@@ -4,7 +4,7 @@ date: 2026-04-18
 status: TODO
 author: product-agent
 story-id: S-0008
-epic-id: E-0005
+epic-id: E-0003
 ---
 
 # S-0008 - Release kp-agents-v0.2.0
@@ -19,7 +19,7 @@ En tant qu'utilisateur du plugin `kp-agents` déjà installé en v0.1.0, je veux
 
 ## Contexte
 
-- Clôt l'epic E-0005.
+- Clôt l'epic E-0003.
 - Précédent release : `kp-agents-v0.1.0` (E-0001 / S-0003, tag `kp-agents-v0.1.0`).
 - Convention de release : semver mineur pour changements de comportement agents non-breaking.
 
@@ -63,13 +63,13 @@ En tant qu'utilisateur du plugin `kp-agents` déjà installé en v0.1.0, je veux
 - [ ] `plugins/kp-agents/.claude-plugin/plugin.json` : version passée de `0.1.0` à `0.2.0`.
 - [ ] `CHANGELOG.md` contient une nouvelle entrée `## [0.2.0] - 2026-04-XX` décrivant les changements groupés par thème (Cohérence, Descriptions, Refactoring, Outillage) avec référence aux stories.
 - [ ] `./sync.sh` a été rejoué une dernière fois ; `git status` ne montre pas d'artefact oublié dans `plugins/`.
-- [ ] Commit de release créé avec message `feat(E-0005): release kp-agents-v0.2.0 (optimisation agents selon best practices)`.
+- [ ] Commit de release créé avec message `feat(E-0003): release kp-agents-v0.2.0 (optimisation agents selon best practices)`.
 - [ ] Tag git `kp-agents-v0.2.0` créé et pushé.
 - [ ] Validation end-to-end :
   - Exécuter `/plugin marketplace update` dans Claude Code.
   - Vérifier qu'une mise à jour est proposée pour `kp-agents`.
   - Installer la mise à jour et invoquer au moins 2 agents (`/kp-agents:brainstorm`, `/kp-agents:review`) pour confirmer qu'ils démarrent et affichent les nouvelles descriptions / sections Gotchas.
-- [ ] L'epic E-0005 est marquée `done` dans son `readme.md` et son répertoire est déplacé en `docs/project/epics/_archives/E-0005-Optimisation-Agents-Best-Practices/`.
+- [ ] L'epic E-0003 est marquée `done` dans son `readme.md` et son répertoire est déplacé en `docs/project/epics/_archives/E-0003-Optimisation-Agents-Best-Practices/`.
 - [ ] `docs/project/roadmap.md` reflète la clôture de l'epic.
 - [ ] `docs/INDEX.md` est mis à jour par l'agent documentation (relais à la fin).
 
@@ -84,7 +84,7 @@ En tant qu'utilisateur du plugin `kp-agents` déjà installé en v0.1.0, je veux
 - Commandes clés (à titre indicatif, adapter au flow git du mainteneur) :
   ```bash
   git add agents/ includes/ plugins/ CHANGELOG.md docs/
-  git commit -m "feat(E-0005): release kp-agents-v0.2.0"
+  git commit -m "feat(E-0003): release kp-agents-v0.2.0"
   git tag kp-agents-v0.2.0
   git push origin main --tags
   ```

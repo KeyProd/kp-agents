@@ -115,12 +115,12 @@ Après validation, passe en revue le code modifié pour détecter les opportunit
 
 **Comportement adaptatif (basé sur la mémoire) :**
 - Consulte la mémoire du projet pour vérifier si l'utilisateur a une préférence sur cette étape
-- Si la mémoire indique d'exécuter automatiquement : lance `/simplify` (Claude Code) ou l'outil équivalent de la plateforme courante
+- Si la mémoire indique d'exécuter automatiquement : lance l'outil de simplification natif de la plateforme courante (`/simplify` sur Claude Code ; équivalent Cursor ou Codex ; à défaut, passe manuelle)
 - Si la mémoire indique de sauter cette étape : passe directement au bilan
 - Si aucune préférence en mémoire : **propose à l'utilisateur** avant de lancer
 
 > **Simplification proposée :**
-> Je peux lancer `/simplify` (ou équivalent) pour vérifier le code implémenté (réutilisation, qualité, efficacité).
+> Je peux lancer l'outil de simplification de la plateforme (`/simplify` sur Claude Code ou équivalent) — ou, à défaut, faire une passe manuelle sur le code modifié selon les critères : **lisibilité**, **duplication**, **complexité cyclomatique**, **noms explicites**, **early return vs nested**.
 > Souhaites-tu que je le fasse ? Et dois-je le faire systématiquement à l'avenir ?
 
 Si l'utilisateur répond, **sauvegarde sa préférence en mémoire** pour les prochaines sessions.
@@ -129,28 +129,43 @@ Si l'utilisateur répond, **sauvegarde sa préférence en mémoire** pour les pr
 
 **Si des améliorations sont appliquées** : re-vérifie que les tests passent toujours avant de continuer.
 
-### 6. Bilan post-implémentation
-À la fin de chaque story (ou de l'epic en mode epic), fournis un bilan bref :
-- **Ce qui est testable** : liste courte des actions/scénarios que l'utilisateur peut vérifier immédiatement (ex: "lancer `npm test`", "appeler GET /api/x et vérifier la réponse")
-- **Recommandation** : indique UNE des trois options suivantes :
-  - **Review recommandée** : le code touche des zones sensibles, de la logique métier critique ou des patterns nouveaux — une relecture est souhaitable avant de continuer
-  - **Test poussé recommandé** : l'implémentation fonctionne mais certains edge cases ou intégrations méritent une validation manuelle approfondie
-  - **Passer à la suite** : l'implémentation est straightforward, bien couverte par les tests, on peut enchaîner
+### 6. Bilan et relais documentaire
+À la fin de chaque story (ou de l'epic en mode epic), fournis un bilan bref couvrant :
 
-Si des écarts avec la documentation ont été identifiés pendant l'implémentation (changements de spec, clarifications, ajustements d'architecture, décisions nouvelles), **suggère explicitement** de lancer `/kp-documentation` pour mettre à jour la documentation concernée. Liste les écarts détectés pour faciliter le travail de l'agent Documentation.
+1. **Ce qui est testable** : liste courte des actions/scénarios que l'utilisateur peut vérifier immédiatement (ex: « lancer `npm test` », « appeler `GET /api/x` et vérifier la réponse »).
+2. **Recommandation** : indique UNE des trois options suivantes :
+   - **Review recommandée** (→ `status: REVIEW`) : code touchant des zones sensibles, logique métier critique ou patterns nouveaux
+   - **Test poussé recommandé** (→ `status: REVIEW`) : implémentation fonctionnelle mais edge cases ou intégrations à valider manuellement
+   - **Passer à la suite** (→ `status: DONE`) : implémentation straightforward, bien couverte par les tests
+3. **Mise à jour du statut** de la story dans son frontmatter (cf. recommandation ci-dessus).
+4. **Écarts documentaires détectés** : si la spec, l'architecture ou le produit ont été clarifiés / ajustés pendant l'implémentation, **liste les écarts** (ex: « la story ne mentionnait pas le cache, ajouté après discussion » ; « `docs/architect.md` ADR-003 doit être marquée `deprecated` »).
+5. **Relais documentation** : si l'étape 4 a produit des écarts, recommande explicitement `/kp-agents:documentation` avec le bloc de handoff et la liste des écarts. Si aucun écart, skip.
+6. **Cas spécial `docs/features/<group>/architect.md`** : si l'implémentation a dévié du design initial sur une feature, mets à jour ce fichier toi-même (pas de relais documentation nécessaire pour une simple mise à jour localisée).
+7. **Mise à jour de l'epic** : si toutes ses stories sont terminées, mets son `status` à `done` dans `readme.md`.
 
-Mets à jour le statut de la story en conséquence :
-- Review recommandée → `status: REVIEW`
-- Test poussé recommandé → `status: REVIEW`
-- Passer à la suite → `status: DONE`
+#### Exemple de section `## Validation par critère`
 
-### 7. Mise à jour de la documentation
-Après l'implémentation :
-- Mets à jour `docs/features/<feature-group>/architect.md` si l'implémentation a dévié du design initial
-- Mets à jour l'epic si toutes ses stories sont terminées (`status: done`)
-- Documente tout écart significatif entre la spec et l'implémentation
-- Si une ambiguïté produit ou architecture a été résolue pendant le développement, propose la mise à jour documentaire adaptée
-- Si la mise à jour documentaire devient substantielle, transversale ou nécessite une analyse d'écart entre doc et code, recommande explicitement le relais vers l'agent Documentation
+**✅ Bien remplie** — chaque critère mappe explicitement à l'implémentation + preuve + limites :
+
+```markdown
+## Validation par critère
+
+- **Le token expire après 24h** : ✅ implémenté via `TokenService.expiresIn: 86400` dans `src/auth/token.ts:42`. Test unitaire `token.test.ts:15-28` vérifie expiration simulée. Limite : pas de test d'horloge système modifiée.
+- **L'email de confirmation part en < 30s** : ⚠️ implémenté via queue async (`src/email/queue.ts`), mais **non vérifié en charge** — seul le happy path local est testé. À valider en staging.
+- **Permissions admin respectées** : ✅ middleware `requireAdmin` dans `src/middleware/auth.ts:60`, testé via `auth.e2e.test.ts` (403 pour user non-admin).
+```
+
+**❌ Trop vague** — à éviter :
+
+```markdown
+## Validation par critère
+
+- Le token : OK
+- L'email : testé
+- Permissions : fonctionnent
+```
+
+La différence : dans le mauvais exemple, un reviewer ne peut pas vérifier ce qui a été fait, avec quelle preuve, ni où sont les limites. Dans le bon exemple, chaque critère est traçable.
 
 ## Gotchas
 
@@ -176,7 +191,6 @@ Après l'implémentation :
 - Ne considère pas une story comme terminée tant qu'il n'existe pas de correspondance claire entre critères d'acceptation, code et validation
 - Quand tu touches à la documentation, aligne-toi sur les templates de référence et évite de dégrader leur lisibilité
 {{include:dependency-versions}}
-- **Pas de worktree** : ne travaille JAMAIS dans un worktree git isolé. Si tu parallélises des tâches, fais-le sur la branche de travail courante. Les worktrees créent de la confusion et des conflits — tout le travail doit rester sur une seule branche.
 
 {{include:guardrails}}
 

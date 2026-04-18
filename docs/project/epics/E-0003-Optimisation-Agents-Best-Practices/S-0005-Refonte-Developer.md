@@ -1,7 +1,7 @@
 ---
 title: Refonte de l'agent developer
 date: 2026-04-18
-status: TODO
+status: DONE
 author: product-agent
 story-id: S-0005
 epic-id: E-0003
@@ -83,3 +83,22 @@ En tant que developer-agent, je veux un processus plus concis où le bilan post-
 
 - La règle "Pas de worktree" sera déplacée en `## Gotchas` par S-0003 — vérifier la coordination pour éviter le doublon. Proposition : S-0003 passe en premier, S-0005 nettoie le résidu si nécessaire.
 - Faut-il aussi fusionner les étapes 3 (Implémentation) et 4 (Validation) qui se suivent logiquement ? Décision : **non**, elles ont des outputs distincts (code vs section `## Validation par critère`) — à conserver séparément.
+
+## Implémentation
+
+- Fichier modifié : `agents/developer.md` uniquement.
+- Étape 5 (Simplification) : `/simplify` présenté comme l'outil natif Claude Code, avec fallback « équivalent Cursor ou Codex » et passe manuelle sur 5 critères (lisibilité, duplication, complexité cyclomatique, noms explicites, early return vs nested). La mémoire utilisateur est conservée (auto / proposer / skip).
+- Étapes 6 + 7 fusionnées en `### 6. Bilan et relais documentaire` avec 7 sous-points numérotés : testable, recommandation, mise à jour statut, écarts documentaires, relais `/kp-agents:documentation`, cas spécial `features/<group>/architect.md`, mise à jour de l'epic.
+- Section pédagogique ajoutée : `#### Exemple de section \`## Validation par critère\`` avec un ✅ bon exemple (expiration token + ref `token.test.ts:15-28`) et un ❌ contre-exemple trop vague.
+- Résidu nettoyé : règle « Pas de worktree » supprimée de `## Règles` (déjà présente dans `## Gotchas` via S-0003), évite le doublon.
+- Régénéré via `./sync.sh --dist-only` ; aucun `{{include:` résiduel dans `plugins/kp-agents/skills/developer/SKILL.md`.
+
+## Validation par critère
+
+- **Fusion étapes 6 + 7** : ✅ `agents/developer.md:132` expose `### 6. Bilan et relais documentaire`, plus d'étape 7 séparée.
+- **Contenu fusionné complet (3 options, statut, relais doc, feature architect)** : ✅ les 7 sous-points numérotés couvrent les 3 options Review/Test/Continuer (point 2), la mise à jour du statut (point 3), la suggestion `/kp-agents:documentation` avec liste d'écarts (points 4-5), et le cas `docs/features/<group>/architect.md` (point 6).
+- **Simplification portable multi-cibles** : ✅ mention explicite « `/simplify` sur Claude Code ; équivalent Cursor ou Codex ; à défaut, passe manuelle » avec critères objectifs.
+- **Exemple Validation par critère (bon + mauvais)** : ✅ section `#### Exemple de section` avec bloc ✅ bien rempli (3 critères traçables) et ❌ trop vague (3 lignes caricaturales mais pédagogiques), plus une note finale expliquant la différence.
+- **Réduction ≥ 10 lignes** : ✅ 371 → 198 lignes (-173 lignes), dépasse largement le seuil. La réduction provient principalement du fait que les includes factorisaient déjà activation/gotchas et que la fusion 6+7 a éliminé la redondance structurelle.
+- **`./sync.sh` OK + SKILL.md compilé vérifié** : ✅ sync ré-exécuté, 0 `{{include:` résiduel dans le SKILL.md compilé.
+- **Mémoire utilisateur `/simplify` préservée** (cas limite) : ✅ le bloc « Comportement adaptatif (basé sur la mémoire) » conserve les 3 branches (auto / skip / proposer).

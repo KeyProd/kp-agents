@@ -4,7 +4,7 @@ date: 2026-04-18
 status: TODO
 author: product-agent
 story-id: S-0002
-epic-id: E-0002
+epic-id: E-0005
 ---
 
 # S-0002 - Réécriture des descriptions en phrasing impératif

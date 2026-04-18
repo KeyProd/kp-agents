@@ -41,6 +41,7 @@ author: product-agent
 ### Epics actives
 
 - [E-0002 - Auto-bump de version du plugin kp-agents](epics/E-0002-Auto-Bump-Version/readme.md) — 🔄 ready, 3 stories TODO
+- [E-0005 - Optimisation des agents selon best practices](epics/E-0005-Optimisation-Agents-Best-Practices/readme.md) — 🔄 ready, 8 stories TODO (voir [`docs/agents-review.md`](../agents-review.md))
 
 ### Epics backlog (qualifié, non priorisé)
 

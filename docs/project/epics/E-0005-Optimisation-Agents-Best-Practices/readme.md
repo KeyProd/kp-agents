@@ -3,11 +3,11 @@ title: Optimisation des agents selon best practices
 date: 2026-04-18
 status: ready
 author: product-agent
-epic-id: E-0002
+epic-id: E-0005
 phase: 2
 ---
 
-# E-0002 - Optimisation des agents selon best practices
+# E-0005 - Optimisation des agents selon best practices
 
 ## Résumé
 

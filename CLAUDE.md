@@ -81,6 +81,7 @@ Les agents peuvent inclure des templates partagés avec la directive `{{include:
 - `architect-template` — Template pour docs/architect.md
 - `epic-template` — Template pour les epics
 - `story-template` — Template pour les stories
+- `index-template` — Template pour docs/INDEX.md (utilisé uniquement par documentation)
 
 ### Stratégie d'inclusion par agent
 - **product, developer, review** : `docs-structure` (complet — ces agents créent/modifient stories et epics)

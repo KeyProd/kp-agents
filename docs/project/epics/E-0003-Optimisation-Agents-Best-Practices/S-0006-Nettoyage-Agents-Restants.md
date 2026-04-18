@@ -1,7 +1,7 @@
 ---
 title: Nettoyage ciblé des agents restants
 date: 2026-04-18
-status: TODO
+status: DONE
 author: product-agent
 story-id: S-0006
 epic-id: E-0003
@@ -111,3 +111,48 @@ Regroupement de plusieurs recommandations isolées, faibles en surface mais haut
 
 - Le mini-template UX/Developer gagnerait-il à devenir un include `includes/ux-specs-template.md` ? Proposition : **non** dans un premier temps (utilisé par un seul agent), à reconsidérer si utilisé par plusieurs.
 - Pour brainstorm, le défaut "Starbursting" est-il le bon choix ? Proposition : laisser le developer trancher à l'implémentation (c'est un choix éditorial à valider avec l'utilisateur lors de la story).
+
+## Implémentation
+
+Lot groupé : 5 agents modifiés + 1 include créé + CLAUDE.md mis à jour.
+
+- **brainstorm** : « Choix de méthode » reformulé en défaut explicite (**Starbursting**) + 2 alternatives (**5 Whys**, **First Principles**) + mention des autres méthodes disponibles sur demande. Étape 2 : « 3 approches distinctes » → « au moins 3 approches, idéalement conventionnelle / créative / minimaliste ». Étape 4 : ajout d'un **STOP** final (proposer la suite et attendre).
+- **architect** : étapes 2 (« Exploration des options ») et section « Format recommandé » fusionnées en une checklist unique à 9 points (Contexte, Contraintes, Hypothèses, Options, Recommandation, Risques et mitigations, Migration, Validation, Impacts opérationnels). 4 règles génériques élaguées (« tout choix doit être justifié », « Mermaid = versionnable », « cite les fichiers » regroupés ; « relie aux stories » supprimé) — les 7 règles restantes sont plus concrètes.
+- **review** : étape 2 « Revue automatisée » réduite de 17 à 4 lignes (« si outil dispo → lance ; sinon passe étape 3, signale 1 fois »). Règles élaguées : suppression des doublons avec les Gotchas (« JAMAIS modifier le code source », « refuse si pas de `## Implémentation` ») + consolidation en 4 règles.
+- **documentation** : bloc « Format de l'index » (52 lignes) extrait dans `includes/index-template.md` + référencé via `{{include:index-template}}`. Règles dédupliquées : 12 → 6 (les doublons avec le processus et les Gotchas ont été supprimés, le reste consolidé).
+- **ux-ui** : philosophie « belle mais confuse = échec » remplacée par une consigne actionnable (« si hésitation > 2s sur action principale → refaire »). Mini-template specs Developer ajouté : tokens CSS custom properties + composant Button avec tous les états + tableau breakpoints.
+- **Include créé** : `includes/index-template.md` (~52 lignes extraites de documentation).
+- **CLAUDE.md** : ligne `index-template` ajoutée à la liste des includes disponibles.
+
+Régénéré via `./sync.sh --dist-only` ; les 5 SKILL.md compilés ne contiennent aucun `{{include:` résiduel.
+
+## Validation par critère
+
+### brainstorm
+- **Défaut explicite + 2 alternatives** : ✅ « Starbursting (défaut) » + « 5 Whys » + « First Principles » explicitement signalés par contexte.
+- **7 méthodes en annexe** : ✅ SCAMPER, Six Thinking Hats, Worst Possible Idea, Mind Mapping listées comme « autres méthodes disponibles sur demande ».
+- **STOP étape 4** : ✅ « **STOP** : propose la suite et attends le choix » ajouté.
+- **Reformulation « 3 approches »** : ✅ « au moins 3 approches, idéalement conventionnelle / créative / minimaliste ».
+
+### architect
+- **Fusion Processus + Format recommandé** : ✅ étape 2 intègre directement la checklist 9 points (Contexte → Impacts opérationnels) ; section « Format recommandé » supprimée.
+- **≥ 2 règles génériques élaguées** : ✅ 4 règles supprimées (« tout choix doit être justifié », « Mermaid versionnable » consolidée avec « cite les fichiers », « relie aux stories », « recommande Documentation si doc obsolète » reformulée).
+
+### review
+- **Étape 2 ≤ 6 lignes** : ✅ 4 lignes (bloc condensé).
+- **Mémoire préservée** : ✅ « mémorise sa préférence si déclinée » explicite.
+- **≥ 1 règle élaguée** : ✅ 7 → 4 règles (suppressions : doublons avec Gotchas « jamais modifier le code », « refuse si pas de ## Implémentation », « recommandations ne bloquent pas GO »).
+
+### documentation
+- **Extraction `includes/index-template.md`** : ✅ fichier créé (53 lignes), référencé via `{{include:index-template}}`.
+- **Règles dédupliquées** : ✅ 12 → 6 règles (suppressions : « lis avant de remplacer », « ne suppose pas fausse », « divergence code/doc » — déjà couvert par le processus / les Gotchas ; « README+CLAUDE obligatoire » déjà dans la section Périmètre + Gotchas).
+- **≥ 1 règle élaguée** : ✅ largement dépassé.
+
+### ux-ui
+- **Mini-template specs ajouté** : ✅ bloc CSS (tokens) + composant Button (6 états + 4 variantes + taille min tactile) + tableau breakpoints.
+- **Slogan remplacé** : ✅ « belle mais confuse = échec » → « si hésitation > 2s sur action principale → refaire ».
+
+### Global
+- **`./sync.sh` OK + 5 SKILL.md vérifiés** : ✅ 0 `{{include:` résiduel.
+- **Somme des lignes diminuée** : ✅ 1014 → 812 lignes pour les 5 agents (**−202 lignes**, dont −52 par extraction index-template vers l'include ; cible −30 à −60 largement dépassée).
+- **CLAUDE.md mis à jour** : ✅ `index-template` listé avec mention « utilisé uniquement par documentation ».

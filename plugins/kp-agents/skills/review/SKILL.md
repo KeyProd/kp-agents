@@ -35,23 +35,11 @@ Avant de reviewer, lis TOUJOURS dans cet ordre :
 5. Le `docs/features/<feature-group>/architect.md` si existant
 6. Le code effectivement modifié/créé (fichiers listés dans la section `## Implémentation`)
 
-### 2. Revue automatisée
+### 2. Revue automatisée (optionnelle)
 
-Avant la revue manuelle, utilise un outil de code review automatisé si disponible pour enrichir ton analyse.
+Si un outil de code review automatisé est disponible sur la plateforme courante (`/code-review` ou MCP équivalent sur Claude Code, fonction intégrée Cursor / Codex / IDE), lance-le sur les fichiers modifiés de la story et utilise les findings comme input de la revue manuelle.
 
-**Détection et exécution :**
-- **Claude Code** : vérifie si la commande `/code-review` (ou un outil MCP de review) est disponible. Si oui, exécute-le sur les fichiers modifiés de la story.
-- **Autres plateformes** (Cursor, Codex, IDE) : utilise les fonctionnalités de review automatisé intégrées si disponibles.
-
-**Si aucun outil automatisé n'est détecté :**
-Signale-le à l'utilisateur une seule fois (consulte la mémoire pour ne pas répéter) :
-
-> **Recommandation** : Aucun outil de code review automatisé détecté. Pour enrichir les futures reviews, tu peux installer un outil adapté à ta plateforme (ex: skill `/code-review` pour Claude Code, extension de review pour ton IDE). Souhaites-tu que je te guide ?
-
-Si l'utilisateur décline ou ne souhaite pas installer d'outil, **sauvegarde cette préférence en mémoire** pour ne plus le proposer.
-
-**Intégration des résultats :**
-Les findings de la revue automatisée alimentent la revue manuelle (étape suivante). Ils ne remplacent pas l'analyse du reviewer mais la complètent en identifiant rapidement les patterns communs (complexité, duplication, problèmes de style).
+Sinon, passe directement à l'étape 3. Signale l'absence d'outil **une seule fois** à l'utilisateur (mémorise sa préférence si déclinée) et ne redemande plus.
 
 ### 3. Revue de code
 Analyse le code implémenté selon ces axes :
@@ -172,13 +160,10 @@ En plus de l'écriture dans la story, fournis dans ta réponse :
 - Les recommandations P2/P3 ne bloquent pas un GO si le code est fonctionnel et couvre les critères — ne confonds pas « à améliorer » et « à corriger ».
 
 ## Règles
-- Ne valide jamais un critère d'acceptation sans preuve (test passé, vérification manuelle documentée, ou code explicitement conforme)
-- Ne modifie JAMAIS le code source — ton rôle est de reviewer, pas de corriger
-- Si le Developer a signalé des limites connues dans sa validation, vérifie si elles sont acceptables ou bloquantes
-- Si la story n'a pas de section `## Implémentation`, refuse la review et demande un retour au Developer
-- Les recommandations d'amélioration ne doivent pas bloquer un GO si le code est fonctionnel et conforme
-- Sois factuel et précis : cite les fichiers, lignes, et snippets concernés
-- En mode epic, produis un bilan consolidé à la fin avec le statut de chaque story reviewée
+- Ne valide jamais un critère d'acceptation sans preuve (test passé, vérification manuelle documentée, ou code explicitement conforme).
+- Si le Developer a signalé des limites connues dans sa validation, vérifie si elles sont acceptables ou bloquantes.
+- Cite toujours les fichiers, lignes et snippets concernés (format `path/file.ts:42`).
+- En mode epic, produis un bilan consolidé à la fin avec le statut de chaque story reviewée.
 
 ### Exemple de recommandation bien formulée
 

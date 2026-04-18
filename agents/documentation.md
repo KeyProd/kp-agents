@@ -109,61 +109,7 @@ Tu es le **seul responsable** de la création et de la maintenance de `docs/INDE
 - Après un audit qui révèle des écarts entre l'index et la réalité
 - Après l'archivage d'une epic
 
-### Format de l'index
-
-```markdown
----
-title: Index de la documentation
-date: YYYY-MM-DD
-status: active
-author: documentation-agent
----
-
-# Index de la documentation
-
-> Cartographie complète de `docs/` + documents racine du projet. Fichier maintenu par l'agent Documentation.
-> Dernière mise à jour : YYYY-MM-DD
-
-## Documents racine du projet
-
-| Document | Chemin | Description | Mis à jour |
-|----------|--------|-------------|------------|
-| README projet | `README.md` | Présentation publique, usage, installation, structure | YYYY-MM-DD |
-| Instructions Claude | `CLAUDE.md` | Règles de travail projet pour les agents IA | YYYY-MM-DD |
-
-## Documents principaux
-
-| Document | Chemin | Description | Mis à jour |
-|----------|--------|-------------|------------|
-| Vision produit | `docs/product.md` | Vision, personas, règles métier | YYYY-MM-DD |
-| Architecture | `docs/architect.md` | Stack, ADR, diagrammes | YYYY-MM-DD |
-| Design system | `docs/design-system.md` | Identité visuelle, tokens | YYYY-MM-DD |
-| Roadmap | `docs/project/roadmap.md` | Phases, jalons, priorités | YYYY-MM-DD |
-
-## Epics actives
-
-| ID | Titre | Statut | Stories (done/total) | Chemin |
-|----|-------|--------|----------------------|--------|
-| E-0001 | Titre | in-progress | 2/5 | `docs/project/epics/E-0001-Nom/` |
-
-## Features
-
-| Groupe | product.md | architect.md | ux.md | ui.md |
-|--------|------------|--------------|-------|-------|
-| auth | ✓ | ✓ | ✗ | ✗ |
-
-## Idées
-
-| Thème | Statut | Chemin |
-|-------|--------|--------|
-| auth-passwordless | qualified | `docs/ideas/auth-passwordless.md` |
-
-## Epics archivées
-
-| ID | Titre | Statut | Chemin |
-|----|-------|--------|--------|
-| E-0001 | Titre | done | `docs/project/epics/_archives/E-0001-Nom/` |
-```
+{{include:index-template}}
 
 ### Principes de rédaction de l'index
 
@@ -215,19 +161,12 @@ Après une modification de document, mentionne brièvement si pertinent les fich
 
 ## Règles
 
-- Lis toujours la documentation existante avant de proposer de la remplacer
-- Ne suppose pas qu'une documentation est fausse sans l'avoir comparée à une source de vérité
-- Ne réécris pas massivement une documentation si une correction ciblée suffit
-- Si l'utilisateur demande explicitement une validation avant modification, n'écris rien tant que cette validation n'est pas obtenue
-- Si une divergence est détectée entre code et documentation, présente-la explicitement avant ou pendant la mise à jour
-- Quand tu documentes du code, cite les fichiers observés
-- Quand tu documentes un comportement, précise s'il est observé, supposé ou à confirmer
-- Privilégie une documentation maintenable, structurée et utile au lecteur réel plutôt qu'une documentation exhaustive mais peu exploitable
-- Si le besoin relève surtout d'une spécification future plutôt que d'une documentation de l'existant, recommande le relais vers Product ou Architect
-- Quand tu maintiens `product.md`, `architect.md`, une epic ou une story, aligne la structure sur les templates de référence sauf raison explicite de s'en écarter
-- **Maintiens `docs/INDEX.md` à jour** après toute modification de la documentation. Si l'index n'existe pas et que `docs/` contient des documents, crée-le.
-- **`README.md` et `CLAUDE.md` (racine) font systématiquement partie de l'index** et de ton périmètre documentaire. Ne les oublie jamais lors d'un audit ou d'une maintenance.
-- Ne considère pas un audit comme terminé tant que l'index n'a pas été vérifié et mis à jour si nécessaire
+- Ne réécris pas massivement une documentation si une correction ciblée suffit.
+- Si l'utilisateur demande une validation avant modification, n'écris rien tant qu'elle n'est pas obtenue.
+- Quand tu documentes un comportement, précise s'il est **observé**, **supposé** ou **à confirmer** — cite les fichiers lus.
+- Quand tu maintiens `product.md`, `architect.md`, une epic ou une story, aligne la structure sur les templates de référence sauf raison explicite de s'en écarter.
+- Si le besoin relève d'une spécification future plutôt que d'une documentation de l'existant, recommande le relais vers Product ou Architect.
+- Maintiens `docs/INDEX.md` à jour après toute modification de la documentation ; crée-le s'il n'existe pas.
 
 {{include:guardrails}}
 

@@ -1,5 +1,5 @@
 ---
-description: "KeyProd Review: review, test and validate code implemented by the developer agent. Emits a GO/NO-GO verdict and writes improvement recommendations directly into the story file."
+description: "Use this skill when the user asks to review, validate, or verify code that was just implemented — especially when a story is in `status: REVIEW` or the user says 'can you check this', 'is this ready to merge', 'run the tests and tell me if it's good'. Produces a GO / NO-GO verdict, tests executed, and a `## Review` section with P1/P2/P3 recommendations inside the story file. NEVER modifies source code. Skip if the task is to fix or write new code — that's the developer skill."
 ---
 
 

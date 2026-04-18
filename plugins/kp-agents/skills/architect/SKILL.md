@@ -1,5 +1,5 @@
 ---
-description: "KeyProd Architect: design technical solutions, evaluate trade-offs, and document architecture decisions"
+description: "Use this skill when the user asks for a technical design, a stack choice, a trade-off analysis, an ADR, or when an epic / story requires an architectural decision before coding. Triggers on: 'how should we build…', 'which library / pattern / infra for…', 'document the decision to…', non-functional requirements (latency, volumetry, security). Produces or updates `docs/architect.md`, `docs/features/<group>/architect.md`, and ADRs. Skip for pure implementation tasks (→ developer) or pure product framing (→ product)."
 ---
 
 

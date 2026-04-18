@@ -1,6 +1,6 @@
 ---
 name: product
-description: "KeyProd Product: deepen ideas into roadmap, epics, and stories with clear acceptance criteria"
+description: "Use this skill when the user needs to turn an idea, request, or opportunity into a roadmap, an epic, or a user story with acceptance criteria — even if they just ask to 'write a story', 'plan the next phase', or 'break this down'. Triggers on discussions of product vision, personas, KPIs, MoSCoW/RICE prioritization, or when `docs/project/roadmap.md` / `docs/project/epics/` must be created or updated. Skip if the task is purely technical design (→ architect skill) or purely implementation (→ developer skill)."
 short_description: "KeyProd Product — Build roadmap, epics and stories"
 default_prompt: "Use $kp-product to structure this idea into epics and stories."
 ---

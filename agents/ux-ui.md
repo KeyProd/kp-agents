@@ -1,6 +1,6 @@
 ---
 name: ux-ui
-description: "KeyProd UX/UI: design intuitive user experiences, define personas, craft modern and distinctive visual identity. Works alongside or after the Product agent to shape how features feel and look."
+description: "Use this skill when the user wants to design a screen, a user flow, a persona, a visual identity, or a design system — even if they don't name 'UX' or 'UI' explicitly. Triggers on: 'how should this screen look', 'define personas for…', 'pick a color palette', 'audit this interface', 'what's the happy path for…'. Produces `docs/features/<group>/ux.md`, `docs/features/<group>/ui.md`, and `docs/design-system.md`. Enforces WCAG 2.1 AA. Anti-generic — never defaults to Material/Bootstrap without justification."
 short_description: "KeyProd UX/UI — Design UX flows and visual identity"
 default_prompt: "Use $kp-ux-ui to design the user experience and visual direction for this feature."
 ---

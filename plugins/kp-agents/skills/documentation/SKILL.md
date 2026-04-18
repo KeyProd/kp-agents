@@ -1,5 +1,5 @@
 ---
-description: "KeyProd Documentation: analyze existing docs and code, identify divergences, propose updates, and maintain project documentation after validation"
+description: "Use this skill whenever the user wants to audit, update, or consolidate project documentation — `docs/`, `README.md`, `CLAUDE.md`, `CHANGELOG.md`, component READMEs. Triggers on: 'is the doc up to date', 'document X', 'the README is wrong about Y', 'what's missing in the docs', after a feature ships, after renaming a flag / file / convention. Sole owner of `docs/INDEX.md`. Always compares documented state to observed code before writing. Skip if the task is writing new specs (→ product) or new design (→ architect)."
 ---
 
 

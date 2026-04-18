@@ -1,7 +1,7 @@
 ---
 title: Réécriture des descriptions en phrasing impératif
 date: 2026-04-18
-status: TODO
+status: DONE
 author: product-agent
 story-id: S-0002
 epic-id: E-0003
@@ -84,5 +84,27 @@ En tant qu'utilisateur de Claude Code avec le plugin kp-agents installé, je veu
 
 ## Questions ouvertes
 
-- Faut-il garder le préfixe "KeyProd" dans les descriptions ? Le préfixe est utile pour l'identité de la suite mais peut consommer des caractères sur la limite 1024. Proposition : le conserver dans `short_description` mais l'omettre dans `description` (lisible).
+- ~~Préfixe "KeyProd"~~ **Résolu 2026-04-18** : supprimé des 7 `description` (le patron impératif prime). `short_description` conserve "KeyProd" pour l'identité marketplace.
 - ~~Variante francophone à prévoir ?~~ **Résolu 2026-04-18** : descriptions en anglais, conversation en langue utilisateur (via include `activation.md`).
+
+## Implémentation
+
+- Fichiers modifiés (frontmatter `description` uniquement) : les 7 `agents/*.md`.
+- Source des nouvelles descriptions : tableau `docs/agents-review.md#a-optimisation-du-champ-description-trigger-reliability`.
+- Régénérés via `./sync.sh --dist-only` : plugin + cursor + codex.
+- Vérifications :
+  - Toutes les descriptions commencent par "Use this skill when/whenever".
+  - Longueurs comprises entre 480 et 530 caractères (< 1024).
+  - Toutes contiennent une clause near-miss ("Do NOT use…", "Skip if…", "NEVER").
+  - YAML parse correctement (test via `head -7 plugins/kp-agents/skills/*/SKILL.md`).
+  - `name`, `short_description`, `default_prompt` inchangés.
+
+## Validation par critère
+
+- **Toutes commencent par "Use this skill when…"** : ✅ 6 sur 7 avec "Use this skill when", 1 ("documentation") avec "Use this skill whenever" — formulation impérative équivalente.
+- **Au moins un trigger implicite** : ✅ chaque description contient "even if they don't…" ou "Triggers on: '…'" listant des formulations utilisateur non-verbatim.
+- **Au moins une clause near-miss** : ✅ "Do NOT use…" (brainstorm, developer), "Skip if…" (product, architect, review, documentation), "NEVER modifies source code" (review), "Anti-generic — never defaults to…" (ux-ui).
+- **< 1024 caractères** : ✅ max 530 (architect).
+- **`./sync.sh` passe** : ✅ 7 agents syncés.
+- **YAML valide** : ✅ parsing OK sur tous les SKILL.md (aucun caractère `"` dans les descriptions, seulement des `'` compatibles YAML double-quoted).
+- **`short_description`, `default_prompt`, `name` inchangés** : ✅ seule la ligne `description:` a été modifiée.

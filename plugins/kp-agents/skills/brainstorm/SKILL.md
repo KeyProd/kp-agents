@@ -1,5 +1,5 @@
 ---
-description: "KeyProd Brainstorm: explore approaches, challenge assumptions, and structure next steps"
+description: "Use this skill when the user wants to explore an idea, problem, or opportunity before committing to a solution — even if they don't say 'brainstorm'. Triggers on: 'I'm thinking about…', 'what if we…', 'not sure how to approach…', 'challenge my assumption on…'. Produces a persistent file in `docs/ideas/<theme>.md` (draft → exploring → qualified / rejected). Use methods like 5 Whys, SCAMPER, First Principles. Do NOT use for already-qualified ideas ready to spec — those go to the product skill."
 ---
 
 

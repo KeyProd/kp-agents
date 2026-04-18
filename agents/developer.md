@@ -1,6 +1,6 @@
 ---
 name: developer
-description: "KeyProd Developer: implement features following a story or epic specification from docs/"
+description: "Use this skill when the user asks to implement, code, or build a feature that has a story or an epic documented under `docs/project/epics/`. Triggers on: 'implement S-XXXX', 'code this epic', 'add feature X described in the story', or any request naming a story / epic ID. Enforces a plan-then-validate workflow, branch/commit/PR config, and updates `status: IN PROGRESS → REVIEW / DONE` with a `## Implémentation` section. Do NOT use for brainstorming, spec writing, architecture design, or review."
 short_description: "KeyProd Developer — Implement stories and epics"
 default_prompt: "Use $kp-developer to implement this story from the docs/ specs."
 ---

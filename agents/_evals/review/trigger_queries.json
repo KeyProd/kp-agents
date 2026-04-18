@@ -1,0 +1,28 @@
+{
+  "agent": "review",
+  "version": "v0.2.0",
+  "description": "Prompts triggering (or not) the kp-agents:review skill. Near-miss focused on developer (the most confused neighbor).",
+  "queries": [
+    { "id": "rev-pos-01", "query": "review ma PR #42 — story S-0003 est en status REVIEW", "should_trigger": true, "reason": "verbe review + story REVIEW" },
+    { "id": "rev-pos-02", "query": "can you check the implementation of S-0007 before I merge?", "should_trigger": true, "reason": "EN, check + merge = review" },
+    { "id": "rev-pos-03", "query": "valide le code de S-0004, les tests passent mais je veux une paire d'yeux", "should_trigger": true, "reason": "validation humaine explicite" },
+    { "id": "rev-pos-04", "query": "is this ready to merge? here is the branch feat/E-0003-auth", "should_trigger": true, "reason": "ready to merge = review" },
+    { "id": "rev-pos-05", "query": "GO ou NO-GO sur la story S-0001 ?", "should_trigger": true, "reason": "verdict GO/NO-GO explicite" },
+    { "id": "rev-pos-06", "query": "run the tests and tell me if S-0002 is good to ship", "should_trigger": true, "reason": "EN, run tests + verdict" },
+    { "id": "rev-pos-07", "query": "je veux une review de toutes les stories en REVIEW de l'epic E-0004", "should_trigger": true, "reason": "mode epic review" },
+    { "id": "rev-pos-08", "query": "relis l'implémentation de S-0006 et dis-moi si les critères d'acceptation sont couverts", "should_trigger": true, "reason": "relecture + CA coverage" },
+    { "id": "rev-pos-09", "query": "audit the code added in the last commit and flag issues", "should_trigger": true, "reason": "audit code = review" },
+    { "id": "rev-pos-10", "query": "vérifie que S-0005 respecte bien docs/architect.md", "should_trigger": true, "reason": "conformité architecture" },
+
+    { "id": "rev-neg-01", "query": "implémente S-0003", "should_trigger": false, "reason": "near-miss developer : implémente pur" },
+    { "id": "rev-neg-02", "query": "fix the bug introduced in S-0004", "should_trigger": false, "reason": "near-miss developer : fix" },
+    { "id": "rev-neg-03", "query": "reprends S-0007 là où c'était laissé", "should_trigger": false, "reason": "near-miss developer : reprise IN PROGRESS" },
+    { "id": "rev-neg-04", "query": "audit la documentation de docs/architect.md", "should_trigger": false, "reason": "near-miss documentation : audit DOC, pas code" },
+    { "id": "rev-neg-05", "query": "est-ce que la roadmap est à jour par rapport aux epics ?", "should_trigger": false, "reason": "near-miss documentation : cohérence docs" },
+    { "id": "rev-neg-06", "query": "structure cette feature en stories avec critères d'acceptation", "should_trigger": false, "reason": "near-miss product" },
+    { "id": "rev-neg-07", "query": "challenge-moi sur cette idée avant que je la spec", "should_trigger": false, "reason": "near-miss brainstorm" },
+    { "id": "rev-neg-08", "query": "décide pour moi entre Postgres et DynamoDB pour le store principal", "should_trigger": false, "reason": "near-miss architect : décision technique" },
+    { "id": "rev-neg-09", "query": "refais le flow d'onboarding plus intuitif", "should_trigger": false, "reason": "near-miss ux-ui" },
+    { "id": "rev-neg-10", "query": "write the S-0002 file for epic E-0005", "should_trigger": false, "reason": "near-miss product : rédaction story" }
+  ]
+}

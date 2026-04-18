@@ -1,0 +1,52 @@
+{
+  "agent": "developer",
+  "version": "v0.2.0",
+  "description": "End-to-end output evals for kp-agents:developer. Each case assumes a throwaway test worktree with fixture stories.",
+  "cases": [
+    {
+      "id": "dev-out-01",
+      "prompt": "implémente la story fixture FIX-0001 dans fixtures/E-FIX-Test/ — elle décrit un endpoint GET /health qui retourne {status: ok}",
+      "expected_behavior": [
+        "l'agent annonce qu'il est actif au début (include activation)",
+        "l'agent demande la configuration de travail (branche, commits, PR) ou la récupère en mémoire",
+        "l'agent présente un plan d'implémentation et attend validation avant de coder",
+        "l'agent met à jour le statut à IN PROGRESS puis DONE ou REVIEW à la fin",
+        "l'agent ajoute les sections ## Implémentation et ## Validation par critère"
+      ],
+      "assertions": [
+        { "type": "file_contains", "path": "fixtures/E-FIX-Test/FIX-0001-Healthcheck.md", "substring": "## Implémentation" },
+        { "type": "file_contains", "path": "fixtures/E-FIX-Test/FIX-0001-Healthcheck.md", "substring": "## Validation par critère" },
+        { "type": "frontmatter_field_equals", "path": "fixtures/E-FIX-Test/FIX-0001-Healthcheck.md", "field": "status", "value": "DONE" },
+        { "type": "section_order", "path": "fixtures/E-FIX-Test/FIX-0001-Healthcheck.md", "before": "## Implémentation", "after": "## Validation par critère" }
+      ]
+    },
+    {
+      "id": "dev-out-02",
+      "prompt": "implémente la story fixture FIX-0002 qui demande d'ajouter un champ createdAt — la spec est ambiguë (pas de type précisé)",
+      "expected_behavior": [
+        "l'agent détecte l'ambiguïté de type (timestamp int vs ISO string vs Date)",
+        "l'agent pose la question plutôt que de deviner, et N'IMPLÉMENTE PAS avant réponse",
+        "si l'utilisateur refuse de trancher, l'agent recommande un retour vers product ou architect via un bloc de handoff"
+      ],
+      "assertions": [
+        { "type": "response_contains", "substring": "ambigu" },
+        { "type": "response_contains_any", "substrings": ["Handoff →", "/kp-agents:product", "/kp-agents:architect"] },
+        { "type": "file_absent", "path": "fixtures/E-FIX-Test/FIX-0002-CreatedAt/implementation/" }
+      ]
+    },
+    {
+      "id": "dev-out-03",
+      "prompt": "implémente l'epic fixture E-FIX-Two-Stories (deux stories : FIX-0003 puis FIX-0004, la seconde dépend de la première)",
+      "expected_behavior": [
+        "l'agent produit un plan epic global couvrant les 2 stories AVANT de coder",
+        "le plan mentionne l'ordre et les dépendances inter-stories",
+        "l'agent fait un commit par story (ou documente pourquoi il regroupe)",
+        "le bilan final mentionne l'état de chaque story"
+      ],
+      "assertions": [
+        { "type": "response_contains_all", "substrings": ["FIX-0003", "FIX-0004", "dépend"] },
+        { "type": "frontmatter_field_equals", "path": "fixtures/E-FIX-Two-Stories/readme.md", "field": "status", "value": "done" }
+      ]
+    }
+  ]
+}

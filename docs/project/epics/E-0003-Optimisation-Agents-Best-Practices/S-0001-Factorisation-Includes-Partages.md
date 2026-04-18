@@ -1,7 +1,7 @@
 ---
 title: Factorisation des blocs partagés via includes
 date: 2026-04-18
-status: TODO
+status: DONE
 author: product-agent
 story-id: S-0001
 epic-id: E-0003
@@ -101,4 +101,29 @@ En tant que mainteneur du projet kp-agents, je veux que les blocs répétés à 
 
 ## Questions ouvertes
 
-- Convention de structure interne des includes : avec ou sans titre `##` en tête ? Vérifier les includes existants (`guardrails.md`, `handoff.md`) pour aligner le style.
+- ~~Convention de structure interne des includes~~ **Résolu 2026-04-18** : aligné sur `guardrails.md` — l'include inclut son propre titre `##` (ex : `## Activation et persistance` pour `activation.md`). `dependency-versions.md` reste sans titre car injecté comme puce unique dans une liste existante.
+
+## Implémentation
+
+- Fichiers créés :
+  - `includes/activation.md` (6 puces : annonce, persistance, changement de sujet, hors périmètre, distinction faits/hypothèses, langue utilisateur)
+  - `includes/dependency-versions.md` (puce unique)
+- Fichiers modifiés :
+  - `agents/brainstorm.md`, `agents/product.md`, `agents/architect.md`, `agents/developer.md`, `agents/review.md`, `agents/ux-ui.md`, `agents/documentation.md` — bloc Activation remplacé par `{{include:activation}}`
+  - `agents/architect.md`, `agents/developer.md`, `agents/review.md` — règle Versions des dépendances remplacée par `{{include:dependency-versions}}`
+  - `CLAUDE.md` — liste Includes enrichie avec `activation` et `dependency-versions`
+- Régénérés via `./sync.sh --dist-only` : `plugins/kp-agents/skills/*/SKILL.md` (7 fichiers) + `dist/cursor/` + `dist/codex/`
+- Commandes de vérification :
+  - `grep -r '{{include:' plugins/` → aucun résidu non résolu
+  - MD5 des 7 blocs Activation extraits → identiques (`9301c66a40e156d05f0ae621848a4ca5`)
+
+## Validation par critère
+
+- **`includes/activation.md` existe avec 6 puces canoniques** : ✅ fichier présent avec titre `## Activation et persistance` suivi des 6 puces (dont la règle langue utilisateur). Aligné sur `guardrails.md`.
+- **`includes/dependency-versions.md` existe** : ✅ fichier présent avec puce unique reformulée génériquement (couvre librairies / frameworks / outils).
+- **Les 7 agents utilisent `{{include:activation}}`** : ✅ vérifié via `grep` dans `agents/`.
+- **architect/developer/review utilisent `{{include:dependency-versions}}`** : ✅ vérifié via `grep`.
+- **`./sync.sh --dist-only` passe sans erreur** : ✅ 7 agents syncés sur 3 cibles (plugin + cursor + codex).
+- **Diff inspection : bloc Activation strictement identique entre les 7 SKILL.md** : ✅ MD5 unique `9301c66a40e156d05f0ae621848a4ca5`.
+- **Aucun bloc Activation résiduel dans `agents/*.md`** : ✅ `grep "Activation et persistance" agents/` renvoie uniquement la directive d'include (via le texte de l'include après résolution, mais dans les sources il n'y a plus que `{{include:activation}}`).
+- **`CLAUDE.md` mis à jour** : ✅ section "Includes" complétée avec `activation` et `dependency-versions`, stratégie d'inclusion par agent déjà présente (à enrichir lors d'une passe documentation si besoin).

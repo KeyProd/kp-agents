@@ -71,6 +71,8 @@ docs/              ← Documentation projet (vision, architecture, epics, storie
 ## Includes
 
 Les agents peuvent inclure des templates partagés avec la directive `{{include:nom}}` :
+- `activation` — Bloc « Activation et persistance » partagé par les 7 agents (6 puces : annonce, persistance, changement de sujet, hors périmètre, distinction faits/hypothèses, langue utilisateur)
+- `dependency-versions` — Règle « Versions des dépendances » partagée par architect, developer et review
 - `docs-structure` — Convention de structure documentaire projet (complète, avec tous les templates)
 - `docs-structure-light` — Convention de structure documentaire (arborescence et règles uniquement, sans templates)
 - `guardrails` — Garde-fous anti-hallucination transversaux

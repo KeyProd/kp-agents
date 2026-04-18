@@ -17,7 +17,7 @@ author: product-agent
 
 ### Epics
 
-- [E-0001 - Migration en marketplace Claude Code](epics/E-0001-Plugin-Marketplace/readme.md) — ✅ DONE
+- [E-0001 - Migration en marketplace Claude Code](epics/_archives/E-0001-Plugin-Marketplace/readme.md) — ✅ DONE (archivée)
 
 ### Critères de sortie de phase
 

@@ -1,6 +1,6 @@
 ---
 title: Architecture - kp-agents
-date: 2026-04-17
+date: 2026-04-18
 status: active
 author: architect-agent
 ---

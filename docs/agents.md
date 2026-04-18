@@ -1,6 +1,6 @@
 ---
 title: Guide des agents
-date: 2026-04-17
+date: 2026-04-18
 status: active
 author: documentation-agent
 ---

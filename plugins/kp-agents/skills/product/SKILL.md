@@ -34,7 +34,18 @@ L'agent Product est **conversationnel** : il ne produit pas un livrable complet 
 
 ## Processus
 
-### 1. Cadrage produit
+### 1. Mode init (nouveau projet uniquement)
+Si le projet n'a pas encore de structure `docs/`, crée le squelette de base **avant** toute autre action :
+- `docs/product.md` — à compléter avec le cadrage produit
+- `docs/architect.md` — squelette vide prêt pour l'agent Architect
+- `docs/project/roadmap.md` — squelette vide
+- `docs/project/epics/` — répertoire vide
+- `docs/ideas/` — répertoire vide
+- `docs/features/` — répertoire vide
+
+Mentionne à l'utilisateur que la structure a été initialisée et enchaîne directement avec le cadrage produit (étape 2).
+
+### 2. Cadrage produit
 - Si le sujet a fait l'objet d'un brainstorm préalable, lis `docs/ideas/<theme>.md` pour reprendre les hypothèses validées, les approches retenues et les questions déjà traitées. Ne repars pas de zéro.
 - Clarifie la vision et les objectifs business
 - Identifie les utilisateurs cibles et leurs pain points
@@ -45,7 +56,7 @@ L'agent Product est **conversationnel** : il ne produit pas un livrable complet 
 - Si des éléments clés manquent, **formule les questions et attends les réponses** au lieu de combler les trous implicitement
 - **STOP si nécessaire** : si la vision, les utilisateurs cibles ou le problème principal ne sont pas clairs, pose tes questions et attends avant de produire la roadmap
 
-### 2. Roadmap
+### 3. Roadmap
 Construis ou mets à jour `docs/project/roadmap.md` avec :
 - Les phases du projet (Discovery, MVP, V1, V2...)
 - Pour chaque phase : objectif, périmètre fonctionnel, jalons clés
@@ -54,142 +65,232 @@ Construis ou mets à jour `docs/project/roadmap.md` avec :
 - Les risques majeurs et hypothèses de passage d'une phase à l'autre
 - Les critères de sortie de phase
 
-Format de la roadmap :
+Format : aligne-toi sur la structure documentée dans la section « Convention de sortie » ci-dessous (frontmatter `title/date/status/author`, phases numérotées, liens vers les epics).
+
+### 4. Epics
+Pour chaque epic, crée un répertoire `docs/project/epics/E-XXXX-Nom-Simple/` contenant un `readme.md`.
+
+Structure canonique : cf. `## Template recommandé - `docs/project/epics/E-XXXX-Nom-Simple/readme.md`
+
+Objectif : document lisible par des non-techniques tout en restant utile aux développeurs pour comprendre le périmètre, les dépendances et la logique de découpage.
+
 ```markdown
-title: Roadmap
-date: YYYY-MM-DD
-status: active
-author: product-agent
-
-# Roadmap - [Nom du projet]
-
-## Phase 1 - [Nom] (Priorité: MUST)
-**Objectif**: [...]
-**Jalon**: [date ou critère]
-
-### Epics
-- [E-0001 - Titre](epics/E-0001-Titre-Simple/)
-- [E-0002 - Titre](epics/E-0002-Titre-Simple/)
-```
-
-### 3. Epics
-Pour chaque epic, crée un répertoire `docs/project/epics/E-XXXX-Nom-Simple/` contenant un `readme.md` :
-```markdown
+---
 title: [Titre]
 date: YYYY-MM-DD
 status: draft | ready | in-progress | done
 author: product-agent
 epic-id: E-0001
 phase: 1
+---
 
-# E-0001 - [Titre de l'Epic]
+# E-0001 - [Titre de l'epic]
+
+## Résumé
+[Description courte et compréhensible de l'epic]
 
 ## Objectif
-[Ce que l'epic doit accomplir]
+[Ce que l'epic doit accomplir et la valeur attendue]
 
-## Contexte
-[Pourquoi cette epic est nécessaire]
+## Problème adressé
+[Pourquoi cette epic existe]
+
+## Résultat attendu
+- [résultat observable 1]
+- [résultat observable 2]
 
 ## Périmètre
-### In scope
-- [...]
-### Out of scope
-- [...]
+### Inclus
+- [élément in scope]
+- [élément in scope]
 
-## Stories
-- [S-0001 - Titre](S-0001-Nom-Simple.md)
-- [S-0002 - Titre](S-0002-Nom-Simple.md)
+### Exclu
+- [élément out of scope]
+- [élément out of scope]
+
+## Règles métier concernées
+- [règle métier 1]
+- [règle métier 2]
 
 ## Dépendances
-- [Epic ou système dépendant]
+- [autre epic, système, décision, équipe]
+
+## Risques / inconnues
+- [risque ou question ouverte]
+- [hypothèse à valider]
+
+## Stories
+- [S-0001 - Titre](S-0001-Nom-Simple.md) - [but court]
+- [S-0002 - Titre](S-0002-Nom-Simple.md) - [but court]
 
 ## Critères de succès
-- [...]
+- [critère de succès mesurable]
+- [critère de succès mesurable]
 ```
 
-### 4. Stories
-Pour chaque story, crée un fichier directement dans le répertoire de l'epic parente (`docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md`) :
+### Principes de rédaction
+- Garder un niveau de lecture accessible aux non-techniques
+- Expliquer clairement le pourquoi, le périmètre et les dépendances
+- Donner assez de contexte pour que les développeurs comprennent la logique de découpage
+- Ne pas transformer l'epic en document d'architecture détaillé` (inclus en fin de ce skill). Remplir au minimum : résumé, objectif, problème adressé, périmètre (inclus/exclu), règles métier concernées, dépendances, stories, critères de succès.
+
+### 5. Stories
+Pour chaque story, crée un fichier directement dans le répertoire de l'epic parente (`docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md`).
+
+Structure canonique : cf. `## Template recommandé - `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md`
+
+Objectif : document lisible par tous, mais suffisamment précis pour permettre une implémentation robuste et testable.
+
 ```markdown
+---
 title: [Titre]
 date: YYYY-MM-DD
 status: TODO | IN PROGRESS | REVIEW | DONE
 author: product-agent
 story-id: S-0001
 epic-id: E-0001
+---
 
-# S-0001 - [Titre de la Story]
+# S-0001 - [Titre de la story]
+
+## Résumé
+[Description courte de la story]
 
 ## User Story
 En tant que [persona], je veux [action] afin de [bénéfice].
 
+## Contexte
+- [contexte métier utile]
+- [précondition ou dépendance]
+
+## Règles métier
+- [règle métier 1]
+- [règle métier 2]
+
 ## Scénarios
-### Scénario nominal
+### Nominal
 - Étant donné [...]
 - Quand [...]
 - Alors [...]
 
-### Cas alternatifs
+### Alternatif
 - Étant donné [...]
 - Quand [...]
 - Alors [...]
 
-### Cas d'erreur / refus
+### Erreur / refus
 - Étant donné [...]
 - Quand [...]
 - Alors [...]
 
 ## Cas limites
 - [ ] état vide
-- [ ] validation de saisie / données invalides
+- [ ] données invalides
 - [ ] permissions / rôles
 - [ ] doublons / idempotence
-- [ ] limites métier / volumétrie
-- [ ] indisponibilité partielle d'un système tiers si applicable
+- [ ] limites de volumétrie ou seuils métier
 
 ## Critères d'acceptation
-- [ ] Critère formulé de manière vérifiable et observable
-- [ ] Critère lié au scénario nominal
-- [ ] Critère lié à un cas alternatif ou d'erreur
-- [ ] Critère lié aux règles métier ou aux permissions si applicable
-
-## Notes techniques
-[Contraintes ou indications pour l'équipe technique]
+- [ ] Critère observable et testable
+- [ ] Critère observable et testable
+- [ ] Critère observable et testable
 
 ## Dépendances
-[Stories, epics, systèmes ou décisions nécessaires]
+- [story, epic, API, décision, composant]
 
-## Hypothèses / Questions ouvertes
-- Hypothèse : [...]
-- Question ouverte : [...]
+## Notes techniques
+- [contrainte technique]
+- [point d'attention d'implémentation]
 
-## Instrumentation / Mesure
-- KPI ou événement à suivre : [...]
-- Signal attendu : [...]
+## Instrumentation / mesure
+- [événement, KPI, log, métrique si pertinent]
 
-## Maquettes / Références
-[Liens ou descriptions si applicable]
+## Questions ouvertes
+- [question]
+
+## Implémentation
+- Fichiers créés / modifiés : [...]
+- Commandes de test : [...]
+- Notes de review : [...]
+
+## Validation par critère
+- **[Critère]** : [implémentation], [preuve/test], [limites]
 ```
 
-### 5. Mode init (nouveau projet)
-Si le projet n'a pas encore de structure `docs/`, crée le squelette de base :
-- `docs/product.md` — à compléter avec le cadrage produit
-- `docs/architect.md` — squelette vide prêt pour l'agent Architect
-- `docs/project/roadmap.md` — squelette vide
-- `docs/project/epics/` — répertoire vide
-- `docs/ideas/` — répertoire vide
-- `docs/features/` — répertoire vide
-
-Mentionne à l'utilisateur que la structure a été initialisée et enchaîne directement avec le cadrage produit.
+### Principes de rédaction
+- Écrire de manière lisible par tous
+- Être suffisamment précis pour éviter l'interprétation implicite côté développement
+- Couvrir au minimum le scénario nominal, un scénario alternatif et un cas d'erreur
+- S'assurer que les critères d'acceptation sont directement vérifiables` (inclus en fin de ce skill). Remplir au minimum : user story, scénarios (nominal + alternatif + erreur), cas limites, critères d'acceptation testables, dépendances, notes techniques, instrumentation.
 
 ### 6. Vue globale produit
-Mets à jour `docs/product.md` avec la vision d'ensemble :
-- Vision produit
-- Personas
-- Fonctionnalités clés par groupe de features
-- Liens vers la roadmap et les epics
-- Utilise le template de référence pour garder un document court, lisible par des non-techniques et centré sur les règles métier
+Mets à jour `docs/product.md` avec la vision d'ensemble (vision, personas, features, liens roadmap/epics).
 
-Pour chaque groupe de features identifié, crée ou mets à jour `docs/features/<feature-group>/product.md`.
+Structure canonique : cf. `## Template recommandé - `docs/product.md`
+
+Objectif : document lisible par des non-techniques, court, orienté valeur métier, règles métier et périmètre fonctionnel.
+
+```markdown
+---
+title: Product Overview
+date: YYYY-MM-DD
+status: active
+author: product-agent
+---
+
+# Produit - [Nom du projet]
+
+## Résumé
+[En 5 à 10 lignes : ce que fait le produit, pour qui, et pourquoi il existe]
+
+## Problème adressé
+- [problème métier ou utilisateur 1]
+- [problème métier ou utilisateur 2]
+
+## Utilisateurs / Personas
+- **[Persona 1]** : [objectif principal, contexte]
+- **[Persona 2]** : [objectif principal, contexte]
+
+## Valeur apportée
+- [bénéfice principal]
+- [bénéfice secondaire]
+
+## Règles métier
+- [règle métier 1]
+- [règle métier 2]
+- [règle métier 3]
+
+## Parcours et cas d'usage clés
+- **[Cas d'usage 1]** : [résumé du scénario nominal]
+- **[Cas d'usage 2]** : [résumé du scénario nominal]
+
+## Périmètre fonctionnel
+### Inclus
+- [fonctionnalité / capacité]
+- [fonctionnalité / capacité]
+
+### Exclu
+- [hors scope]
+- [hors scope]
+
+## Contraintes produit
+- [contrainte réglementaire, marché, support, business, localisation, etc.]
+
+## Mesure du succès
+- [KPI 1]
+- [KPI 2]
+
+## Références
+- [Roadmap](project/roadmap.md)
+- [Epics](project/epics/)
+```
+
+### Principes de rédaction
+- Écrire pour des lecteurs non techniques
+- Rester synthétique : expliquer le "pourquoi" avant le "comment"
+- Centraliser ici les règles métier transverses
+- Éviter les détails d'implémentation technique
+- Si un sujet devient trop technique, référencer `docs/architect.md`` (inclus via la convention docs-structure). Pour chaque groupe de features identifié, crée ou mets à jour `docs/features/<feature-group>/product.md`.
 
 ### 7. Contrôle de complétude
 Avant de finaliser une roadmap, une epic ou une story :
@@ -225,17 +326,17 @@ Avant de finaliser une roadmap, une epic ou une story :
 - Si une exigence n'est pas objectivement vérifiable, reformule-la
 - Distingue les règles métier, les contraintes UX, les contraintes data/API et les dépendances externes
 - N'écris pas de story purement nominale sans cas alternatif ni cas d'erreur
+- Si le sujet est trop flou pour produire des stories fiables, reste au niveau epic ou backlog qualifié et documente les inconnues
+- Quand le besoin appelle une conception technique structurante, recommande explicitement le relais vers l'agent Architect
+- Quand une création ou refonte documentaire importante est nécessaire, recommande explicitement le relais vers l'agent Documentation ou structure la sortie selon ses conventions
 
-### Exemples de calibrage qualité
+## Exemples de calibrage
 
 **Critère d'acceptation bien formulé** :
 > "L'utilisateur reçoit un email de confirmation dans les 30 secondes suivant l'inscription, contenant un lien d'activation valide 24h"
 
 **Critère trop vague** (à éviter) :
 > "L'utilisateur reçoit un email"
-- Si le sujet est trop flou pour produire des stories fiables, reste au niveau epic ou backlog qualifié et documente les inconnues
-- Quand le besoin appelle une conception technique structurante, recommande explicitement le relais vers l'agent Architect
-- Quand une création ou refonte documentaire importante est nécessaire, recommande explicitement le relais vers l'agent Documentation ou structure la sortie selon ses conventions
 
 ## Garde-fous
 

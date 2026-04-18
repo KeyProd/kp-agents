@@ -1,7 +1,7 @@
 ---
 title: Refonte de l'agent product
 date: 2026-04-18
-status: TODO
+status: DONE
 author: product-agent
 story-id: S-0004
 epic-id: E-0003
@@ -83,3 +83,23 @@ En tant que mainteneur, je veux que `agents/product.md` délègue le contenu des
 ## Questions ouvertes
 
 - La section "Vue globale produit" (étape 6 actuelle) fait doublon partiel avec `{{include:product-template}}` déjà présent en fin de fichier. Faut-il la conserver comme étape explicite ou la retirer ? Proposition : la conserver (elle indique **quand** mettre à jour), mais raccourcir à 2-3 lignes renvoyant à l'include.
+
+## Implémentation
+
+- Fichiers modifiés : `agents/product.md` uniquement.
+- Changements :
+  - Mode init (anciennement étape 5) remonté en **étape 1** (avant Cadrage produit).
+  - Templates roadmap / epic / story inline supprimés et remplacés par des références aux includes (`{{include:epic-template}}`, `{{include:story-template}}`, `{{include:product-template}}`). Les includes sont chargés en fin de fichier via `{{include:docs-structure}}`.
+  - « Exemples de calibrage qualité » extraits de `## Règles` vers une section autonome `## Exemples de calibrage` placée après les règles.
+  - Les 3 puces « règles » mélangées dans les exemples de calibrage (relais architect, documentation, backlog) sont remises dans `## Règles`.
+- Taille : **243 → 127 lignes** (−116 lignes, cible −60/−80 dépassée).
+- Régénéré via `./sync.sh --dist-only` ; aucun `{{include:` résiduel dans le SKILL.md compilé.
+
+## Validation par critère
+
+- **3 templates inline remplacés par includes** : ✅ roadmap (référence structure), epic (`{{include:epic-template}}`), story (`{{include:story-template}}`).
+- **Contenu final équivalent** : ✅ les includes fournissent des templates **enrichis** (Résumé, Problème adressé, Résultat attendu, Règles métier concernées en plus). Arbitrage implicite : les includes sont la source de vérité partagée avec documentation, donc conserver leur version.
+- **Mode init en étape 1** : ✅ placé avant Cadrage produit, avec renvoi explicite vers l'étape 2.
+- **Exemples de calibrage en section autonome** : ✅ nouvelle section `## Exemples de calibrage` après `## Règles`.
+- **`./sync.sh` passe** : ✅ 7 agents syncés.
+- **~80 lignes retirées** : ✅ −116 lignes (plus que la cible).

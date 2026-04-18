@@ -1,7 +1,7 @@
 ---
 title: Optimisation des agents selon best practices
 date: 2026-04-18
-status: ready
+status: done
 author: product-agent
 epic-id: E-0003
 phase: 2

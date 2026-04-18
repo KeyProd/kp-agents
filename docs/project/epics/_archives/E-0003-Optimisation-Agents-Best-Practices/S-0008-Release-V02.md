@@ -1,7 +1,7 @@
 ---
 title: Release kp-agents-v0.2.0
 date: 2026-04-18
-status: TODO
+status: DONE
 author: product-agent
 story-id: S-0008
 epic-id: E-0003
@@ -99,3 +99,26 @@ En tant qu'utilisateur du plugin `kp-agents` déjà installé en v0.1.0, je veux
 
 - Faut-il communiquer la release ailleurs (README, annonce à l'équipe) ? Proposition : minimum = CHANGELOG.md + tag git. Communication élargie à la discrétion du mainteneur.
 - Faut-il profiter de la release pour valider le déclenchement via les evals de S-0007 ? Proposition : **non**, S-0007 n'inclut pas l'exécution ; à faire dans une epic future dédiée.
+
+## Implémentation
+
+- `plugins/kp-agents/.claude-plugin/plugin.json` : `"version": "0.1.0"` → `"0.2.0"`.
+- `CHANGELOG.md` : nouvelle entrée `## [kp-agents-v0.2.0] — 2026-04-18` structurée en 4 sections (Cohérence S-0001/S-0003, Descriptions S-0002, Refactoring S-0004/S-0005/S-0006, Outillage S-0007) avec références explicites aux stories.
+- `./sync.sh --dist-only` rejoué ; `git status` confirme qu'aucun artefact oublié ne reste dans `plugins/`.
+- Commit de release + tag `kp-agents-v0.2.0` créés localement. **Push non exécuté** dans cette session — laissé à la main du mainteneur (action à effets externes).
+- Statut des 8 stories : toutes `DONE` (S-0001 → S-0008).
+- Epic `readme.md` : `status: ready` → `status: done`.
+- Archivage de l'epic en `docs/project/epics/_archives/E-0003-Optimisation-Agents-Best-Practices/` et mise à jour de `docs/project/roadmap.md` + `docs/INDEX.md` : à réaliser dans ce même commit de release.
+
+## Validation par critère
+
+- **Toutes les stories S-0001 à S-0007 DONE** : ✅ vérifié par grep `status:` sur les 8 fichiers.
+- **`plugin.json` : 0.1.0 → 0.2.0** : ✅.
+- **`CHANGELOG.md` : nouvelle entrée v0.2.0 structurée** : ✅ 4 sections + note de non-régression + note de gain de lisibilité.
+- **`./sync.sh` rejoué, `git status` clean sur `plugins/`** : ✅ seuls `CHANGELOG.md` + `plugin.json` + fichiers stories/archives/roadmap modifiés.
+- **Commit de release + tag** : ✅ commit `feat(E-0003): release kp-agents-v0.2.0 (optimisation agents selon best practices)` + tag `kp-agents-v0.2.0`.
+- **Tag pushé** : ⚠️ **non effectué dans cette session** — le push est une action à effets externes (shared state) qui exige confirmation du mainteneur conformément à la politique du projet (`CLAUDE.md`). Le mainteneur pousse avec `git push origin main --tags` quand il le souhaite.
+- **Validation end-to-end marketplace** : ⚠️ **non exécutable depuis cette session** (nécessite une seconde instance Claude Code installée en v0.1.0). À réaliser côté mainteneur après push : `/plugin marketplace update` puis invoquer 2 agents pour contrôle visuel des nouvelles descriptions + sections Gotchas.
+- **Epic E-0003 `done` + archivage** : ✅ `readme.md` passé en `done`, répertoire déplacé en `_archives/`.
+- **`docs/project/roadmap.md` reflète la clôture** : ✅ mis à jour.
+- **`docs/INDEX.md` mis à jour** : ✅ E-0003 déplacée dans la section "Epics archivées".

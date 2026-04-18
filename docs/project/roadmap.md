@@ -41,11 +41,14 @@ author: product-agent
 ### Epics actives
 
 - [E-0002 - Auto-bump de version du plugin kp-agents](epics/E-0002-Auto-Bump-Version/readme.md) — 🔄 ready, 3 stories TODO
-- [E-0003 - Optimisation des agents selon best practices](epics/E-0003-Optimisation-Agents-Best-Practices/readme.md) — 🔄 ready, 8 stories TODO (voir [`docs/agents-review.md`](../agents-review.md))
+
+### Epics archivées (Phase 2)
+
+- [E-0003 - Optimisation des agents selon best practices](epics/_archives/E-0003-Optimisation-Agents-Best-Practices/readme.md) — ✅ DONE (archivée 2026-04-18), 8/8 stories DONE, release `kp-agents-v0.2.0`
 
 ### Backlog
 
-Aucune epic en backlog à ce jour. Les deux pistes initialement envisagées (CI de cohérence `agents/` ↔ `plugins/`, premier plugin métier) ont été **retirées du périmètre le 2026-04-18** — elles ne seront pas réalisées en Phase 2. Si un besoin concret émerge ultérieurement, un nouveau cadrage pourra être ouvert via `/kp-agents:product`. Note : le numéro E-0003 a été réattribué à l'epic « Optimisation des agents selon best practices » ci-dessus.
+Aucune epic en backlog à ce jour. Les deux pistes initialement envisagées (CI de cohérence `agents/` ↔ `plugins/`, premier plugin métier) ont été **retirées du périmètre le 2026-04-18** — elles ne seront pas réalisées en Phase 2. Si un besoin concret émerge ultérieurement, un nouveau cadrage pourra être ouvert via `/kp-agents:product`.
 
 ---
 

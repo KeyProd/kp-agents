@@ -25,6 +25,7 @@ author: documentation-agent
 | Vision produit | `docs/product.md` | Vision, personas, valeur, règles métier, parcours, KPIs (7 agents `kp-agents`) | 2026-04-18 |
 | Architecture | `docs/architect.md` | Stack, ADR (4), diagrammes, contrats de fichiers plugin Claude Code | 2026-04-18 |
 | Guide des agents | `docs/agents.md` | Description et workflows des 7 agents génériques (schémas Mermaid, namespaces `/kp-agents:<nom>`) | 2026-04-18 |
+| Review des agents | `docs/agents-review.md` | Audit des sources `agents/*.md` : forces, divergences, optimisations priorisées P1/P2/P3 | 2026-04-18 |
 
 ## Roadmap
 

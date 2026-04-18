@@ -5,6 +5,7 @@ status: active
 author: product-agent
 ---
 
+
 # Roadmap - kp-agents
 
 ## Phase 1 - Migration en marketplace Claude Code (Priorité: MUST) ✅ DONE
@@ -37,13 +38,16 @@ author: product-agent
 
 **Décision 2026-04-18** : le passage du repo en visibilité publique est **retiré du périmètre**. Le fonctionnement au sein de l'organisation KeyProd avec token d'org est l'usage cible. Une ouverture publique pourra être reconsidérée ultérieurement si un besoin externe concret émerge.
 
-### Epics potentielles (backlog qualifié, non priorisé)
+### Epics actives
 
-- **E-0002** — Auto-bump de version via hash des skills (retrait du versioning manuel, adresse le risque d'oubli de bump)
+- [E-0002 - Auto-bump de version du plugin kp-agents](epics/E-0002-Auto-Bump-Version/readme.md) — 🔄 ready, 3 stories TODO
+
+### Epics backlog (qualifié, non priorisé)
+
 - **E-0003** — CI : check de cohérence `agents/` ↔ `plugins/` (hook pre-commit ou GitHub Action), adresse aussi la recommandation P3.3 de la review S-0001 (test automatisé)
 - **E-0004** — Premier plugin métier spécifique (ex: `kp-projet-X` pour un projet KeyProd) — démontre l'extensibilité multi-plugins
 
-Ces epics sont sans priorité relative à ce stade — à cadrer via `/kp-agents:product` quand le besoin se matérialise.
+Ces epics backlog sont sans priorité relative à ce stade — à cadrer via `/kp-agents:product` quand le besoin se matérialise.
 
 ---
 

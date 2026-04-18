@@ -1,7 +1,7 @@
 ---
 title: Migration en marketplace Claude Code
 date: 2026-04-17
-status: ready
+status: done
 author: product-agent
 epic-id: E-0001
 phase: 1

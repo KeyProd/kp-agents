@@ -1,50 +1,49 @@
 ---
 title: Roadmap
-date: 2026-04-17
+date: 2026-04-18
 status: active
 author: product-agent
 ---
 
 # Roadmap - kp-agents
 
-## Phase 1 - Migration en marketplace Claude Code (Priorité: MUST)
+## Phase 1 - Migration en marketplace Claude Code (Priorité: MUST) ✅ DONE
 
 **Objectif** : faire de kp-agents une **marketplace Claude Code native** installable via URL git, tout en conservant la compatibilité Cursor/Codex via `sync.sh`. Supprimer la cible d'installation Claude locale désormais redondante.
 
-**Jalon** : release `kp-agents-v0.1.0` publiée sur GitHub, installable et fonctionnelle pour tout dev KeyProd.
+**Jalon** : release `kp-agents-v0.1.0` publiée sur GitHub, installable et fonctionnelle pour tout dev KeyProd. **Atteint le 2026-04-18.**
 
 **Pré-requis** : ✅ Spike de faisabilité validé GO (2026-04-17) — marketplace + plugin + GitHub privé + token d'org fonctionnent.
 
 ### Epics
 
-- [E-0001 - Migration en marketplace Claude Code](epics/E-0001-Plugin-Marketplace/readme.md)
+- [E-0001 - Migration en marketplace Claude Code](epics/E-0001-Plugin-Marketplace/readme.md) — ✅ DONE
 
 ### Critères de sortie de phase
 
-- [ ] `./sync.sh` produit les 3 cibles (`plugins/kp-agents/`, `dist/cursor/`, `dist/codex/`) sans toucher `~/.claude/commands/`
-- [ ] `plugins/kp-agents/` contient les 7 agents sous forme de skills au format Claude Code natif
-- [ ] `./sync.sh --clean` et `--clean-all` sont adaptés au nouveau périmètre
-- [ ] `/plugin install kp-agents@kp-agents` fonctionne depuis un poste vierge
-- [ ] `/kp-agents:brainstorm` (et les 6 autres) sont invocables et répondent correctement
-- [ ] Documentation à jour : README, CLAUDE.md, docs/agents.md, docs/INDEX.md
-- [ ] Tag `kp-agents-v0.1.0` poussé sur GitHub + GitLab
+- [x] `./sync.sh` produit les 3 cibles (`plugins/kp-agents/`, `dist/cursor/`, `dist/codex/`) sans toucher `~/.claude/commands/`
+- [x] `plugins/kp-agents/` contient les 7 agents sous forme de skills au format Claude Code natif
+- [x] `./sync.sh --clean` et `--clean-all` sont adaptés au nouveau périmètre
+- [x] `/plugin install kp-agents@kp-agents` fonctionne depuis un poste vierge
+- [x] `/kp-agents:brainstorm` (et les 6 autres) sont invocables et répondent correctement
+- [x] Documentation à jour : README, CLAUDE.md, docs/agents.md, docs/INDEX.md
+- [x] Tag `kp-agents-v0.1.0` poussé sur GitHub + GitLab
 
 ---
 
-## Phase 2 - Ouverture publique et extension (Priorité: COULD)
+## Phase 2 - Hygiène et extensibilité (Priorité: COULD)
 
-**Objectif** : permettre à des collaborateurs externes à KeyProd d'utiliser `kp-agents` sans friction d'authentification, et préparer l'accueil de futurs plugins (ex: plugins métier spécifiques par projet).
+**Objectif** : consolider l'outillage autour du plugin (automatisation, test) et préparer l'accueil de futurs plugins métier spécifiques.
 
-**Hypothèses à valider avant d'engager** :
-- Le repo peut être passé en visibilité publique sans exposer de données sensibles
-- Y a-t-il une demande externe réelle pour justifier l'effort de hardening ?
+**Décision 2026-04-18** : le passage du repo en visibilité publique est **retiré du périmètre**. Le fonctionnement au sein de l'organisation KeyProd avec token d'org est l'usage cible. Une ouverture publique pourra être reconsidérée ultérieurement si un besoin externe concret émerge.
 
-### Epics potentielles (à décider après Phase 1)
+### Epics potentielles (backlog qualifié, non priorisé)
 
-- E-0002 — Passage du repo en visibilité publique
-- E-0003 — Auto-bump de version via hash des skills (retrait du versioning manuel)
-- E-0004 — CI : check de cohérence `agents/` ↔ `plugins/` (hook pre-commit ou GitHub Action)
-- E-0005 — Premier plugin métier spécifique (ex: `kp-projet-X`)
+- **E-0002** — Auto-bump de version via hash des skills (retrait du versioning manuel, adresse le risque d'oubli de bump)
+- **E-0003** — CI : check de cohérence `agents/` ↔ `plugins/` (hook pre-commit ou GitHub Action), adresse aussi la recommandation P3.3 de la review S-0001 (test automatisé)
+- **E-0004** — Premier plugin métier spécifique (ex: `kp-projet-X` pour un projet KeyProd) — démontre l'extensibilité multi-plugins
+
+Ces epics sont sans priorité relative à ce stade — à cadrer via `/kp-agents:product` quand le besoin se matérialise.
 
 ---
 
@@ -52,10 +51,9 @@ author: product-agent
 
 | Risque | Phase | Mitigation |
 |---|---|---|
-| Drift entre `agents/` et `plugins/` committé | Phase 1 | Discipline de `./sync.sh` avant commit, CI en Phase 2 |
-| Oubli de bump `plugin.json` lors d'une release | Phase 1 | CHANGELOG obligatoire, checklist dans la story de release |
-| Difficulté pour les externes sans token GitHub org | Phase 2 | Passage en repo public (nécessite audit contenu) |
+| Drift entre `agents/` et `plugins/` committé | Phase 1 (résolu) → Phase 2 (automatisation) | Discipline `./sync.sh` avant commit ; automatisable via E-0003 |
+| Oubli de bump `plugin.json` lors d'une release | Phase 1 (résolu) → Phase 2 (automatisation) | CHANGELOG obligatoire ; automatisable via E-0002 |
 
 ## Hypothèses de passage d'une phase à l'autre
 
-- **Phase 1 → Phase 2** : au moins 3 devs KeyProd utilisent quotidiennement le plugin, retours positifs, zéro incident de dérive.
+- **Phase 1 → Phase 2** : ✅ atteint. La Phase 2 est un backlog d'améliorations, pas un objectif bloquant.

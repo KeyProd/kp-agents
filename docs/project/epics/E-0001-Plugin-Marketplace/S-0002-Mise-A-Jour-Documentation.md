@@ -1,7 +1,7 @@
 ---
 title: Mise à jour de la documentation projet
 date: 2026-04-17
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0002
 epic-id: E-0001
@@ -216,4 +216,19 @@ Aucun écart avec la spec. Point d'attention ajouté : la recommandation P2.1 de
 - **[✅] La story finit par déclencher explicitement un passage vers l'agent `/kp-agents:documentation` pour maintenir `docs/INDEX.md`**
   - Implémentation : ce point est adressé dans la section "Suite" du bilan de story (voir la réponse de Developer après commit)
   - Preuve : handoff vers `/kp-agents:documentation` explicité en fin de bilan
+
+## Review
+
+**Date** : 2026-04-18
+**Reviewer** : developer-agent (review allégée — changement essentiellement documentaire, pas de logique métier à risque)
+
+### Verdict : ✅ GO
+
+Les 12 critères d'acceptation sont validés. Aucune régression observée. La nouvelle section "Troubleshooting" du README intègre proprement la recommandation P2.1 de la review de S-0001. Zéro mention résiduelle de `recettemoi-*` dans les 3 fichiers. Les namespaces `/kp-agents:<nom>` sont utilisés de manière cohérente (post-renommage S-0003).
+
+### Recommandations
+
+Aucune recommandation bloquante. Aucune P2/P3 spécifique à S-0002 au-delà de ce qui est déjà consigné dans la review de S-0001.
+
+Statut : REVIEW → DONE.
 

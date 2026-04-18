@@ -1,7 +1,7 @@
 ---
 title: Release kp-agents-v0.1.0 et validation end-to-end
 date: 2026-04-17
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0003
 epic-id: E-0001
@@ -198,8 +198,8 @@ Depuis un poste vierge :
 - **[✅] `plugins/kp-agents/.claude-plugin/plugin.json` a `"version": "0.1.0"`**
   - Preuve : `jq .version plugins/kp-agents/.claude-plugin/plugin.json` retourne `"0.1.0"`
 
-- **[⏳] Le tag git `kp-agents-v0.1.0` existe localement et est poussé sur `origin` et `github`**
-  - À faire dans l'étape de commit/push finale (voir "Commit + tag + push")
+- **[✅] Le tag git `kp-agents-v0.1.0` existe localement et est poussé sur `origin` et `github`**
+  - Preuve : `git tag -l | grep kp-agents` retourne `kp-agents-v0.1.0` ; `git push origin kp-agents-v0.1.0` et `git push github kp-agents-v0.1.0` confirment `[new tag]`
 
 - **[✅] `CHANGELOG.md` existe à la racine avec l'entrée v0.1.0 + référence à l'epic E-0001**
   - Preuve : fichier `CHANGELOG.md` créé, première entrée `[kp-agents-v0.1.0] — 2026-04-17`
@@ -207,14 +207,14 @@ Depuis un poste vierge :
 - **[✅] `claude plugin validate /Users/vincent/GIT/kp-agents` retourne `✔ Validation passed`**
   - Preuve : validation exécutée post-renommage, output `✔ Validation passed`
 
-- **[⏳] Installation réelle depuis un poste vierge : `/plugin marketplace add KeyProd/kp-agents` + `/plugin install kp-agents@kp-agents` fonctionnent**
-  - Nécessite push sur `github/main` + action utilisateur côté client. Validable après push.
+- **[✅] Installation réelle depuis un poste vierge : `/plugin marketplace add KeyProd/kp-agents` + `/plugin install kp-agents@kp-agents` fonctionnent**
+  - Validation utilisateur le 2026-04-18 : install + reload + invocation OK
 
-- **[⏳] `/help` liste les 7 skills sous la forme `kp-agents:<nom>`**
-  - Validable après re-install côté client
+- **[✅] `/help` liste les 7 skills sous la forme `kp-agents:<nom>`**
+  - Validation utilisateur : les 7 skills apparaissent sous `/kp-agents:<nom>`
 
-- **[⏳] Chaque skill affiche l'annonce d'activation correcte**
-  - Validable après invocation par l'utilisateur
+- **[✅] Chaque skill affiche l'annonce d'activation correcte**
+  - Validation utilisateur : `/kp-agents:brainstorm` et les autres skills invoqués avec succès
 
 - **[✅] Le plugin `kp-agents-spike` (anciennement `kp-core-spike`) a été retiré du marketplace**
   - Preuve : `marketplace.json` ne contient qu'une seule entrée `kp-agents`
@@ -232,3 +232,18 @@ Depuis un poste vierge :
 - **Surveillance** : après le push + tag, vérifier qu'un client (autre poste) peut installer et invoquer sans friction
 - **S-0002 feedback** : la section "Troubleshooting" du README couvre le cas `0 skills` après renommage — utile pour cette migration précisément
 - **Backlog P3** : les recommandations hygiène de la review S-0001 (shopt nullglob, test automatisé, etc.) restent valables pour une epic future
+
+## Review
+
+**Date** : 2026-04-18
+**Reviewer** : developer-agent (review allégée — changement structurel mais circonscrit : renommage + bump + CHANGELOG)
+
+### Verdict : ✅ GO
+
+Tous les critères d'acceptation sont validés, y compris ceux marqués ⏳ qui nécessitaient un test côté client (confirmé OK par l'utilisateur le 2026-04-18). Le renommage `kp-core` → `kp-agents` (hors spec initiale mais demandé en cours de story) est propre et propagé sur tous les artefacts : 0 occurrence résiduelle de `kp-core` dans le repo. La version `0.1.0` est en place, le tag `kp-agents-v0.1.0` est poussé sur GitHub et GitLab, le CHANGELOG est initialisé.
+
+### Recommandations
+
+- **P3** (backlog futur) : automatiser le bump de version via hash des skills pour éviter les oublis humains — voir E-0003 potentielle en Phase 2 de la roadmap
+
+Statut : REVIEW → DONE. **Epic E-0001 terminée.**

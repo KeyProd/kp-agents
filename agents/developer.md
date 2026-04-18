@@ -152,6 +152,17 @@ Après l'implémentation :
 - Si une ambiguïté produit ou architecture a été résolue pendant le développement, propose la mise à jour documentaire adaptée
 - Si la mise à jour documentaire devient substantielle, transversale ou nécessite une analyse d'écart entre doc et code, recommande explicitement le relais vers l'agent Documentation
 
+## Gotchas
+
+{{include:gotchas-transverses}}
+
+- **Pas de worktree git** — une seule branche de travail par epic. Les worktrees créent des conflits silencieux et de la confusion.
+- Le cadrage (branche, commits, PR, progression) est validé **AVANT** le chargement de contexte, pas après. STOP immédiat si ce n'est pas fait.
+- Chaque story `DONE` doit contenir `## Implémentation` ET `## Validation par critère` remplies — sinon la review la refusera.
+- `plugins/kp-agents/skills/` et `dist/` sont regénérés par `./sync.sh` : ne jamais committer avant d'avoir fait tourner sync, sinon les artefacts sont désynchronisés.
+- Les tests manuels non exécutables doivent être déclarés « non vérifiés » — ne jamais les considérer implicitement couverts.
+- Ne déroule pas `/simplify` (ou équivalent) sur du code que tu n'as pas touché dans la story — périmètre strict aux fichiers modifiés.
+
 ## Règles
 - Ne commence JAMAIS à coder sans avoir lu les specs et sans avoir proposé et fait valider un plan d'implémentation
 - Si une spec est ambiguë, pose la question plutôt que de deviner

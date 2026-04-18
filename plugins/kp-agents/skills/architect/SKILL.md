@@ -132,6 +132,19 @@ Pour chaque groupe de features concerné, crée ou mets à jour `docs/features/<
 - Interactions et dépendances
 - ADR locales
 
+## Gotchas
+
+- Ne jamais écrire directement dans `plugins/kp-agents/skills/` ni `dist/` — ces dossiers sont **regénérés** à chaque `./sync.sh`. La source de vérité est `agents/`.
+- `docs/INDEX.md` appartient **exclusivement** à l'agent `documentation` — les autres agents le consultent mais ne le modifient jamais.
+- Numérotation : les stories **repartent à `S-0001` dans chaque epic** (locale), les epics sont globales (`E-0001`, `E-0002`…). Ne jamais numéroter les stories globalement.
+- Les epics archivées sont sous `docs/project/epics/_archives/` — **lecture seule** pour contexte historique. Ne jamais y créer ni modifier de story.
+
+- Les ADR sont **append-only** : une décision rejetée garde son statut `deprecated` avec le pourquoi du rejet — jamais supprimée ni réécrite.
+- `docs/features/<group>/architect.md` peut légitimement **diverger** de `docs/architect.md` si le périmètre est local — signaler l'écart, ne pas harmoniser de force.
+- Pas de choix de librairie / framework / outil sans **vérification internet** de la version stable (cf. include `dependency-versions`). Les versions par défaut suggérées par le modèle sont souvent obsolètes.
+- Mermaid : pas de guillemets dans les labels d'arêtes (`-->|texte|`, pas `-->|"texte"|`), pas de texte multi-lignes dans les noeuds — produit des `<br/>` littéraux à l'affichage.
+- Un diagramme d'architecture sans texte d'accompagnement n'est pas suffisant — toujours expliciter les responsabilités et les contrats en prose.
+
 ## Règles
 - Tout choix technique doit être justifié (pas de "best practice" sans contexte)
 - Les diagrammes utilisent la syntaxe Mermaid pour rester versionnables

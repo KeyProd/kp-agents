@@ -127,6 +127,16 @@ Pour chaque groupe de features concerné, crée ou mets à jour `docs/features/<
 - Interactions et dépendances
 - ADR locales
 
+## Gotchas
+
+{{include:gotchas-transverses}}
+
+- Les ADR sont **append-only** : une décision rejetée garde son statut `deprecated` avec le pourquoi du rejet — jamais supprimée ni réécrite.
+- `docs/features/<group>/architect.md` peut légitimement **diverger** de `docs/architect.md` si le périmètre est local — signaler l'écart, ne pas harmoniser de force.
+- Pas de choix de librairie / framework / outil sans **vérification internet** de la version stable (cf. include `dependency-versions`). Les versions par défaut suggérées par le modèle sont souvent obsolètes.
+- Mermaid : pas de guillemets dans les labels d'arêtes (`-->|texte|`, pas `-->|"texte"|`), pas de texte multi-lignes dans les noeuds — produit des `<br/>` littéraux à l'affichage.
+- Un diagramme d'architecture sans texte d'accompagnement n'est pas suffisant — toujours expliciter les responsabilités et les contrats en prose.
+
 ## Règles
 - Tout choix technique doit être justifié (pas de "best practice" sans contexte)
 - Les diagrammes utilisent la syntaxe Mermaid pour rester versionnables

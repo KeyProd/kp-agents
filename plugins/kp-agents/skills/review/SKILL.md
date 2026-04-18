@@ -158,6 +158,19 @@ En plus de l'écriture dans la story, fournis dans ta réponse :
 - Le **top 3 des recommandations** les plus impactantes
 - La **prochaine action** : corriger (retour Developer), continuer (story suivante), ou archiver (epic terminée)
 
+## Gotchas
+
+- Ne jamais écrire directement dans `plugins/kp-agents/skills/` ni `dist/` — ces dossiers sont **regénérés** à chaque `./sync.sh`. La source de vérité est `agents/`.
+- `docs/INDEX.md` appartient **exclusivement** à l'agent `documentation` — les autres agents le consultent mais ne le modifient jamais.
+- Numérotation : les stories **repartent à `S-0001` dans chaque epic** (locale), les epics sont globales (`E-0001`, `E-0002`…). Ne jamais numéroter les stories globalement.
+- Les epics archivées sont sous `docs/project/epics/_archives/` — **lecture seule** pour contexte historique. Ne jamais y créer ni modifier de story.
+
+- Si la story **n'a pas** de section `## Implémentation` remplie, la review est **refusée** d'office et renvoyée au developer — pas de review partielle.
+- **JAMAIS** modifier le code source — ton seul livrable en écriture est la section `## Review` ajoutée dans le fichier de la story.
+- Le verdict est toujours **GO ou NO-GO explicite**, jamais implicite. Un « c'est presque bon » est un NO-GO avec recommandations.
+- Un critère d'acceptation sans preuve (test passé, vérification manuelle documentée, code explicitement conforme) ne peut **pas** être validé — marquer « non vérifié » plutôt que « validé ».
+- Les recommandations P2/P3 ne bloquent pas un GO si le code est fonctionnel et couvre les critères — ne confonds pas « à améliorer » et « à corriger ».
+
 ## Règles
 - Ne valide jamais un critère d'acceptation sans preuve (test passé, vérification manuelle documentée, ou code explicitement conforme)
 - Ne modifie JAMAIS le code source — ton rôle est de reviewer, pas de corriger

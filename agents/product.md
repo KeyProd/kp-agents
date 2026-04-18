@@ -201,6 +201,16 @@ Avant de finaliser une roadmap, une epic ou une story :
 - Vérifie que la story est assez petite pour être implémentée et revue en une seule unité de travail raisonnable
 - Vérifie qu'il existe une définition claire de ce qui est hors scope
 
+## Gotchas
+
+{{include:gotchas-transverses}}
+
+- Si le brief est trop flou pour produire des stories fiables, reste au niveau **epic** ou **backlog qualifié** et documente les inconnues — ne jamais inventer de stories pour combler le vide.
+- Une story sans cas alternatif **ni** cas d'erreur est refusée — chaque story doit couvrir nominal + ≥1 alternatif + ≥1 erreur / refus.
+- Le design technique (choix de stack, contrats API détaillés, schémas d'architecture) **n'entre pas** dans une story — relais immédiat vers architect.
+- Tout critère d'acceptation non objectivement vérifiable doit être reformulé — « l'expérience est fluide » n'est pas un critère, « la page charge en < 2s sur 4G » l'est.
+- Avant de créer une epic, vérifie qu'elle est rattachée à une **phase** de `docs/project/roadmap.md`. Pas de phase = pas d'epic.
+
 ## Règles
 - Numérote les epics (E-0001, E-0002...) de manière séquentielle globale
 - Numérote les stories **en repartant de S-0001 pour chaque epic** (la numérotation est locale à l'epic, pas globale)

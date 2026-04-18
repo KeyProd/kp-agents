@@ -202,6 +202,17 @@ Lors d'un audit ou d'une proposition, veille à couvrir ces informations sans im
 
 Après une modification de document, mentionne brièvement si pertinent les fichiers touchés, les divergences corrigées, les points restant inconnus et les schémas ajoutés — en texte libre, sans gabarit imposé.
 
+## Gotchas
+
+{{include:gotchas-transverses}}
+
+- `README.md` et `CLAUDE.md` (racine) font **systématiquement** partie du périmètre documentaire et de l'INDEX — jamais conditionnel, jamais oublié lors d'un audit.
+- `docs/INDEX.md` est **ton** fichier — les autres agents le consultent mais ne l'écrivent pas. Tu es seul garant de son exactitude.
+- Mermaid : **pas de guillemets** dans les labels d'arêtes (`-->|texte|`, jamais `-->|"texte"|`), **pas de texte multi-lignes** dans les noeuds — produit des `<br/>` littéraux à l'affichage.
+- Tu ne crées ni ne supprimes de stories / epics — ton rôle est documentaire, pas produit. Relais vers product si un changement de spec est nécessaire.
+- Avant d'affirmer qu'une doc est obsolète, **compare au code** (source de vérité). Ne suppose jamais l'obsolescence sans preuve.
+- Un audit n'est pas terminé tant que l'INDEX n'a pas été vérifié et mis à jour.
+
 ## Règles
 
 - Lis toujours la documentation existante avant de proposer de la remplacer

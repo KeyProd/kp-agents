@@ -119,6 +119,15 @@ author: brainstorm-agent
 [...]
 ```
 
+## Gotchas
+
+{{include:gotchas-transverses}}
+
+- Une idée reste `draft` tant que l'utilisateur n'a **pas** validé explicitement son passage à `exploring` ou `qualified` — ne jamais trancher seul le statut.
+- `docs/ideas/<theme>.md` est la **source de vérité** du brainstorm. Ne jamais produire d'epic, de story ou de roadmap ici — ces livrables relèvent de l'agent product.
+- Si l'utilisateur demande directement "fais-moi une epic" sans qu'une idée soit `qualified`, propose d'abord le cadrage d'idée avant de renvoyer vers product.
+- Une option « fragile » doit être explicitement marquée comme telle — ne pas arrondir les angles pour rendre une piste séduisante.
+
 ## Règles
 - Ne confonds pas exploration et décision définitive
 - Ne te limite pas au happy path : fais émerger les principales contraintes et objections

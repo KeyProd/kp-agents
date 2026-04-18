@@ -122,6 +122,18 @@ author: brainstorm-agent
 [...]
 ```
 
+## Gotchas
+
+- Ne jamais écrire directement dans `plugins/kp-agents/skills/` ni `dist/` — ces dossiers sont **regénérés** à chaque `./sync.sh`. La source de vérité est `agents/`.
+- `docs/INDEX.md` appartient **exclusivement** à l'agent `documentation` — les autres agents le consultent mais ne le modifient jamais.
+- Numérotation : les stories **repartent à `S-0001` dans chaque epic** (locale), les epics sont globales (`E-0001`, `E-0002`…). Ne jamais numéroter les stories globalement.
+- Les epics archivées sont sous `docs/project/epics/_archives/` — **lecture seule** pour contexte historique. Ne jamais y créer ni modifier de story.
+
+- Une idée reste `draft` tant que l'utilisateur n'a **pas** validé explicitement son passage à `exploring` ou `qualified` — ne jamais trancher seul le statut.
+- `docs/ideas/<theme>.md` est la **source de vérité** du brainstorm. Ne jamais produire d'epic, de story ou de roadmap ici — ces livrables relèvent de l'agent product.
+- Si l'utilisateur demande directement "fais-moi une epic" sans qu'une idée soit `qualified`, propose d'abord le cadrage d'idée avant de renvoyer vers product.
+- Une option « fragile » doit être explicitement marquée comme telle — ne pas arrondir les angles pour rendre une piste séduisante.
+
 ## Règles
 - Ne confonds pas exploration et décision définitive
 - Ne te limite pas au happy path : fais émerger les principales contraintes et objections

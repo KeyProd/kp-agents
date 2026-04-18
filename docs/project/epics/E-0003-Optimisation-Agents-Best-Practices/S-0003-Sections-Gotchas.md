@@ -1,7 +1,7 @@
 ---
 title: Ajout des sections Gotchas par agent
 date: 2026-04-18
-status: TODO
+status: DONE
 author: product-agent
 story-id: S-0003
 epic-id: E-0003
@@ -89,3 +89,25 @@ En tant qu'agent exécuté par Claude Code, je veux disposer d'une liste de gotc
 
 - Faut-il inclure des gotchas liés aux plateformes distribuées (Cursor, Codex) dans tous les agents, ou seulement dans ceux qui s'exécutent différemment ? Proposition : uniquement dans les agents qui interagissent avec des outils plateforme-spécifiques (ex: `developer` avec `/simplify`).
 - Certains gotchas actuels sont formulés en règles (ex: "Pas de worktree" dans developer) — faut-il les déplacer depuis `## Règles` vers `## Gotchas` ou les dupliquer ? Proposition : **déplacer** (éviter la duplication), car c'est bien un gotcha.
+
+## Implémentation
+
+- Fichiers créés : `includes/gotchas-transverses.md` (4 items communs aux 7 agents).
+- Fichiers modifiés : les 7 `agents/*.md` — section `## Gotchas` ajoutée juste avant `## Règles`.
+- Chaque agent : `{{include:gotchas-transverses}}` puis 4 à 6 items spécifiques (brainstorm 4, product 5, architect 5, developer 6, review 5, documentation 6, ux-ui 6).
+- Régénérés via `./sync.sh --dist-only` ; aucun `{{include:` résiduel dans `plugins/`.
+
+## Validation par critère
+
+- **Section `## Gotchas` avant `## Règles` dans les 7 agents** : ✅ vérifié (`grep -c "## Gotchas"` → 1 par SKILL.md).
+- **Entre 5 et 10 items par agent** : ✅ include 4 items + 4 à 6 spécifiques = 8 à 10 items par agent, sous le cap.
+- **Items concrets et observables** : ✅ chaque item cite un fichier (`docs/INDEX.md`, `_archives/`, `README.md`), une commande (`./sync.sh`, `/simplify`), un workflow (`## Implémentation`, ADR append-only) ou un seuil (WCAG 4.5:1).
+- **Factorisation transverses** : ✅ les 4 gotchas partagés (plugins/dist, INDEX propriété doc, numérotation, archives) sont dans `includes/gotchas-transverses.md`.
+- **`./sync.sh` régénère correctement** : ✅ 7 SKILL.md contiennent la section.
+- **Gotchas minimaux exigés** :
+  - Transversal (plugins/dist + INDEX + numérotation + archives) : ✅ dans include.
+  - Developer (worktree + cadrage avant contexte) : ✅ items 1-2.
+  - Review (refus sans Implémentation + jamais modifier code) : ✅ items 1-2.
+  - Documentation (README+CLAUDE + Mermaid) : ✅ items 1 et 3.
+
+> Note : la suppression des doublons entre `## Règles` et `## Gotchas` (ex: "Pas de worktree" déjà listé dans les règles developer) est **déléguée à S-0005 / S-0006** (refontes par agent). Pour S-0003, les items sont ajoutés sans nettoyer l'existant afin de rester focalisé.

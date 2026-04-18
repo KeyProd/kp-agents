@@ -43,12 +43,9 @@ author: product-agent
 - [E-0002 - Auto-bump de version du plugin kp-agents](epics/E-0002-Auto-Bump-Version/readme.md) — 🔄 ready, 3 stories TODO
 - [E-0005 - Optimisation des agents selon best practices](epics/E-0005-Optimisation-Agents-Best-Practices/readme.md) — 🔄 ready, 8 stories TODO (voir [`docs/agents-review.md`](../agents-review.md))
 
-### Epics backlog (qualifié, non priorisé)
+### Backlog
 
-- **E-0003** — CI : check de cohérence `agents/` ↔ `plugins/` (hook pre-commit ou GitHub Action), adresse aussi la recommandation P3.3 de la review S-0001 (test automatisé)
-- **E-0004** — Premier plugin métier spécifique (ex: `kp-projet-X` pour un projet KeyProd) — démontre l'extensibilité multi-plugins
-
-Ces epics backlog sont sans priorité relative à ce stade — à cadrer via `/kp-agents:product` quand le besoin se matérialise.
+Aucune epic en backlog à ce jour. Les epics E-0003 et E-0004 initialement envisagées (CI de cohérence `agents/` ↔ `plugins/`, premier plugin métier) ont été **retirées du périmètre le 2026-04-18** — elles ne seront pas réalisées en Phase 2. Si un besoin concret émerge ultérieurement, un nouveau cadrage pourra être ouvert via `/kp-agents:product`.
 
 ---
 
@@ -56,8 +53,8 @@ Ces epics backlog sont sans priorité relative à ce stade — à cadrer via `/k
 
 | Risque | Phase | Mitigation |
 |---|---|---|
-| Drift entre `agents/` et `plugins/` committé | Phase 1 (résolu) → Phase 2 (automatisation) | Discipline `./sync.sh` avant commit ; automatisable via E-0003 |
-| Oubli de bump `plugin.json` lors d'une release | Phase 1 (résolu) → Phase 2 (automatisation) | CHANGELOG obligatoire ; automatisable via E-0002 |
+| Drift entre `agents/` et `plugins/` committé | Phase 1 (résolu) | Discipline `./sync.sh` avant commit ; à surveiller en revue de PR faute d'automatisation CI prévue |
+| Oubli de bump `plugin.json` lors d'une release | Phase 1 (résolu) → Phase 2 (automatisation) | CHANGELOG obligatoire ; automatisation via E-0002 |
 
 ## Hypothèses de passage d'une phase à l'autre
 

@@ -22,7 +22,7 @@ En tant qu'utilisateur de Claude Code avec le plugin kp-agents installé, je veu
 - Recommandation couverte : **B1** dans `docs/agents-review.md` (annexe, section A).
 - Priorité : **P1**.
 - Source des descriptions proposées : tableau dans `docs/agents-review.md#a-optimisation-du-champ-description-trigger-reliability`.
-- Les descriptions proposées sont en **anglais** pour maximiser le trigger matching multi-langues (pratique recommandée par agentskills.io).
+- Les descriptions proposées sont en **anglais** pour maximiser le trigger matching multi-langues (pratique recommandée par agentskills.io). **Décision actée le 2026-04-18** : les descriptions (frontmatter) sont en anglais, mais les agents doivent converser **exclusivement dans la langue de l'utilisateur** — cette règle est portée par l'include `activation.md` créé en S-0001.
 
 ## Règles métier
 
@@ -73,7 +73,7 @@ En tant qu'utilisateur de Claude Code avec le plugin kp-agents installé, je veu
 
 ## Notes techniques
 
-- Langue : descriptions en **anglais**. Si le mainteneur préfère le français, adapter les propositions du tableau mais garder le patron impératif.
+- Langue : descriptions en **anglais** (décision 2026-04-18). La consigne de réponse dans la langue de l'utilisateur est portée côté corps via l'include `activation.md` (cf. S-0001) — ne pas dupliquer ici.
 - Fichiers impactés : les 7 `agents/*.md` (uniquement frontmatter, ligne `description:`), régénération plugin + dist.
 - Attention au format YAML : si la description est longue, utiliser `description: >` suivi d'une indentation pour les multi-lignes.
 

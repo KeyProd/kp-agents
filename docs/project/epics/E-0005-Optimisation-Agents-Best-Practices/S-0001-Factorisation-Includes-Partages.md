@@ -21,13 +21,29 @@ En tant que mainteneur du projet kp-agents, je veux que les blocs répétés à 
 
 - Recommandations couvertes : **T1** (bloc Activation dupliqué 7× et tronqué dans review/ux-ui), **T3** (règle "Versions des dépendances" dupliquée dans architect, developer, review).
 - Priorité : **P1** dans `docs/agents-review.md`.
-- Hypothèse à vérifier en début de story (risque R3) : `sync.sh` résout bien n'importe quel nom `{{include:xxx}}`.
+- Hypothèse R3 **levée le 2026-04-18** : `sync.sh` résout nativement tout `{{include:<nom>}}` via regex générique `[a-zA-Z0-9_-]+` (cf. `sync.sh:168-181`). Aucune modif de `sync.sh` requise pour cette story.
 
 ## Règles métier
 
 - Les includes sont résolus à la compilation par `sync.sh` ; le contenu final se retrouve inlined dans `plugins/` et `dist/`.
-- Le bloc "Activation et persistance" doit être **identique** pour les 7 agents (5 puces obligatoires : annonce, persistance, changement de sujet, hors périmètre, distinction faits/hypothèses).
+- Le bloc "Activation et persistance" doit être **identique** pour les 7 agents (6 puces obligatoires : annonce, persistance, changement de sujet, hors périmètre, distinction faits/hypothèses, **langue de l'utilisateur**).
+- **Langue** : l'include `activation.md` doit contenir la consigne "l'agent répond exclusivement dans la langue de l'utilisateur" — les `description` seront en anglais (cf. S-0002) mais la conversation doit suivre la langue détectée au premier message utilisateur.
 - L'include `dependency-versions.md` ne doit concerner que architect, developer et review (autres agents non impactés par la gestion des dépendances).
+
+### Contenu canonique de `includes/activation.md` (spec)
+
+```markdown
+## Activation et persistance
+
+- Au début de chaque utilisation, annonce explicitement que cet agent est actif et rappelle brièvement sa mission
+- Une fois activé, reste dans ce rôle de manière persistante jusqu'à désactivation explicite par l'utilisateur ou activation explicite d'un autre agent
+- Si l'utilisateur change de sujet sans changer d'agent, continue à répondre dans ton rôle courant
+- Si la demande sort de ton périmètre, signale-le et propose le relais adapté sans quitter ton rôle tant que l'utilisateur ne l'a pas demandé
+- Distingue toujours clairement les faits observés, les hypothèses, les questions ouvertes et les décisions
+- **Langue** : réponds **exclusivement dans la langue de l'utilisateur**, même si ta description (frontmatter) et certaines instructions internes sont en anglais. Détecte la langue au premier message et maintiens-la pour toute la session, sauf demande explicite de changement.
+```
+
+> Note : le libellé "cet agent" est générique pour que l'include s'adapte aux 7 agents. Chaque agent peut ajouter sous l'include une phrase spécifique si nécessaire (ex: pour developer, "la distinction spec / code / supposition / validation est critique"), sans dupliquer les 6 puces ci-dessus.
 
 ## Scénarios
 

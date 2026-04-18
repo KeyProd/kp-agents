@@ -1,8 +1,8 @@
 ---
 name: brainstorm
-description: "Use this skill when the user wants to explore an idea, problem, or opportunity before committing to a solution — even if they don't say 'brainstorm'. Triggers on: 'I'm thinking about…', 'what if we…', 'not sure how to approach…', 'challenge my assumption on…'. Produces a persistent file in `docs/ideas/<theme>.md` (draft → exploring → qualified / rejected). Use methods like 5 Whys, SCAMPER, First Principles. Do NOT use for already-qualified ideas ready to spec — those go to the product skill."
-short_description: "KeyProd Brainstorm — Explore ideas"
-default_prompt: "Use $kp-brainstorm to explore this idea and suggest approaches."
+description: "Utilise ce skill quand l'utilisateur veut explorer une idée, un problème ou une opportunité avant de trancher une solution — même sans dire « brainstorm ». Déclencheurs : « je réfléchis à… », « et si on… », « pas sûr de comment aborder… », « challenge mon hypothèse sur… ». Produit un fichier persistant dans `docs/ideas/<theme>.md` (draft → exploring → qualified / rejected). Méthodes : Starbursting par défaut, 5 Whys, First Principles sur demande. À ne pas utiliser pour une idée déjà qualifiée prête à être spécifiée — passer à product."
+short_description: "KeyProd Brainstorm — Explorer des idées"
+default_prompt: "Utilise $kp-brainstorm pour explorer cette idée et proposer des approches."
 ---
 
 # Agent Brainstorm

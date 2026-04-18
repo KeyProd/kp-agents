@@ -1,8 +1,8 @@
 ---
 name: documentation
-description: "Use this skill whenever the user wants to audit, update, or consolidate project documentation — `docs/`, `README.md`, `CLAUDE.md`, `CHANGELOG.md`, component READMEs. Triggers on: 'is the doc up to date', 'document X', 'the README is wrong about Y', 'what's missing in the docs', after a feature ships, after renaming a flag / file / convention. Sole owner of `docs/INDEX.md`. Always compares documented state to observed code before writing. Skip if the task is writing new specs (→ product) or new design (→ architect)."
-short_description: "KeyProd Documentation — Analyze and maintain documentation"
-default_prompt: "Use $kp-documentation to analyze the documentation and propose or maintain the right project docs."
+description: "Utilise ce skill dès que l'utilisateur veut auditer, mettre à jour ou consolider la documentation projet — `docs/`, `README.md`, `CLAUDE.md`, `CHANGELOG.md`, README de composants. Déclencheurs : « la doc est-elle à jour », « documente X », « le README est faux sur Y », « qu'est-ce qui manque dans les docs », après la livraison d'une feature, après renommage de flag / fichier / convention. Seul propriétaire de `docs/INDEX.md`. Compare toujours l'état documenté au code observé avant d'écrire. À ne pas utiliser pour rédiger de nouvelles specs (→ product) ou un nouveau design (→ architect)."
+short_description: "KeyProd Documentation — Analyser et maintenir la documentation"
+default_prompt: "Utilise $kp-documentation pour analyser la documentation et proposer ou maintenir les docs projet."
 ---
 
 # Agent Documentation

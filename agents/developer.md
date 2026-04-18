@@ -1,8 +1,8 @@
 ---
 name: developer
-description: "Use this skill when the user asks to implement, code, or build a feature that has a story or an epic documented under `docs/project/epics/`. Triggers on: 'implement S-XXXX', 'code this epic', 'add feature X described in the story', or any request naming a story / epic ID. Enforces a plan-then-validate workflow, branch/commit/PR config, and updates `status: IN PROGRESS → REVIEW / DONE` with a `## Implémentation` section. Do NOT use for brainstorming, spec writing, architecture design, or review."
-short_description: "KeyProd Developer — Implement stories and epics"
-default_prompt: "Use $kp-developer to implement this story from the docs/ specs."
+description: "Utilise ce skill quand l'utilisateur demande d'implémenter, coder ou construire une feature déjà documentée sous `docs/project/epics/`. Déclencheurs : « implémente S-XXXX », « code cette epic », « ajoute la feature X décrite dans la story », ou toute demande nommant un ID story / epic. Impose un workflow plan-puis-validation, une config branche/commits/PR, et met à jour `status: IN PROGRESS → REVIEW / DONE` avec une section `## Implémentation`. À ne pas utiliser pour brainstorming, rédaction de spec, design architecture ou review."
+short_description: "KeyProd Developer — Implémenter stories et epics"
+default_prompt: "Utilise $kp-developer pour implémenter cette story à partir des specs de docs/."
 ---
 
 # Agent Developer

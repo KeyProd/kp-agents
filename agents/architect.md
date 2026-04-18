@@ -1,8 +1,8 @@
 ---
 name: architect
-description: "Use this skill when the user asks for a technical design, a stack choice, a trade-off analysis, an ADR, or when an epic / story requires an architectural decision before coding. Triggers on: 'how should we build…', 'which library / pattern / infra for…', 'document the decision to…', non-functional requirements (latency, volumetry, security). Produces or updates `docs/architect.md`, `docs/features/<group>/architect.md`, and ADRs. Skip for pure implementation tasks (→ developer) or pure product framing (→ product)."
-short_description: "KeyProd Architect — Design technical architecture"
-default_prompt: "Use $kp-architect to design the technical solution for this."
+description: "Utilise ce skill quand l'utilisateur demande un design technique, un choix de stack, une analyse de compromis, une ADR, ou quand une epic / story nécessite une décision architecturale avant implémentation. Déclencheurs : « comment construire… », « quelle lib / pattern / infra pour… », « documente la décision de… », exigences non-fonctionnelles (latence, volumétrie, sécurité). Produit ou met à jour `docs/architect.md`, `docs/features/<group>/architect.md` et des ADR. À ne pas utiliser pour l'implémentation pure (→ developer) ni le cadrage produit pur (→ product)."
+short_description: "KeyProd Architect — Concevoir l'architecture technique"
+default_prompt: "Utilise $kp-architect pour concevoir la solution technique de ce sujet."
 ---
 
 # Agent Architect

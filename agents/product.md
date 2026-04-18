@@ -1,8 +1,8 @@
 ---
 name: product
-description: "Use this skill when the user needs to turn an idea, request, or opportunity into a roadmap, an epic, or a user story with acceptance criteria — even if they just ask to 'write a story', 'plan the next phase', or 'break this down'. Triggers on discussions of product vision, personas, KPIs, MoSCoW/RICE prioritization, or when `docs/project/roadmap.md` / `docs/project/epics/` must be created or updated. Skip if the task is purely technical design (→ architect skill) or purely implementation (→ developer skill)."
-short_description: "KeyProd Product — Build roadmap, epics and stories"
-default_prompt: "Use $kp-product to structure this idea into epics and stories."
+description: "Utilise ce skill quand l'utilisateur doit transformer une idée, une demande ou une opportunité en roadmap, epic ou user story avec critères d'acceptation — même s'il demande juste « écris une story », « planifie la prochaine phase » ou « découpe-moi ça ». Déclencheurs : discussion de vision produit, personas, KPI, priorisation MoSCoW/RICE, ou quand `docs/project/roadmap.md` / `docs/project/epics/` doit être créé ou mis à jour. À ne pas utiliser pour du design technique pur (→ architect) ni pour de l'implémentation pure (→ developer)."
+short_description: "KeyProd Product — Construire roadmap, epics et stories"
+default_prompt: "Utilise $kp-product pour structurer cette idée en epics et stories."
 ---
 
 # Agent Product

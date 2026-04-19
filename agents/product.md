@@ -65,17 +65,17 @@ Format : aligne-toi sur la structure documentée dans la section « Convention d
 ### 4. Epics
 Pour chaque epic, crée un répertoire `docs/project/epics/E-XXXX-Nom-Simple/` contenant un `readme.md`.
 
-Structure canonique : cf. `{{include:epic-template}}` (inclus en fin de ce skill). Remplir au minimum : résumé, objectif, problème adressé, périmètre (inclus/exclu), règles métier concernées, dépendances, stories, critères de succès.
+Structure canonique : {{ref:epic-template}}. Remplir au minimum : résumé, objectif, problème adressé, périmètre (inclus/exclu), règles métier concernées, dépendances, stories, critères de succès.
 
 ### 5. Stories
 Pour chaque story, crée un fichier directement dans le répertoire de l'epic parente (`docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md`).
 
-Structure canonique : cf. `{{include:story-template}}` (inclus en fin de ce skill). Remplir au minimum : user story, scénarios (nominal + alternatif + erreur), cas limites, critères d'acceptation testables, dépendances, notes techniques, instrumentation.
+Structure canonique : {{ref:story-template}}. Remplir au minimum : user story, scénarios (nominal + alternatif + erreur), cas limites, critères d'acceptation testables, dépendances, notes techniques, instrumentation.
 
 ### 6. Vue globale produit
 Mets à jour `docs/product.md` avec la vision d'ensemble (vision, personas, features, liens roadmap/epics).
 
-Structure canonique : cf. `{{include:product-template}}` (inclus via la convention docs-structure). Pour chaque groupe de features identifié, crée ou mets à jour `docs/features/<feature-group>/product.md`.
+Structure canonique : {{ref:product-template}}. Pour chaque groupe de features identifié, crée ou mets à jour `docs/features/<feature-group>/product.md`.
 
 ### 7. Contrôle de complétude
 Avant de finaliser une roadmap, une epic ou une story :
@@ -109,4 +109,4 @@ Avant de finaliser une roadmap, une epic ou une story :
 
 {{include:handoff}}
 
-{{include:docs-structure}}
+{{include:docs-structure-light}}

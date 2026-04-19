@@ -4,6 +4,34 @@ Toutes les modifications notables de kp-agents sont listées ici. Format inspir�
 
 Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` → champ `version`). Les tags git suivent le format `<plugin-name>-v<X.Y.Z>`.
 
+> **Note sur l'auto-bump** : depuis la release v0.3.0, `sync.sh` bumpe automatiquement le composant `patch` de la version quand le contenu des skills change (hash SHA256 stocké dans `plugin.json._contentHash`). Les flags `--minor` et `--major` permettent de forcer un bump de niveau supérieur. Voir ADR-005 dans [`docs/architect.md`](docs/architect.md).
+
+---
+
+## [kp-agents-v0.3.0] — à venir (épic E-0002 terminée)
+
+Introduction de l'auto-bump de version du plugin `kp-agents` — le composant `patch` est désormais incrémenté automatiquement à chaque modification du contenu des skills, sans action manuelle du contributeur.
+
+### Ajouté
+
+- **Auto-bump patch** (S-0001) : `sync.sh` calcule un hash SHA256 stable sur `plugins/kp-agents/skills/**/SKILL.md` et incrémente le composant `patch` de la version si le hash a changé depuis le précédent sync.
+- **Champs custom `_contentHash` et `_lastAutoVersion`** dans `plugin.json` (préfixés `_`, acceptés par `claude plugin validate`). Servent respectivement à détecter les changements de contenu et à repérer les bumps manuels.
+- **Flags `--minor` et `--major`** (S-0002) : bump explicite des composantes semver supérieures avec reset des composantes inférieures (ex: `0.3.5 --minor` → `0.4.0`). Flags mutuellement exclusifs, incompatibles avec `--clean` / `--clean-all`.
+- **Détection du bump manuel** (S-0002) : un édit direct de `version` dans `plugin.json` est respecté — `sync.sh` ne re-bumpe jamais par-dessus une saisie humaine.
+- **ADR-005** (S-0003) : `docs/architect.md` documente la décision, les 5 alternatives rejetées et les conséquences. ADR-004 (versioning manuel) passée en `deprecated`.
+- **Section Troubleshooting versioning** (S-0003) dans `README.md` : 3 cas couverts (version ne bouge pas, conflit merge Git sur `plugin.json`, rollback d'une release).
+
+### Modifié
+
+- `README.md` et `CLAUDE.md` : l'étape de bump manuel dans "Publier une mise à jour" a été remplacée par une description du bump automatique + des flags `--minor`/`--major`.
+- `CLAUDE.md` : tableau "Flags disponibles" enrichi de `--minor` et `--major` avec règles d'exclusivité.
+
+### Notes
+
+- Aucun changement breaking pour les consommateurs du plugin (le flow d'installation et d'utilisation reste identique).
+- Pour les contributeurs : l'étape "bumper `plugin.json` à la main" disparaît du workflow standard. Elle reste possible en cas de besoin explicite (et est respectée par le mécanisme).
+- Dépendances : `shasum` (ou fallback `openssl`) + `python3` — tous standard macOS/Linux.
+
 ---
 
 ## [kp-agents-v0.2.0] — 2026-04-18

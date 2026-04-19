@@ -180,3 +180,28 @@ Utilise `/kp-agents:brainstorm` à la place de `/kp-brainstorm`, etc.
 /plugin marketplace add KeyProd/kp-agents@feat/ma-branche
 /plugin install kp-agents@kp-agents
 ```
+
+### Auto-bump de version : la version ne bouge pas après modification
+
+Si tu modifies un agent, lances `./sync.sh`, mais que la version dans `plugin.json` reste identique :
+
+1. **Vérifie les outils de hash** : `shasum` (standard macOS/Linux) ou `openssl` doit être dans le `PATH`. Si aucun des deux n'est disponible, `sync.sh` affiche un warning `"Hash calculation skipped (no SHA256 tool available)"` et saute le bump.
+2. **Vérifie `python3`** : la manipulation JSON du `plugin.json` dépend de `python3` (standard macOS/Linux récent). Test rapide : `python3 --version`.
+3. **Vérifie le champ `_lastAutoVersion`** : si `version` dans `plugin.json` diffère de `_lastAutoVersion`, `sync.sh` considère un bump manuel et ne re-bumpe pas. Aligne les deux champs pour réactiver l'auto-patch, ou utilise `./sync.sh --minor` / `--major` pour forcer.
+4. **Relance manuellement** après modification d'un agent : `./sync.sh`. Le log doit afficher `"Plugin version bumped: X.Y.Z → X.Y.(Z+1) (content changed)"`.
+
+### Conflit Git sur `plugin.json` après merge concurrent
+
+Si deux branches ont bumpé `plugin.json` en parallèle, un merge peut produire une incohérence entre `version` et `_contentHash`. Résolution :
+
+1. Résous le conflit manuellement en gardant la plus haute des deux versions
+2. Relance `./sync.sh` — il mettra à jour `_contentHash` pour refléter l'état réel des skills et alignera `_lastAutoVersion`
+3. Vérifie avec `claude plugin validate .` que le résultat est conforme
+
+### Rollback d'une release
+
+Semver ne permet pas de "descendre" la version côté client (un client qui a reçu `0.3.0` ignorera un futur `0.2.1` sorti après). Pour revenir en arrière :
+
+1. `git revert` le commit fautif (le code revient à l'état précédent)
+2. Lance `./sync.sh` — le hash détecte le changement et bumpe le patch en avant (`0.3.0` → `0.3.1`)
+3. La version `0.3.1` porte alors le contenu "corrigé" (qui est l'état pré-release problématique)

@@ -260,7 +260,7 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
 
 ### ADR-004 — Versioning semver manuel au départ
 
-- **Statut** : accepted
+- **Statut** : deprecated (superseded by ADR-005 — auto-bump implémenté par E-0002 en 2026-04-19)
 - **Contexte** : Claude Code détecte les mises à jour d'un plugin via le champ `version` de `plugin.json`. Sans bump, un nouveau commit ne déclenchera pas d'update chez les clients.
 - **Décision** : adopter **semver manuel** au départ. Le plugin `kp-agents` a sa version dans son `plugin.json`. Le dev bump à la main (patch par défaut, mineur si ajout d'agent, majeur si rupture comportementale). Un tag git correspondant est poussé (`kp-agents-v0.2.0`). Évolution possible vers auto-bump basé sur hash du skill.
 - **Conséquences** :
@@ -270,6 +270,34 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
 - **Alternatives rejetées** :
   - **Auto-bump via hash** : à envisager après v1.0, prématuré maintenant
   - **Single version pour toute la marketplace** : casse l'ADR-001 (indépendance des plugins)
+
+### ADR-005 — Auto-bump de version du plugin kp-agents
+
+- **Statut** : accepted (supersedes ADR-004)
+- **Contexte** : le versioning manuel d'ADR-004 s'est avéré fragile en pratique — l'epic E-0001 a rencontré un symptôme `0 skills` en conditions réelles dû à un oubli de bump. Les clients Claude Code comparent la `version` de `plugin.json` du cache local à celle du remote pour détecter les mises à jour ; un contenu modifié sans bump reste invisible. Volume : 7 skills à hasher, overhead négligeable (< 200 ms). Pas d'infrastructure CI/CD au projet (repo privé GitHub + miroir GitLab).
+- **Décision** :
+  1. `sync.sh` calcule un hash **SHA256** du contenu des `plugins/kp-agents/skills/**/SKILL.md` à chaque exécution (via `shasum -a 256`, fallback `openssl dgst -sha256`).
+  2. Le hash est stocké dans un **champ custom `_contentHash`** de `plugin.json` (préfixé `sha256:`). Spike du 2026-04-18 : `claude plugin validate` accepte les champs custom préfixés `_`.
+  3. Un second champ **`_lastAutoVersion`** stocke la version au dernier sync — sert à détecter un édit manuel de `version` et à le respecter.
+  4. Si le hash a changé et qu'aucun flag ni bump manuel n'est détecté : le composant **`patch`** est incrémenté automatiquement.
+  5. Deux flags explicites **`--minor`** et **`--major`** permettent de forcer un bump de niveau supérieur (ajout d'agent, rupture). Ces flags sont **mutuellement exclusifs** et **incompatibles avec `--clean` / `--clean-all`**.
+  6. Un édit manuel de `version` dans `plugin.json` est **respecté** : `sync.sh` détecte la divergence `version != _lastAutoVersion` et ne re-bumpe pas par-dessus.
+  7. Manipulation de `plugin.json` via **`python3`** (argv-safe) — pas d'ajout de `jq` comme dépendance.
+- **Conséquences** :
+  - ✅ Zéro risque d'oubli de bump sur une modification de contenu
+  - ✅ Traçabilité : chaque bump est visible dans le diff git de `plugin.json` (+ log explicite de `sync.sh`)
+  - ✅ Réversibilité : un bump manuel explicite est toujours respecté par l'auto-bump
+  - ✅ Overhead négligeable (< 200 ms sur 7 skills, mesuré)
+  - ⚠️ Deux champs `_contentHash` et `_lastAutoVersion` visibles dans `plugin.json` committé (cosmétique)
+  - ⚠️ Dépendance implicite à `python3` pour manipuler le JSON (standard macOS/Linux — documenté dans Troubleshooting)
+  - ⚠️ Un merge git concurrent sur `plugin.json` peut produire une incohérence `version` ↔ `_contentHash` → arbitrage manuel documenté
+- **Alternatives rejetées** :
+  - **Fichier séparé `.claude-plugin/.content-hash`** : aurait évité les champs custom dans `plugin.json`, mais ajoute un fichier supplémentaire à maintenir. Rejeté après validation du spike.
+  - **Bump basé sur un timestamp** (`date +%s`) : produirait un bump à chaque sync même sans changement → inflation indésirable + violation semver.
+  - **Bump basé sur `git rev-count` ou hash du commit** : couple le plugin à l'historique git, donne une version différente pour une branche vs main sans raison fonctionnelle.
+  - **Auto-bump "intelligent"** (ajout d'un fichier → bump mineur automatique) : ambigu sémantiquement (un renommage = retrait + ajout ?). Laissé comme décision humaine via flags.
+  - **Dépendance à `jq`** : plus élégant qu'un script Python inline, mais ajoute une dépendance d'installation. `python3` est déjà présent.
+- **Références** : [docs/features/auto-bump/architect.md](features/auto-bump/architect.md) (spec technique détaillée), stories E-0002 S-0001/S-0002/S-0003 dans `docs/project/epics/E-0002-Auto-Bump-Version/`
 
 ## Sécurité, performance et opérations
 

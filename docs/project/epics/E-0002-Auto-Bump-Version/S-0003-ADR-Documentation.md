@@ -1,7 +1,7 @@
 ---
 title: ADR-005 et consolidation documentaire
 date: 2026-04-18
-status: TODO
+status: REVIEW
 author: product-agent
 story-id: S-0003
 epic-id: E-0002
@@ -104,15 +104,89 @@ En tant que **contributeur ou mainteneur futur du projet**, je veux **trouver da
 
 ## Implémentation
 
-*à compléter par l'agent Developer (ou Documentation selon le relais)*
+**Date** : 2026-04-19
+**Branche** : `feat/E-0002-Auto-Bump-Version`
 
-- Fichiers créés / modifiés : `docs/architect.md`, `README.md`, `CHANGELOG.md`, éventuellement `CLAUDE.md`
-- Commandes de test :
-  - Relecture humaine de l'ADR-005
-  - `grep -c "ADR-" docs/architect.md` → 5
-  - `grep -i "bumper manuellement" README.md CLAUDE.md` → 0
-- Notes de review : à compléter
+### Fichiers modifiés
+
+- **`docs/architect.md`** :
+  - **ADR-004** (Versioning semver manuel) passée en statut `deprecated (superseded by ADR-005)`.
+  - **ADR-005 — Auto-bump de version du plugin kp-agents** ajoutée (statut `accepted, supersedes ADR-004`). Contexte quantifié (7 skills, < 200 ms, pas de CI), décision en 7 points (SHA256, `_contentHash`, `_lastAutoVersion`, patch auto, flags `--minor`/`--major` exclusifs, respect bump manuel, python3 argv-safe), 5 alternatives rejetées argumentées, référence à `docs/features/auto-bump/architect.md`.
+- **`README.md`** : section "Troubleshooting" enrichie de 3 nouvelles sous-sections dédiées au versioning :
+  - *Auto-bump de version : la version ne bouge pas après modification* — checklist `shasum`/`openssl`/`python3`/champ `_lastAutoVersion`.
+  - *Conflit Git sur `plugin.json` après merge concurrent* — procédure de résolution.
+  - *Rollback d'une release* — explication de la contrainte semver + technique via `git revert` + patch bump en avant.
+- **`CHANGELOG.md`** : entrée `[kp-agents-v0.3.0] — à venir (épic E-0002 terminée)` préparée en tête du fichier. 3 sous-sections (Ajouté / Modifié / Notes) qui consolident S-0001, S-0002 et S-0003. Note globale au header sur l'auto-bump introduite.
+
+### Pas de modification de `sync.sh`
+
+Cette story est purement documentaire. `sync.sh` n'a pas été touché.
+
+### Décisions prises pendant l'implémentation
+
+- **Statut ADR-004** : basculée en `deprecated` avec mention explicite de la supersedure par ADR-005. Cette transition est plus claire que de simplement réécrire ADR-004 (qui perdrait l'historique de décision).
+- **CHANGELOG : version `à venir`** : l'entrée est préparée mais pas encore taguée. Le tag `kp-agents-v0.3.0` sera appliqué au moment de la fermeture définitive de l'epic E-0002, pas dans S-0003 (qui reste au niveau doc).
+- **Pas d'entrée pour ADR-004 deprecated dans CHANGELOG** : les changements ADR sont de la gouvernance, pas du code livré. Le CHANGELOG se focus sur les changements observables par les utilisateurs du plugin.
+
+### Commandes de vérification
+
+```bash
+# 1. Compter les ADR dans architect.md — doit retourner 5
+grep -c "^### ADR-" docs/architect.md   # → 5
+
+# 2. ADR-004 bien en deprecated
+grep -A1 "### ADR-004" docs/architect.md | head -2
+
+# 3. ADR-005 présente et en accepted
+grep -A1 "### ADR-005" docs/architect.md | head -2
+
+# 4. Aucune mention "bumper manuellement" comme étape obligatoire dans README/CLAUDE.md
+grep -i "bumper.*manuellement\|bumper.*à la main" README.md CLAUDE.md
+# → aucune (les occurrences dans docs/project/ et docs/features/ sont dans des specs,
+#   qui décrivent le comportement retiré pour mémoire — OK)
+
+# 5. CHANGELOG contient l'entrée v0.3.0
+grep "kp-agents-v0.3.0" CHANGELOG.md
+
+# 6. Validation plugin
+claude plugin validate /Users/vincent/GIT/kp-agents   # → ✔ Validation passed
+```
+
+### Notes de review
+
+- Le draft ADR-005 prévu par Architect dans [docs/features/auto-bump/architect.md](../../features/auto-bump/architect.md) a été repris avec quelques ajustements mineurs (ordre des points de décision, référence croisée à la feature doc)
+- ADR-004 → `deprecated` explicite, respecte la convention ADR (un statut neutre historique reste visible)
+- Règle métier RM-4 intégralement respectée sur les 3 stories de l'epic
 
 ## Validation par critère
 
-*à compléter lors de la review*
+- **[✅] `docs/architect.md` contient une section ADR-005 avec les 5 rubriques standard** : Statut, Contexte, Décision, Conséquences, Alternatives rejetées. Preuve : `grep -c "^### ADR-" docs/architect.md` → 5.
+- **[✅] L'ADR-005 cite précisément les champs `_contentHash` et `_lastAutoVersion` et l'algorithme SHA256** : vérifiable dans la section Décision (7 points).
+- **[✅] L'ADR-005 liste au moins 2 alternatives rejetées** : 5 alternatives documentées (fichier séparé, timestamp, git rev-count, auto-bump intelligent, jq) avec raison du rejet pour chacune.
+- **[⚠️] L'ADR-005 est référencée dans le sommaire des ADR en haut de `docs/architect.md`** : `docs/architect.md` n'a pas de sommaire explicite des ADR — les ADR sont listées en séquence dans la section "Décisions techniques". Le point est traité par adjonction en fin de liste (ordre chronologique respecté). **Limite** : pas de lien TOC, mais l'organisation actuelle du document ne comportait pas de TOC avant cette story.
+- **[✅] `README.md` contient une section Troubleshooting dédiée au versioning plugin couvrant au moins 2 cas** : 3 cas documentés (version ne bouge pas, conflit merge, rollback).
+- **[✅] `CHANGELOG.md` contient une entrée pour la prochaine release concernant E-0002** : entrée `[kp-agents-v0.3.0] — à venir (épic E-0002 terminée)` présente avec Ajouté / Modifié / Notes.
+- **[✅] `CLAUDE.md` ne contient plus aucune référence au bump manuel comme étape obligatoire** : vérifié par grep — les mentions restantes sont dans les docs de spec (stories E-0002) qui **parlent** de ce qui a été retiré.
+- **[✅] Aucune incohérence entre la doc et le comportement réel de `sync.sh`** : relecture manuelle — les flags documentés correspondent à l'implémentation (S-0001 + S-0002), les messages de log annoncés dans les docs correspondent à ce que le code émet.
+- **[✅] Handoff explicite vers `/kp-agents:documentation`** : voir section "Suggestion de relais" ci-dessous.
+- **[✅] Aucune régression de code** : `./sync.sh` + `claude plugin validate` passent en final. Les modifs de cette story sont 100 % documentaires.
+
+### Suggestion de relais (après merge de l'epic)
+
+> **Handoff → /kp-agents:documentation**
+> **Depuis** : developer-agent (S-0003 DONE, epic E-0002 à clôturer)
+> **Contexte** : Epic E-0002 "Auto-bump de version" terminée (3 stories DONE), prêt pour archivage
+> **Acquis** :
+> - `plugins/kp-agents/.claude-plugin/plugin.json` a les champs `_contentHash` et `_lastAutoVersion`
+> - ADR-005 dans `docs/architect.md` (ADR-004 passée deprecated)
+> - README.md : section Troubleshooting enrichie (3 cas versioning)
+> - CHANGELOG.md : entrée v0.3.0 préparée pour la release
+> - `docs/features/auto-bump/architect.md` : spec technique de référence (créée par Architect)
+> **À traiter** (dans cet ordre) :
+> 1. Retirer E-0002 de la section "Epics actives" dans `docs/INDEX.md`
+> 2. Ajouter E-0002 dans "Epics archivées" avec compteur 3/3 stories DONE
+> 3. Archiver le dossier `docs/project/epics/E-0002-Auto-Bump-Version/` dans `_archives/` via `git mv`
+> 4. Mettre à jour la roadmap : E-0002 passe en "done", Phase 2 reste active avec E-0003 si non encore archivée
+> 5. Ajouter `docs/features/auto-bump/architect.md` dans le tableau "Features" de l'INDEX
+> 6. Rafraîchir les dates "Mis à jour" pour les documents touchés aujourd'hui
+> **Fichiers de référence** : `docs/INDEX.md`, `docs/project/roadmap.md`, `docs/project/epics/E-0002-Auto-Bump-Version/`

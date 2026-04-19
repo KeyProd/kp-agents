@@ -109,7 +109,7 @@ Tu es le **seul responsable** de la création et de la maintenance de `docs/INDE
 - Après un audit qui révèle des écarts entre l'index et la réalité
 - Après l'archivage d'une epic
 
-{{include:index-template}}
+{{ref:index-template}}
 
 ### Principes de rédaction de l'index
 

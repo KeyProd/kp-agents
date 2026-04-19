@@ -74,27 +74,32 @@ Sans `--minor` ni `--major`, `sync.sh` **auto-bumpe le patch** si le contenu des
 - Nettoyage automatique au début de chaque sync : utilise `.installed-agents` pour supprimer chirurgicalement les agents du run précédent (permet de supprimer proprement un agent retiré de `agents/`). Fallback sur glob `kp-*` si le manifeste est absent.
 - Cleanup one-shot des résidus d'installations Claude locales antérieures (`dist/claude/` + `~/.claude/commands/kp-*.md`) au début de chaque `sync.sh` — idempotent
 
-## Includes
+## Includes et references
 
-Les agents peuvent inclure des templates partagés avec la directive `{{include:nom}}` :
-- `activation` — Bloc « Activation et persistance » partagé par les 7 agents (6 puces : annonce, persistance, changement de sujet, hors périmètre, distinction faits/hypothèses, langue utilisateur)
-- `dependency-versions` — Règle « Versions des dépendances » partagée par architect, developer et review
-- `docs-structure` — Convention de structure documentaire projet (complète, avec tous les templates)
-- `docs-structure-light` — Convention de structure documentaire (arborescence et règles uniquement, sans templates)
-- `guardrails` — Garde-fous anti-hallucination transversaux
-- `handoff` — Convention de relais inter-agents (bloc de contexte structuré)
-- `product-template` — Template pour docs/product.md
-- `architect-template` — Template pour docs/architect.md
-- `epic-template` — Template pour les epics
-- `story-template` — Template pour les stories
-- `index-template` — Template pour docs/INDEX.md (utilisé uniquement par documentation)
+Deux directives de composition sont résolues par `sync.sh` avant écriture dans `plugins/` et `dist/` :
+
+### `{{include:nom}}` — inline sur toutes les cibles
+Pour le contenu transverse *léger* qui doit être présent immédiatement à l'activation du skill :
+- `activation` — Rôle et persistance (2 lignes)
+- `dependency-versions` — Règle « Versions des dépendances » (architect, developer, review)
+- `docs-structure` — Convention de structure documentaire (complète, inclut les 4 {{ref}} de templates)
+- `docs-structure-light` — Arborescence + règles, sans templates
+- `handoff` — Convention de relais inter-agents
+- `gotchas-transverses` — Gotchas communs aux 7 agents
+
+### `{{ref:nom}}` — reference file (progressive disclosure, agentskills.io)
+Pour le contenu *lourd* ne servant que ponctuellement (templates de livrables) :
+- **Claude plugin** : le fichier est copié dans `plugins/kp-agents/skills/<agent>/references/<nom>.md` et la directive est remplacée par un pointeur court. Claude Code charge le template **à la demande** via Read.
+- **Cursor / Codex** : inline (ces cibles ne supportent pas la sous-arborescence → fallback behavior).
+
+Refs disponibles :
+- `product-template`, `architect-template`, `epic-template`, `story-template`, `index-template`
 
 ### Stratégie d'inclusion par agent
-- **product, developer, review** : `docs-structure` (complet — ces agents créent/modifient stories et epics)
-- **architect** : `docs-structure-light` + `architect-template` (n'a besoin que du template architecture)
-- **brainstorm, documentation, ux-ui** : `docs-structure-light` (n'ont pas besoin des templates détaillés)
-
-Les directives `{{include:xxx}}` sont **résolues par `sync.sh`** avant écriture dans `plugins/` et `dist/`. Les artefacts générés contiennent du markdown final sans dépendances externes.
+- **product, developer, review** : `docs-structure` (qui charge les 4 templates en ref)
+- **architect** : `docs-structure-light` + `architect-template` (ref)
+- **documentation** : `docs-structure-light` + `index-template` (ref)
+- **brainstorm, ux-ui** : `docs-structure-light`
 
 ## Workflow inter-agents
 

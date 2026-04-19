@@ -63,10 +63,10 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 
 Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes :
 
-- `docs/product.md` : voir `{{include:product-template}}`
-- `docs/architect.md` : voir `{{include:architect-template}}`
-- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : voir `{{include:epic-template}}`
-- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : voir `{{include:story-template}}`
+- `docs/product.md` : {{ref:product-template}}
+- `docs/architect.md` : {{ref:architect-template}}
+- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : {{ref:epic-template}}
+- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : {{ref:story-template}}
 
 Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
 - la clarté du public cible

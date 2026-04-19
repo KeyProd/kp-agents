@@ -147,4 +147,4 @@ Pour chaque groupe de features concerné, crée ou mets à jour `docs/features/<
 
 {{include:docs-structure-light}}
 
-{{include:architect-template}}
+{{ref:architect-template}}

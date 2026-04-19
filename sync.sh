@@ -217,6 +217,66 @@ resolve_includes() {
 }
 
 # ─────────────────────────────────────────────────────────────
+# Resolve {{ref:filename}} for plugin target (progressive disclosure)
+# Copies includes/<name>.md → plugins/kp-agents/skills/<agent>/references/<name>.md
+# Replaces directive with a short pointer that tells the agent to load the file on demand.
+# ─────────────────────────────────────────────────────────────
+resolve_refs_plugin() {
+    local content="$1"
+    local skill_dir="$2"
+    local refs_dir="$skill_dir/references"
+
+    while [[ "$content" =~ \{\{ref:([a-zA-Z0-9_-]+)\}\} ]]; do
+        local ref_name="${BASH_REMATCH[1]}"
+        local ref_file="$INCLUDES_DIR/${ref_name}.md"
+
+        if [[ -f "$ref_file" ]]; then
+            mkdir -p "$refs_dir"
+            cp "$ref_file" "$refs_dir/${ref_name}.md"
+            local pointer="voir \`references/${ref_name}.md\` (à lire à la demande)"
+            content="${content//\{\{ref:$ref_name\}\}/$pointer}"
+        else
+            warn "Ref not found: $ref_file"
+            content="${content//\{\{ref:$ref_name\}\}/}"
+        fi
+    done
+
+    echo "$content"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Resolve {{ref:filename}} for cursor/codex targets (inline fallback)
+# Cursor and Codex don't support progressive disclosure → inline the full template.
+# ─────────────────────────────────────────────────────────────
+resolve_refs_inline() {
+    local content="$1"
+
+    while [[ "$content" =~ \{\{ref:([a-zA-Z0-9_-]+)\}\} ]]; do
+        local ref_name="${BASH_REMATCH[1]}"
+        local ref_file="$INCLUDES_DIR/${ref_name}.md"
+
+        if [[ -f "$ref_file" ]]; then
+            local ref_content
+            ref_content=$(<"$ref_file")
+            content="${content//\{\{ref:$ref_name\}\}/$ref_content}"
+        else
+            warn "Ref not found: $ref_file"
+            content="${content//\{\{ref:$ref_name\}\}/}"
+        fi
+    done
+
+    echo "$content"
+}
+
+# ─────────────────────────────────────────────────────────────
+# Clean stale references/ folder before regenerating plugin skill
+# ─────────────────────────────────────────────────────────────
+clean_plugin_refs() {
+    local skill_dir="$1"
+    rm -rf "$skill_dir/references"
+}
+
+# ─────────────────────────────────────────────────────────────
 # Generate Claude Code plugin skill (plugins/kp-agents/skills/<name>/SKILL.md)
 # Format: minimal YAML frontmatter (description only) + body
 # Committed to git, distributed via plugin marketplace.
@@ -601,10 +661,17 @@ main() {
         body=$(extract_body "$agent_file")
         body=$(resolve_includes "$body")
 
+        # Resolve {{ref:X}} per target (progressive disclosure for plugin, inline fallback elsewhere)
+        local plugin_skill_dir="$PLUGIN_SKILLS_DIR/$AGENT_NAME"
+        clean_plugin_refs "$plugin_skill_dir"
+        local body_plugin body_inline
+        body_plugin=$(resolve_refs_plugin "$body" "$plugin_skill_dir")
+        body_inline=$(resolve_refs_inline "$body")
+
         # Generate for each tool
-        generate_plugin "$AGENT_NAME" "$AGENT_DESC" "$body"
-        generate_cursor "$AGENT_NAME" "$AGENT_DESC" "$body"
-        generate_codex  "$AGENT_NAME" "$AGENT_DESC" "$body" "$AGENT_SHORT_DESC" "$AGENT_DEFAULT_PROMPT"
+        generate_plugin "$AGENT_NAME" "$AGENT_DESC" "$body_plugin"
+        generate_cursor "$AGENT_NAME" "$AGENT_DESC" "$body_inline"
+        generate_codex  "$AGENT_NAME" "$AGENT_DESC" "$body_inline" "$AGENT_SHORT_DESC" "$AGENT_DEFAULT_PROMPT"
 
         synced_names+=("$AGENT_NAME")
         count=$((count + 1))

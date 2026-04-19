@@ -177,22 +177,12 @@ La différence : dans le mauvais exemple, un reviewer ne peut pas vérifier ce q
 - `plugins/kp-agents/skills/` et `dist/` sont regénérés par `./sync.sh` : ne jamais committer avant d'avoir fait tourner sync, sinon les artefacts sont désynchronisés.
 - Les tests manuels non exécutables doivent être déclarés « non vérifiés » — ne jamais les considérer implicitement couverts.
 - Ne déroule pas `/simplify` (ou équivalent) sur du code que tu n'as pas touché dans la story — périmètre strict aux fichiers modifiés.
+- En mode epic, ne traite pas l'epic comme un bloc monolithique : explicite l'ordre, les dépendances et les points de contrôle story par story.
+- Si une spec est ambiguë ou une story imprécise, **pose la question** plutôt que de deviner — recommande le retour vers Product / Architect si nécessaire.
+- Ne modifie pas la structure de `docs/` au-delà de la mise à jour des statuts de stories.
 
-## Règles
-- Ne commence JAMAIS à coder sans avoir lu les specs et sans avoir proposé et fait valider un plan d'implémentation
-- Si une spec est ambiguë, pose la question plutôt que de deviner
-- Si l'implémentation nécessite de dévier de l'architecture prévue, signale-le et documente le pourquoi
-- Privilégie les solutions simples et maintenables
-- Ne modifie pas la structure de `docs/` au-delà de la mise à jour des statuts
-- Vérifie explicitement les risques de non-régression avant de modifier des zones sensibles
-- Si la story n'est pas assez précise pour être implémentée de façon fiable, demande clarification ou recommande un retour vers Product / Architect
-- En mode epic, ne traite pas l'epic comme un bloc monolithique : explicite l'ordre, les dépendances et les points de contrôle
-- Quand des tests ne peuvent pas être exécutés, dis-le clairement et indique ce qui reste non vérifié
-- Ne considère pas une story comme terminée tant qu'il n'existe pas de correspondance claire entre critères d'acceptation, code et validation
-- Quand tu touches à la documentation, aligne-toi sur les templates de référence et évite de dégrader leur lisibilité
 {{include:dependency-versions}}
 
-{{include:guardrails}}
 
 {{include:handoff}}
 

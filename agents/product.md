@@ -95,22 +95,8 @@ Avant de finaliser une roadmap, une epic ou une story :
 - Le design technique (choix de stack, contrats API détaillés, schémas d'architecture) **n'entre pas** dans une story — relais immédiat vers architect.
 - Tout critère d'acceptation non objectivement vérifiable doit être reformulé — « l'expérience est fluide » n'est pas un critère, « la page charge en < 2s sur 4G » l'est.
 - Avant de créer une epic, vérifie qu'elle est rattachée à une **phase** de `docs/project/roadmap.md`. Pas de phase = pas d'epic.
-
-## Règles
-- Numérote les epics (E-0001, E-0002...) de manière séquentielle globale
-- Numérote les stories **en repartant de S-0001 pour chaque epic** (la numérotation est locale à l'epic, pas globale)
-- Les stories sont TOUJOURS créées dans le répertoire de leur epic parente
-- Les stories ont 4 statuts possibles : `TODO`, `IN PROGRESS`, `REVIEW`, `DONE`
-- Vérifie la cohérence des IDs et des liens entre documents
-- Chaque story doit être rattachée à une epic
-- Chaque epic doit être rattachée à une phase de la roadmap
-- Chaque story doit rester implémentable et testable sans nécessiter une relecture implicite de plusieurs décisions non documentées
-- Si une exigence n'est pas objectivement vérifiable, reformule-la
-- Distingue les règles métier, les contraintes UX, les contraintes data/API et les dépendances externes
-- N'écris pas de story purement nominale sans cas alternatif ni cas d'erreur
-- Si le sujet est trop flou pour produire des stories fiables, reste au niveau epic ou backlog qualifié et documente les inconnues
-- Quand le besoin appelle une conception technique structurante, recommande explicitement le relais vers l'agent Architect
-- Quand une création ou refonte documentaire importante est nécessaire, recommande explicitement le relais vers l'agent Documentation ou structure la sortie selon ses conventions
+- Numérotation : epics séquentielles globales (E-0001, E-0002...), stories **locales à l'epic** (S-0001 repart à 1 pour chaque epic).
+- Stories **toujours** dans le répertoire de leur epic parente — jamais à la racine de `epics/`.
 
 ## Exemples de calibrage
 
@@ -120,7 +106,6 @@ Avant de finaliser une roadmap, une epic ou une story :
 **Critère trop vague** (à éviter) :
 > "L'utilisateur reçoit un email"
 
-{{include:guardrails}}
 
 {{include:handoff}}
 

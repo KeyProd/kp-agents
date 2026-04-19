@@ -150,11 +150,7 @@ En plus de l'écriture dans la story, fournis dans ta réponse :
 - Le verdict est toujours **GO ou NO-GO explicite**, jamais implicite. Un « c'est presque bon » est un NO-GO avec recommandations.
 - Un critère d'acceptation sans preuve (test passé, vérification manuelle documentée, code explicitement conforme) ne peut **pas** être validé — marquer « non vérifié » plutôt que « validé ».
 - Les recommandations P2/P3 ne bloquent pas un GO si le code est fonctionnel et couvre les critères — ne confonds pas « à améliorer » et « à corriger ».
-
-## Règles
-- Ne valide jamais un critère d'acceptation sans preuve (test passé, vérification manuelle documentée, ou code explicitement conforme).
-- Si le Developer a signalé des limites connues dans sa validation, vérifie si elles sont acceptables ou bloquantes.
-- Cite toujours les fichiers, lignes et snippets concernés (format `path/file.ts:42`).
+- Cite toujours les fichiers, lignes et snippets concernés (format `path/file.ts:42`) — pas de remarque flottante sans ancre.
 - En mode epic, produis un bilan consolidé à la fin avec le statut de chaque story reviewée.
 
 ### Exemple de recommandation bien formulée
@@ -168,7 +164,6 @@ En plus de l'écriture dans la story, fournis dans ta réponse :
 | 1 | sécurité | P1 | Améliorer la sécurité des tokens | Utiliser une meilleure approche |
 {{include:dependency-versions}}
 
-{{include:guardrails}}
 
 {{include:handoff}}
 

@@ -90,10 +90,11 @@ Lancer `./sync.sh` — le plugin Claude exposera l'agent comme `/kp-agents:mon-a
 ### Publier une mise à jour Claude Code
 
 1. Modifier l'agent source dans `agents/<nom>.md`
-2. Lancer `./sync.sh` pour régénérer `plugins/kp-agents/skills/<nom>/SKILL.md`
-3. Bumper la version dans `plugins/kp-agents/.claude-plugin/plugin.json` (semver — patch, mineur ou majeur selon la nature du changement)
-4. `git add agents/ plugins/ && git commit && git tag kp-agents-v<X.Y.Z> && git push --tags`
-5. Les utilisateurs reçoivent la mise à jour au prochain `/plugin marketplace update` (ou automatiquement selon leur config)
+2. Lancer `./sync.sh` pour régénérer `plugins/kp-agents/skills/<nom>/SKILL.md`. **La version patch est bumpée automatiquement** si le contenu des skills a changé (via un hash SHA256 stocké dans `_contentHash`). Pour un bump mineur (ajout d'agent) ou majeur (rupture), utiliser `./sync.sh --minor` ou `./sync.sh --major` (à venir).
+3. `git add agents/ plugins/ && git commit && git tag kp-agents-v<X.Y.Z> && git push --tags`
+4. Les utilisateurs reçoivent la mise à jour au prochain `/plugin marketplace update` (ou automatiquement selon leur config)
+
+**Note** : un bump manuel de `version` dans `plugin.json` (édition directe) est **respecté** par `sync.sh` — il ne re-bumpe pas par-dessus. Le mécanisme compare `version` à `_lastAutoVersion` pour détecter les bumps manuels.
 
 ## Includes
 

@@ -48,7 +48,8 @@ docs/              ← Documentation projet (vision, architecture, epics, storie
 3. Lancer `./sync.sh` (ou `./sync.sh --dist-only` pour générer sans installer Cursor/Codex)
 4. Le script génère le SKILL.md dans `plugins/kp-agents/skills/<nom>/` et les artefacts Cursor/Codex préfixés `kp-`
 5. Publier la mise à jour Claude :
-   - Bumper `plugins/kp-agents/.claude-plugin/plugin.json` (semver)
+   - `sync.sh` **bumpe automatiquement la version patch** si le contenu des skills a changé (cf. `_contentHash` + `_lastAutoVersion` dans `plugin.json` — géré par le script, ne pas modifier à la main)
+   - Pour un bump mineur ou majeur (ajout/retrait d'agent, rupture), utiliser `./sync.sh --minor` ou `./sync.sh --major` (à venir dans S-0002 de E-0002)
    - `git add agents/ plugins/` puis commit, tag `kp-agents-v<X.Y.Z>` et push
    - Les utilisateurs reçoivent la maj au prochain `/plugin marketplace update`
 

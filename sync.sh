@@ -29,6 +29,7 @@ PLUGIN_DIR="$AGENTS_DIR/plugins/kp-agents"
 PLUGIN_SKILLS_DIR="$PLUGIN_DIR/skills"
 
 MANIFEST_FILE="$AGENTS_DIR/.installed-agents"
+PLUGIN_JSON="$PLUGIN_DIR/.claude-plugin/plugin.json"
 INSTALL_TARGETS=true
 CLEAN_ONLY=false
 CLEAN_ALL=false
@@ -388,6 +389,123 @@ clean() {
 }
 
 # ─────────────────────────────────────────────────────────────
+# Auto-bump de version du plugin kp-agents (E-0002 S-0001)
+#
+# Stockage : trois champs dans plugin.json
+#   version          → version semver publique (lue par Claude Code client)
+#   _contentHash     → SHA256 du contenu des skills générés, préfixé "sha256:"
+#   _lastAutoVersion → valeur de version au dernier sync, sert à détecter
+#                      un bump manuel effectué en dehors de ce script
+# ─────────────────────────────────────────────────────────────
+
+# Calcul d'un hash SHA256 stable sur plugins/kp-agents/skills/**/SKILL.md
+# Fallback openssl si shasum indisponible. Renvoie "" si aucun outil.
+compute_content_hash() {
+    if command -v shasum >/dev/null 2>&1; then
+        ( cd "$PLUGIN_DIR" && /usr/bin/find skills -type f -name "SKILL.md" | sort | xargs shasum -a 256 | shasum -a 256 | awk '{print $1}' )
+    elif command -v openssl >/dev/null 2>&1; then
+        ( cd "$PLUGIN_DIR" && /usr/bin/find skills -type f -name "SKILL.md" | sort | while IFS= read -r f; do
+            echo "$(openssl dgst -sha256 "$f" | awk '{print $NF}')  $f"
+          done | openssl dgst -sha256 | awk '{print $NF}' )
+    else
+        echo ""
+    fi
+}
+
+# Lit un champ de premier niveau dans plugin.json (via python3, renvoie "" si absent)
+# Le champ est passé en argv pour éviter l'interpolation shell.
+read_plugin_json_field() {
+    local field="$1"
+    python3 - "$PLUGIN_JSON" "$field" <<'PYEOF'
+import json, sys
+path, field = sys.argv[1], sys.argv[2]
+try:
+    d = json.load(open(path))
+    print(d.get(field, ''))
+except Exception:
+    print('')
+PYEOF
+}
+
+# Met à jour version / _contentHash / _lastAutoVersion dans plugin.json
+# Préserve l'indentation (indent=2) et les autres champs en place.
+update_plugin_json() {
+    local new_version="$1" new_hash="$2" new_last_auto="$3"
+    python3 - "$PLUGIN_JSON" "$new_version" "$new_hash" "$new_last_auto" <<'PYEOF'
+import json, sys
+path, new_version, new_hash, new_last_auto = sys.argv[1:5]
+with open(path) as f:
+    d = json.load(f)
+d['version'] = new_version
+d['_contentHash'] = new_hash
+d['_lastAutoVersion'] = new_last_auto
+with open(path, 'w') as f:
+    json.dump(d, f, indent=2)
+    f.write('\n')
+PYEOF
+}
+
+# Incrémente un composant d'une version semver X.Y.Z
+# Usage : bump_version "0.2.0" patch → 0.2.1
+bump_version() {
+    local current="$1" kind="$2"
+    if ! [[ "$current" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+        err "Invalid version format in plugin.json: \"$current\" (expected X.Y.Z)"
+        return 1
+    fi
+    local major="${BASH_REMATCH[1]}" minor="${BASH_REMATCH[2]}" patch="${BASH_REMATCH[3]}"
+    case "$kind" in
+        major) echo "$((major + 1)).0.0" ;;
+        minor) echo "$major.$((minor + 1)).0" ;;
+        patch) echo "$major.$minor.$((patch + 1))" ;;
+        *) err "Invalid bump kind: $kind"; return 1 ;;
+    esac
+}
+
+# Orchestration de l'auto-bump : lit plugin.json, compare au nouveau hash,
+# et met à jour en fonction de 5 cas (init, bump manuel, flag minor/major,
+# auto-patch, idempotence). Appelée depuis main() après génération des skills.
+apply_version_logic() {
+    local current_version current_hash last_auto new_hash
+    current_version=$(read_plugin_json_field version)
+    current_hash=$(read_plugin_json_field _contentHash)
+    last_auto=$(read_plugin_json_field _lastAutoVersion)
+    local computed; computed=$(compute_content_hash)
+
+    # 0. Fallback : aucun outil de hash disponible
+    if [[ -z "$computed" ]]; then
+        warn "Hash calculation skipped (no SHA256 tool available) — version unchanged: $current_version"
+        return 0
+    fi
+    new_hash="sha256:$computed"
+
+    # 1. Initialisation au premier run (champs custom absents)
+    if [[ -z "$current_hash" || -z "$last_auto" ]]; then
+        update_plugin_json "$current_version" "$new_hash" "$current_version"
+        log "Plugin content hash initialized: ${new_hash:0:19}... (version unchanged: $current_version)"
+        return 0
+    fi
+
+    # 2. Bump manuel détecté : version a changé sans passer par ce script
+    if [[ "$current_version" != "$last_auto" ]]; then
+        update_plugin_json "$current_version" "$new_hash" "$current_version"
+        log "Manual version bump detected ($last_auto → $current_version) — kept as-is, references updated"
+        return 0
+    fi
+
+    # 3. Auto-bump patch si le hash a changé
+    if [[ "$current_hash" != "$new_hash" ]]; then
+        local bumped; bumped=$(bump_version "$current_version" patch) || return 1
+        update_plugin_json "$bumped" "$new_hash" "$bumped"
+        ok "Plugin version bumped: $current_version → $bumped (content changed)"
+        return 0
+    fi
+
+    # 4. Idempotence : rien n'a changé
+    log "Plugin version unchanged: $current_version (no content change)"
+}
+
+# ─────────────────────────────────────────────────────────────
 # Main
 # ─────────────────────────────────────────────────────────────
 main() {
@@ -446,6 +564,9 @@ main() {
         count=$((count + 1))
         echo ""
     done
+
+    # Apply auto-bump logic on plugin.json (content hash, version bump if needed)
+    apply_version_logic
 
     # Write the new manifest so next run can clean surgically
     if [[ ${#synced_names[@]} -gt 0 ]]; then

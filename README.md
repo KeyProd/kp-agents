@@ -90,7 +90,10 @@ Lancer `./sync.sh` — le plugin Claude exposera l'agent comme `/kp-agents:mon-a
 ### Publier une mise à jour Claude Code
 
 1. Modifier l'agent source dans `agents/<nom>.md`
-2. Lancer `./sync.sh` pour régénérer `plugins/kp-agents/skills/<nom>/SKILL.md`. **La version patch est bumpée automatiquement** si le contenu des skills a changé (via un hash SHA256 stocké dans `_contentHash`). Pour un bump mineur (ajout d'agent) ou majeur (rupture), utiliser `./sync.sh --minor` ou `./sync.sh --major` (à venir).
+2. Lancer `./sync.sh` pour régénérer `plugins/kp-agents/skills/<nom>/SKILL.md`. **La version patch est bumpée automatiquement** si le contenu des skills a changé (via un hash SHA256 stocké dans `_contentHash`).
+   - Pour l'ajout d'un nouvel agent ou une feature notable : `./sync.sh --minor` (`X.Y.Z` → `X.(Y+1).0`)
+   - Pour une rupture (retrait d'agent, renommage de namespace) : `./sync.sh --major` (`X.Y.Z` → `(X+1).0.0`)
+   - `--minor` et `--major` sont mutuellement exclusifs et ne se combinent pas avec `--clean` / `--clean-all`.
 3. `git add agents/ plugins/ && git commit && git tag kp-agents-v<X.Y.Z> && git push --tags`
 4. Les utilisateurs reçoivent la mise à jour au prochain `/plugin marketplace update` (ou automatiquement selon leur config)
 

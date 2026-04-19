@@ -33,6 +33,8 @@ PLUGIN_JSON="$PLUGIN_DIR/.claude-plugin/plugin.json"
 INSTALL_TARGETS=true
 CLEAN_ONLY=false
 CLEAN_ALL=false
+BUMP_MINOR=false
+BUMP_MAJOR=false
 
 PREFIX="kp"  # Prefix for Cursor/Codex artefacts (kp-brainstorm, kp-product...)
 
@@ -68,9 +70,15 @@ parse_args() {
                 CLEAN_ONLY=true
                 CLEAN_ALL=true
                 ;;
+            --minor)
+                BUMP_MINOR=true
+                ;;
+            --major)
+                BUMP_MAJOR=true
+                ;;
             -h|--help)
                 cat <<'HELP_EOF'
-Usage: ./sync.sh [--dist-only] [--clean | --clean-all]
+Usage: ./sync.sh [--dist-only] [--clean | --clean-all] [--minor | --major]
 
 Generates the Claude Code plugin (plugins/kp-agents/) from agents/*.md,
 and installs Cursor rules + Codex skills locally.
@@ -82,11 +90,21 @@ Options:
                 and strip their skill folders from plugins/kp-agents/, then exit
   --clean-all   Remove ALL kp-* Cursor/Codex artefacts via glob (ignores manifest)
                 and clear plugins/kp-agents/skills/, then exit
+  --minor       Force a minor version bump (X.Y.Z → X.(Y+1).0). Use when
+                adding a new agent or adding a significant feature.
+                Mutually exclusive with --major. Cannot be combined with --clean.
+  --major       Force a major version bump (X.Y.Z → (X+1).0.0). Use for
+                breaking changes (e.g. removing an agent, namespace rename).
+                Mutually exclusive with --minor. Cannot be combined with --clean.
 
 Notes:
   - The Claude plugin in plugins/kp-agents/ is versioned in git and distributed
     via the marketplace (.claude-plugin/marketplace.json). This script does NOT
     install anything to ~/.claude/commands/.
+  - Without --minor/--major, sync.sh auto-bumps the patch version if skill
+    content has changed (SHA256 stored in plugin.json as _contentHash).
+  - A manual edit of "version" in plugin.json is respected — sync.sh never
+    overwrites a manual bump (detection via _lastAutoVersion field).
 HELP_EOF
                 exit 0
                 ;;
@@ -97,6 +115,18 @@ HELP_EOF
         esac
         shift
     done
+
+    # Validation des flags mutuellement exclusifs
+    if $BUMP_MINOR && $BUMP_MAJOR; then
+        err "--minor and --major are mutually exclusive, choose only one"
+        exit 1
+    fi
+
+    # Validation des flags incompatibles avec --clean / --clean-all
+    if ($BUMP_MINOR || $BUMP_MAJOR) && $CLEAN_ONLY; then
+        err "--minor / --major cannot be combined with --clean / --clean-all"
+        exit 1
+    fi
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -493,7 +523,23 @@ apply_version_logic() {
         return 0
     fi
 
-    # 3. Auto-bump patch si le hash a changé
+    # 3. Flag --minor explicite
+    if $BUMP_MINOR; then
+        local bumped; bumped=$(bump_version "$current_version" minor) || return 1
+        update_plugin_json "$bumped" "$new_hash" "$bumped"
+        ok "Plugin version bumped: $current_version → $bumped (minor, requested)"
+        return 0
+    fi
+
+    # 4. Flag --major explicite
+    if $BUMP_MAJOR; then
+        local bumped; bumped=$(bump_version "$current_version" major) || return 1
+        update_plugin_json "$bumped" "$new_hash" "$bumped"
+        ok "Plugin version bumped: $current_version → $bumped (major, requested)"
+        return 0
+    fi
+
+    # 5. Auto-bump patch si le hash a changé
     if [[ "$current_hash" != "$new_hash" ]]; then
         local bumped; bumped=$(bump_version "$current_version" patch) || return 1
         update_plugin_json "$bumped" "$new_hash" "$bumped"
@@ -501,7 +547,7 @@ apply_version_logic() {
         return 0
     fi
 
-    # 4. Idempotence : rien n'a changé
+    # 6. Idempotence : rien n'a changé
     log "Plugin version unchanged: $current_version (no content change)"
 }
 

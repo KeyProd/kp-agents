@@ -1,7 +1,7 @@
 ---
 title: Flags --minor et --major + respect du bump manuel
 date: 2026-04-18
-status: TODO
+status: REVIEW
 author: product-agent
 story-id: S-0002
 epic-id: E-0002
@@ -154,16 +154,81 @@ En tant que **contributeur kp-agents**, je veux **pouvoir bumper explicitement e
 
 ## Implémentation
 
-*à compléter par l'agent Developer*
+**Date** : 2026-04-19
+**Branche** : `feat/E-0002-Auto-Bump-Version` (commit sur S-0001 déjà fait : `3c64c69`)
 
-- Fichiers créés / modifiés : `sync.sh`, `plugins/kp-agents/.claude-plugin/plugin.json`, `CLAUDE.md`, `README.md`
-- Commandes de test :
-  - `./sync.sh --minor` avec contenu inchangé → 0.x.y → 0.(x+1).0
-  - `./sync.sh --major` → 0.x.y → 1.0.0
-  - `./sync.sh --minor --major` → erreur
-  - Éditer `plugin.json` à la main (`version: "0.5.0"`), lancer `./sync.sh` → respect de la version
-- Notes de review : à compléter
+### Fichiers modifiés
+
+- **`sync.sh`** :
+  - Deux nouvelles variables globales : `BUMP_MINOR=false`, `BUMP_MAJOR=false`
+  - `parse_args` étendu avec les cases `--minor` et `--major`
+  - Après la boucle `parse_args` : deux validations ajoutées (exclusivité `--minor`/`--major`, incompatibilité avec `--clean` / `--clean-all`)
+  - `apply_version_logic` étendue : ajout de 2 cas (bump minor demandé, bump major demandé), avant le cas auto-bump patch. Ordre final : fallback → init → bump manuel → minor flag → major flag → patch auto → idempotence (6 cas)
+  - Help (`--help`) enrichi : documentation des 2 nouveaux flags + note explicite sur le bump manuel respecté
+- **`CLAUDE.md`** : tableau "Flags disponibles" enrichi de 2 lignes (`--minor`, `--major`) avec description + règles d'exclusivité. Paragraphe explicatif ajouté sous le tableau sur le comportement auto-bump patch par défaut et le respect du bump manuel.
+- **`README.md`** : section "Publier une mise à jour Claude Code" — étape 2 enrichie avec les 3 scénarios explicites (patch auto, `--minor`, `--major`) et leur règle d'exclusivité.
+
+### Commandes de test
+
+```bash
+# 1. Bump minor
+./sync.sh --minor   # v0.2.1 → v0.3.0 (patch remis à 0)
+
+# 2. Bump major
+./sync.sh --major   # v0.3.0 → v1.0.0 (minor et patch remis à 0)
+
+# 3. Flags exclusifs → erreur + exit 1
+./sync.sh --minor --major; echo "Exit: $?"
+# → "--minor and --major are mutually exclusive, choose only one", exit 1
+
+# 4. --minor + --clean → erreur + exit 1
+./sync.sh --minor --clean; echo "Exit: $?"
+# → "--minor / --major cannot be combined with --clean / --clean-all", exit 1
+
+# 5. Bump manuel sans modification d'agent
+python3 -c "import json; ..."   # éditer plugin.json version → 2.0.0
+./sync.sh   # log: "Manual version bump detected (1.0.0 → 2.0.0) — kept as-is, references updated"
+# Vérifier : version=2.0.0 préservée, _lastAutoVersion aligné à 2.0.0
+
+# 6. Bump manuel + modification d'agent (priorité humaine)
+python3 -c "..."   # version → 3.0.0
+echo " " >> agents/brainstorm.md
+./sync.sh   # log: "Manual version bump detected (2.0.0 → 3.0.0)"
+# Vérifier : version=3.0.0 préservée (pas de patch auto par-dessus), hash mis à jour
+```
+
+### Décisions prises pendant l'implémentation
+
+- **Ordre des cas dans `apply_version_logic`** : priorité au bump manuel (cas 2) **avant** les flags, car la détection manuelle est une règle de sécurité (on ne veut pas écraser une saisie humaine, même si un flag est passé). Ensuite flags explicites (cas 3-4), puis auto-patch (cas 5), puis idempotence (cas 6).
+- **Validation en fin de `parse_args`** : placée après la boucle pour avoir accès à l'état final des variables (`BUMP_MINOR`, `BUMP_MAJOR`, `CLEAN_ONLY`). Plus lisible qu'une validation disséminée dans chaque case.
+- **Compatibilité avec `--dist-only`** : non explicitement testée mais logique — `--minor`/`--major` agissent sur `plugin.json` (pas sur les installs Cursor/Codex), donc combinables sans effet de bord.
+- **Passe manuelle de simplification** : revue du code ajouté — pas de refactor nécessaire (duplication minime entre cas minor/major acceptable, noms explicites, complexité contenue).
+
+### Notes de review
+
+- Règle RM-4 respectée : README + CLAUDE.md mis à jour dans le même commit que le code
+- Bash 3.2 compatible : uniquement `[[ ]]`, tests booléens, pas de feature bash 4+
+- 6 cas dans `apply_version_logic` — la complexité reste contenue grâce aux early returns
+- `claude plugin validate` passé ✔ dans tous les états de test (y compris après tests destructifs multiples)
 
 ## Validation par critère
 
-*à compléter lors de la review*
+- **[✅] `./sync.sh --minor` incrémente le composant mineur et remet le patch à 0** : testé 0.2.1 → 0.3.0 (log `minor, requested`)
+- **[✅] `./sync.sh --major` incrémente le composant majeur et remet mineur + patch à 0** : testé 0.3.0 → 1.0.0 (log `major, requested`)
+- **[✅] `./sync.sh --minor --major` retourne une erreur claire et un exit code non nul** : testé — message `"--minor and --major are mutually exclusive, choose only one"`, exit 1
+- **[✅] Un bump manuel dans `plugin.json` est respecté — la version n'est pas écrasée par l'auto-bump** : testé — version=2.0.0 manuelle préservée après sync sans modif, log `Manual version bump detected (1.0.0 → 2.0.0)`
+- **[✅] Après un bump manuel respecté, `_lastAutoVersion` est mis à jour** : testé — aligné à la nouvelle version (2.0.0) pour que le prochain sync reparte sur cette base
+- **[✅] Les cas conflictuels flag+clean retournent une erreur claire** : testé `--minor --clean` → message explicite + exit 1
+- **[⚠️] Une version malformée dans `plugin.json` retourne une erreur explicite** : couvert par `bump_version` (regex stricte `^[0-9]+\.[0-9]+\.[0-9]+$`). Non testé formellement dans cette story (scénario très rare, branche couverte par inspection de code)
+- **[✅] `claude plugin validate` reste ✅ avec le champ `_lastAutoVersion` ajouté** : testé après chaque transition d'état, 100 % des runs passent
+- **[✅] Documentation mise à jour** (bloquant, RM-4) :
+  - `CLAUDE.md` : tableau flags enrichi + paragraphe explicatif
+  - `README.md` : section "Publier une mise à jour" avec les 3 scénarios (patch auto / --minor / --major)
+  - Note explicite dans les deux docs sur le respect du bump manuel
+- **[✅] Bash 3.2 compatible** : pas de feature bash 4+, `bash -n sync.sh` passe
+
+### Écarts documentaires
+
+Aucun écart majeur avec la spec. Les 2 questions ouvertes avaient été tranchées dans le design Architect et sont suivies :
+- Pas d'alias courts `-m`/`-M` : conservé (confusion casse évitée)
+- Version inférieure saisie manuellement : respectée par le mécanisme (priorité humaine). Pas de log warning spécifique implémenté à ce stade (non bloquant — les logs de bump manuel sont neutres sur la direction du changement)

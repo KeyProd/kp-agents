@@ -386,3 +386,54 @@ Ces recommandations s'ajoutent aux P1/P2/P3 déjà listés plus haut et sont pr�
 - **Pas de mesure empirique** : les propositions B1–B7 sont fondées sur les heuristiques des 3 guides, pas sur un eval set exécuté. Les gains réels sont à confirmer.
 - **Le champ `description`** est utilisé différemment par Claude Code (plugin marketplace), Cursor (rules) et Codex (skills). Les descriptions optimisées pour le trigger Claude peuvent être sur-dimensionnées pour Cursor/Codex. À vérifier en rejouant `sync.sh` après application de B1.
 - **Le mécanisme `{{include:}}` de `sync.sh`** inline à la compilation : il n'équivaut pas totalement à la *progressive disclosure* runtime des skills natifs (B.3). Cette nuance limite le gain de tokens en contexte, mais conserve la modularité côté source.
+
+---
+
+## Mise à jour — état post-refactor (avril 2026)
+
+Cette section clôt l'audit : la majorité des recommandations P1/P2 a été appliquée. Les gains sont mesurés en lignes de `SKILL.md` compilé (source = `plugins/kp-agents/skills/<agent>/SKILL.md`).
+
+### Recommandations traitées
+
+| ID | Statut | Commit | Impact observé |
+|----|--------|--------|----------------|
+| **B1** — descriptions impératives + triggers | ✅ appliqué | S-0002 (rewrite), cfe8f8a (traduction FR) | Descriptions en français impératif, triggers explicites (déclencheurs, à ne pas utiliser) |
+| **B2** — section `## Gotchas` par agent | ✅ appliqué | S-0003 | 5-8 gotchas spécifiques projet par agent, include `gotchas-transverses` partagé |
+| **B3** — brainstorm : défaut + alternatives | ✅ appliqué | S-0006 | Starbursting par défaut, 5 Whys / First Principles secondaires, le reste sur demande |
+| **B4** — élagage contenu générique | ✅ appliqué | S-0004, S-0005, S-0006, a99124a | Retrait des sections `## Règles` redondantes, fusion dans Gotchas |
+| **B5** — exemples bien/mal manquants | ✅ appliqué | S-0005 (developer), S-0006 (ux-ui) | Exemples traçables `Validation par critère`, persona calibré |
+| **B6** — structure `agents/_evals/` | ✅ appliqué | S-0007 | Scaffolding trigger + output pour developer et review |
+| **B7** — progressive disclosure via `references/` | ✅ appliqué | 78d31cb | Mécanisme `{{ref:X}}` : templates lourds chargés à la demande côté plugin Claude |
+| **T1** — activation uniformisée | ✅ appliqué | S-0001 | Include unique, version courte (4 puces) |
+| **T2** — templates inline → includes | ✅ appliqué | S-0004 + 78d31cb | Templates externalisés via `{{ref:X}}` |
+| **T3** — règle versions factorisée | ✅ appliqué | S-0001 | Include `dependency-versions` partagé par architect, developer, review |
+| **T6** — `/simplify` multi-cibles | ✅ appliqué | S-0005 | Formulation portable (Claude Code / Cursor / Codex / passe manuelle) |
+
+### État final des agents (source `agents/` + compilé `plugins/kp-agents/skills/`)
+
+| Agent | Source (L) | Compilé (L) | Cible <300 L | Statut |
+|-------|-----------:|------------:|:------------:|--------|
+| brainstorm | 131 | 206 | ✅ | Finalisé |
+| architect | 143 | 220 | ✅ | Finalisé |
+| ux-ui | 164 | 241 | ✅ | Finalisé |
+| documentation | 167 | 244 | ✅ | Finalisé |
+| review | 170 | 261 | ✅ | Finalisé |
+| developer | 189 | 280 | ✅ | Finalisé |
+| product | 112 | 413 | ⚠️ 300-500 | Acceptable (templates inlined côté plugin via refs externes uniquement pour epic/story) |
+
+Total compilé : **1865 lignes** sur 7 agents (moyenne 266 L) vs. ~2500 L avant refactor.
+
+### Récap court par agent
+
+- **brainstorm** — facilitateur d'exploration, Starbursting par défaut, sauvegarde progressive `docs/ideas/<theme>.md` avec cycle draft → exploring → qualified | rejected.
+- **product** — PM qui transforme idées en roadmap / epics / stories avec critères d'acceptation testables. Mode init si `docs/` vierge. Numérotation E globale, S locale à l'epic.
+- **architect** — conception technique, ADR append-only, exemples ADR chiffrés, mode libre ou mode epic. Impose vérif internet des versions de dépendances.
+- **ux-ui** — design UX/UI anti-générique (WCAG 2.1 AA non négociable, 44×44 px tactile min), personas obligatoires avant de dessiner, tokens CSS + breakpoints dans les specs.
+- **developer** — implémentation rigoureuse spec → plan → validation → simplification → bilan. Cadrage branche/commits/PR mémorisé. Pas de worktree.
+- **review** — verdict GO/NO-GO explicite, écrit uniquement dans `## Review` de la story, cite `file.ts:42`, recommandations P1/P2/P3.
+- **documentation** — seul propriétaire de `docs/INDEX.md`, périmètre inclut `README.md` et `CLAUDE.md` racine, compare systématiquement doc et code avant d'écrire.
+
+### Reliquats non traités
+
+- Mesure empirique via eval set (scaffolding posé mais runs non exécutés — nécessite API Anthropic configurée).
+- `product` reste à 413 L compilé : acceptable mais plafond <500 L. Amélioration envisageable si `docs-structure` était lui-même découpé en `docs-structure-light` + `{{ref:*-template}}` (déjà partiellement fait).

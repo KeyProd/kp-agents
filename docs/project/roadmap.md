@@ -1,6 +1,6 @@
 ---
 title: Roadmap
-date: 2026-04-20
+date: 2026-04-21
 status: active
 author: product-agent
 ---
@@ -8,7 +8,7 @@ author: product-agent
 
 # Roadmap - kp-agents
 
-> État au 2026-04-20 : Phase 1 et Phase 2 closes. Toutes les epics sont archivées. Aucun backlog actif.
+> État au 2026-04-21 : Phases 1 et 2 closes. **Phase 3 ouverte** (Configurabilité & sources externes).
 
 ## Phase 1 - Migration en marketplace Claude Code (Priorité: MUST) ✅ DONE
 
@@ -49,9 +49,40 @@ Vide. Les deux pistes initialement envisagées (CI de cohérence `agents/` ↔ `
 
 ---
 
+## Phase 3 - Configurabilité & sources externes (Priorité: SHOULD) 🚧 IN PROGRESS
+
+**Objectif** : rendre les agents `kp-agents` capables de travailler sur des projets dont la documentation produit est centralisée hors du repo (OneDrive / SharePoint) et dont le suivi des tickets est externalisé (JIRA via MCP), tout en préservant 100% le comportement actuel pour les projets sans configuration. Introduction d'un 8ᵉ agent `setup` dédié à la configuration projet et aux préférences utilisateur.
+
+**Jalon** : release `kp-agents-v1.1.0` publiée sur GitHub, validée sur au moins un projet KeyProd réel avec doc produit OneDrive et tickets JIRA.
+
+### Epics
+
+- [E-0004 - Sources Externalisation](epics/E-0004-Sources-Externalisation/readme.md) — 🚧 IN PROGRESS, 0/8 stories
+
+### Critères de sortie de phase
+
+- [ ] Un projet sans `.kp-agents.yml` fonctionne exactement comme aujourd'hui (non-régression)
+- [ ] Un projet avec `product.mode: external` peut pointer vers un dossier OneDrive, l'agent Product lit/écrit dedans avec fallback local si écriture refusée
+- [ ] Un projet avec `tickets.mode: mcp` crée/lit les epics et stories via MCP JIRA avec mapping documenté
+- [ ] Aucun chemin machine-spécifique n'est commité dans le repo (gitignore effectif sur `.kp-agents.local.yml`)
+- [ ] Le nouvel agent `setup` est invocable via `/kp-agents:setup` et configure correctement les deux dimensions
+- [ ] Les 7 agents existants détectent une config manquante et redirigent vers `setup` sans bloquer l'utilisateur
+- [ ] Release `kp-agents-v1.1.0` taguée (minor bump car ajout d'agent)
+- [ ] README + CLAUDE.md + docs/agents.md mis à jour
+
+### Risques majeurs
+
+| Risque | Mitigation |
+|---|---|
+| Mapping story-markdown ↔ ticket JIRA plus lourd que prévu | Spike dédié (S-0005) avant implémentation S-0006 — possibilité de scinder en 2 epics si nécessaire |
+| Permissions OneDrive variables (lecture seule vs lecture-écriture) | Fallback write local systématique avec warn explicite |
+| Gonflement des skills par l'include partagé | Mesure de taille avant/après sur `developer.md` (skill le plus long) en S-0001 |
+
+---
+
 ## Suite
 
-Aucune nouvelle phase n'est ouverte. Les prochains chantiers seront cadrés à partir d'un besoin concret (nouvelle idée qualifiée via `/kp-agents:brainstorm`, puis `/kp-agents:product`).
+Phase 3 en cours. Les chantiers suivants seront cadrés après clôture, à partir de besoins concrets.
 
 ## Risques majeurs (historique)
 

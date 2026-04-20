@@ -1,7 +1,7 @@
 ---
 title: ADR-005 et consolidation documentaire
 date: 2026-04-18
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0003
 epic-id: E-0002

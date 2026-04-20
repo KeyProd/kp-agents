@@ -17,7 +17,6 @@ La source de vérité unique est le dossier `agents/`. Les dossiers `plugins/kp-
 
 ```
 agents/            ← Source de vérité. Un fichier .md par agent.
-  _evals/          ← Jeux d'évaluation (trigger queries + output evals). Mainteneurs uniquement, ignoré par sync.sh.
 includes/          ← Templates réutilisables, injectés via {{include:nom}}
 .claude-plugin/
   marketplace.json ← Catalogue marketplace Claude Code (statique)

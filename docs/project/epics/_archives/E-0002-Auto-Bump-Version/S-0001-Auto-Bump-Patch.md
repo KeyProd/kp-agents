@@ -1,7 +1,7 @@
 ---
 title: Auto-bump patch à chaque sync
 date: 2026-04-18
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0001
 epic-id: E-0002

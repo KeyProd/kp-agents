@@ -402,7 +402,7 @@ Cette section clôt l'audit : la majorité des recommandations P1/P2 a été app
 | **B3** — brainstorm : défaut + alternatives | ✅ appliqué | S-0006 | Starbursting par défaut, 5 Whys / First Principles secondaires, le reste sur demande |
 | **B4** — élagage contenu générique | ✅ appliqué | S-0004, S-0005, S-0006, a99124a | Retrait des sections `## Règles` redondantes, fusion dans Gotchas |
 | **B5** — exemples bien/mal manquants | ✅ appliqué | S-0005 (developer), S-0006 (ux-ui) | Exemples traçables `Validation par critère`, persona calibré |
-| **B6** — structure `agents/_evals/` | ✅ appliqué | S-0007 | Scaffolding trigger + output pour developer et review |
+| **B6** — structure `agents/_evals/` | ❌ retiré (2026-04-20) | — | Scaffolding posé en S-0007 puis supprimé : pas de runner, non directement utilisable. Réintroductible plus tard si un runner est construit. |
 | **B7** — progressive disclosure via `references/` | ✅ appliqué | 78d31cb | Mécanisme `{{ref:X}}` : templates lourds chargés à la demande côté plugin Claude |
 | **T1** — activation uniformisée | ✅ appliqué | S-0001 | Include unique, version courte (4 puces) |
 | **T2** — templates inline → includes | ✅ appliqué | S-0004 + 78d31cb | Templates externalisés via `{{ref:X}}` |
@@ -413,15 +413,15 @@ Cette section clôt l'audit : la majorité des recommandations P1/P2 a été app
 
 | Agent | Source (L) | Compilé (L) | Cible <300 L | Statut |
 |-------|-----------:|------------:|:------------:|--------|
-| brainstorm | 131 | 206 | ✅ | Finalisé |
+| brainstorm | 150 | 225 | ✅ | Finalisé (cadrage durée ajouté) |
 | architect | 143 | 220 | ✅ | Finalisé |
 | ux-ui | 164 | 241 | ✅ | Finalisé |
 | documentation | 167 | 244 | ✅ | Finalisé |
 | review | 170 | 261 | ✅ | Finalisé |
 | developer | 189 | 280 | ✅ | Finalisé |
-| product | 112 | 413 | ⚠️ 300-500 | Acceptable (templates inlined côté plugin via refs externes uniquement pour epic/story) |
+| product | 112 | 189 | ✅ | Finalisé (docs-structure-light + {{ref:*-template}}) |
 
-Total compilé : **1865 lignes** sur 7 agents (moyenne 266 L) vs. ~2500 L avant refactor.
+Total compilé : **1660 lignes** sur 7 agents (moyenne 237 L) vs. ~2500 L avant refactor (−33 %).
 
 ### Récap court par agent
 
@@ -435,5 +435,5 @@ Total compilé : **1865 lignes** sur 7 agents (moyenne 266 L) vs. ~2500 L avant 
 
 ### Reliquats non traités
 
-- Mesure empirique via eval set (scaffolding posé mais runs non exécutés — nécessite API Anthropic configurée).
-- `product` reste à 413 L compilé : acceptable mais plafond <500 L. Amélioration envisageable si `docs-structure` était lui-même découpé en `docs-structure-light` + `{{ref:*-template}}` (déjà partiellement fait).
+- **Mesure empirique** : aucune métrique trigger-rate / pass-rate n'a été mesurée. Le scaffolding `agents/_evals/` a été retiré le 2026-04-20 faute de runner exécutable. Une future mise en place nécessitera : (a) un runner qui appelle l'API Anthropic avec/sans skill, (b) un exécuteur d'assertions sur `docs/`, (c) un format de rapport `benchmark.json` commit par commit.
+- Tous les autres reliquats (`product` à 413 L, etc.) sont résolus.

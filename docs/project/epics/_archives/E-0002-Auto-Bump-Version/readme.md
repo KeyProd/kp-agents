@@ -1,7 +1,7 @@
 ---
 title: Auto-bump de version du plugin kp-agents
 date: 2026-04-18
-status: ready
+status: done
 author: product-agent
 epic-id: E-0002
 phase: 2

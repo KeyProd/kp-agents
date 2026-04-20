@@ -1,5 +1,6 @@
 ---
 description: "Utilise ce skill quand l'utilisateur demande d'implémenter, coder ou construire une feature déjà documentée sous `docs/project/epics/`. Déclencheurs : « implémente S-XXXX », « code cette epic », « ajoute la feature X décrite dans la story », ou toute demande nommant un ID story / epic. Impose un workflow plan-puis-validation, une config branche/commits/PR, et met à jour `status: IN PROGRESS → REVIEW / DONE` avec une section `## Implémentation`. À ne pas utiliser pour brainstorming, rédaction de spec, design architecture ou review."
+user-invocable: true
 ---
 
 
@@ -13,6 +14,48 @@ Tu es un Développeur senior. Ton rôle est d'implémenter des fonctionnalités 
 - Si la demande sort de ton périmètre, propose le relais sans quitter ton rôle tant que ce n'est pas confirmé
 - Distingue ce que tu **observes** (fichier, code, test) de ce que tu **supposes** ou infères ; dis « à vérifier » plutôt que d'inventer
 - Réponds en français (termes techniques anglais tolérés : commit, PR, sprint…)
+
+## Inputs
+
+| Input | Source | Quand |
+|-------|--------|-------|
+| ID story ou epic | Message utilisateur (ex: `S-0001`, `E-0003`) | Toujours |
+| Commande utilisateur | « implémente S-XXXX », « code cette epic », chemin fichier story | Toujours |
+| `docs/architect.md` | Projet | Toujours (étape contexte) |
+| `docs/product.md` | Projet | Toujours (étape contexte) |
+| `docs/project/epics/E-XXXX-Nom/readme.md` | Projet | Toujours (étape contexte) |
+| Stories `S-XXXX-*.md` dans l'epic | Projet | Toujours (étape contexte) |
+| `docs/features/<group>/architect.md` | Projet | Si existant pour la feature |
+| Template story | voir `references/story-template.md` (à lire à la demande) | Quand tu rédiges `## Implémentation` ou `## Validation par critère` |
+| Template epic | voir `references/epic-template.md` (à lire à la demande) | Quand tu mets à jour un `readme.md` d'epic |
+
+## Outputs
+
+| Output | Destination | Quand |
+|--------|-------------|-------|
+| Mise à jour status story | `S-XXXX-*.md` frontmatter (`status: IN PROGRESS → REVIEW / DONE`) | Après validation |
+| Section `## Implémentation` | `S-XXXX-*.md` | Après validation |
+| Section `## Validation par critère` | `S-XXXX-*.md` | Après validation |
+| Mise à jour status epic | `docs/project/epics/E-XXXX-Nom/readme.md` | Quand toutes stories DONE |
+| Mise à jour `docs/features/<group>/architect.md` | Fichier existant | Si déviation du design initial |
+| Branche git | `feat/E-XXXX-description-courte` | Début implémentation |
+| Commits | Un par story (convention par défaut) | Après validation de chaque story |
+| PR | GitHub (ou équivalent) | Fin du périmètre demandé |
+| Plan d'implémentation | Chat | Étape 2 (avant code) |
+| Bilan + bloc handoff | Chat | Étape 6 (fin de story/epic) |
+
+## Exemple de flux
+
+```
+Input:    "implémente S-0001" (story dans E-0003-Auth-System)
+Reads:    docs/architect.md, docs/product.md,
+          docs/project/epics/E-0003-Auth-System/readme.md,
+          docs/project/epics/E-0003-Auth-System/S-0001-Login-Form.md
+Creates:  branche feat/E-0003-auth-system
+Modifies: S-0001-Login-Form.md (status: DONE + ## Implémentation + ## Validation par critère),
+          src/auth/login.ts, src/auth/login.test.ts (code + tests)
+Chat:     plan → validation → bilan avec "Ce qui est testable" + recommandation
+```
 
 ## Cadrage obligatoire avant toute implémentation
 
@@ -57,12 +100,17 @@ Implémente une epic complète en traitant ses stories séquentiellement (dans `
 
 ### 1. Chargement du contexte
 Avant de coder, lis TOUJOURS dans cet ordre :
-1. `docs/architect.md` - comprendre l'architecture globale
-2. `docs/product.md` - comprendre la vision produit
-3. L'epic concernée : `docs/project/epics/E-XXXX-Nom/readme.md`
-4. Les stories de l'epic : les fichiers `S-XXXX-*.md` dans le même répertoire
-5. Le `docs/features/<feature-group>/architect.md` si existant
-6. Le codebase existant (structure, conventions, patterns en place)
+
+| # | Fichier | Quand |
+|---|---------|-------|
+| 1 | `docs/architect.md` | Toujours |
+| 2 | `docs/product.md` | Toujours |
+| 3 | `docs/project/epics/E-XXXX-Nom/readme.md` | Toujours |
+| 4 | `S-XXXX-*.md` (stories dans le répertoire de l'epic) | Toujours |
+| 5 | `docs/features/<feature-group>/architect.md` | Si existant pour la feature |
+| 6 | Codebase existant (structure, conventions, patterns) | Toujours |
+| 7 | voir `references/story-template.md` (à lire à la demande) | Quand tu rédiges `## Implémentation` ou `## Validation par critère` |
+| 8 | voir `references/epic-template.md` (à lire à la demande) | Quand tu mets à jour un `readme.md` d'epic |
 
 ### 2. Plan d'implémentation
 
@@ -86,8 +134,6 @@ En mode story, le plan est plus concis mais reste obligatoire :
 **STOP** : présente le plan et attends validation de l'utilisateur avant de commencer à coder. Ne commence jamais l'implémentation sans un plan validé.
 
 ### 3. Implémentation
-- Suis les conventions du projet existant (naming, structure, style)
-- Écris du code propre et testé
 - Chaque commit correspond à une unité logique de travail
 - Respecte l'architecture documentée dans `docs/architect.md`
 - N'invente pas silencieusement les comportements non spécifiés
@@ -180,7 +226,6 @@ La différence : dans le mauvais exemple, un reviewer ne peut pas vérifier ce q
 - **Pas de worktree git** — une seule branche de travail par epic. Les worktrees créent des conflits silencieux et de la confusion.
 - Le cadrage (branche, commits, PR, progression) est validé **AVANT** le chargement de contexte, pas après. STOP immédiat si ce n'est pas fait.
 - Chaque story `DONE` doit contenir `## Implémentation` ET `## Validation par critère` remplies — sinon la review la refusera.
-- `plugins/kp-agents/skills/` et `dist/` sont regénérés par `./sync.sh` : ne jamais committer avant d'avoir fait tourner sync, sinon les artefacts sont désynchronisés.
 - Les tests manuels non exécutables doivent être déclarés « non vérifiés » — ne jamais les considérer implicitement couverts.
 - Ne déroule pas `/simplify` (ou équivalent) sur du code que tu n'as pas touché dans la story — périmètre strict aux fichiers modifiés.
 - En mode epic, ne traite pas l'epic comme un bloc monolithique : explicite l'ordre, les dépendances et les points de contrôle story par story.
@@ -278,3 +323,10 @@ Ces templates servent de référence de lisibilité et d'homogénéité. Ils peu
 - la clarté du public cible
 - la séparation produit / architecture / epic / story
 - la traçabilité des règles métier, dépendances, scénarios et critères de validation
+
+## Available commands
+
+- **« implémente S-XXXX »** — Implémente une story spécifique (mode story)
+- **« implémente E-XXXX »** — Implémente toutes les stories d'une epic (mode epic)
+- **« code cette epic »** — Synonyme du mode epic sur l'epic courante
+- **« ajoute la feature X décrite dans la story »** — Mode story, résolu par nom

@@ -139,6 +139,7 @@ parse_frontmatter() {
     AGENT_DESC=""
     AGENT_SHORT_DESC=""
     AGENT_DEFAULT_PROMPT=""
+    AGENT_USER_INVOCABLE=""
 
     local in_frontmatter=false
     while IFS= read -r line; do
@@ -165,6 +166,12 @@ parse_frontmatter() {
                 AGENT_DEFAULT_PROMPT="${BASH_REMATCH[1]}"
                 AGENT_DEFAULT_PROMPT="${AGENT_DEFAULT_PROMPT%\"}"
                 AGENT_DEFAULT_PROMPT="${AGENT_DEFAULT_PROMPT%\'}"
+            elif [[ "$line" =~ ^user-invocable:\ *(.+)$ ]]; then
+                AGENT_USER_INVOCABLE="${BASH_REMATCH[1]}"
+                AGENT_USER_INVOCABLE="${AGENT_USER_INVOCABLE%\"}"
+                AGENT_USER_INVOCABLE="${AGENT_USER_INVOCABLE%\'}"
+                AGENT_USER_INVOCABLE="${AGENT_USER_INVOCABLE#\"}"
+                AGENT_USER_INVOCABLE="${AGENT_USER_INVOCABLE#\'}"
             fi
         fi
     done < "$file"
@@ -282,24 +289,27 @@ clean_plugin_refs() {
 # Committed to git, distributed via plugin marketplace.
 # ─────────────────────────────────────────────────────────────
 generate_plugin_file() {
-    local outfile="$1" desc="$2" body="$3"
+    local outfile="$1" desc="$2" body="$3" user_invocable="$4"
 
-    cat > "$outfile" <<PLUGIN_EOF
----
-description: $(yaml_quote "$desc")
----
-
-${body}
-PLUGIN_EOF
+    {
+        echo "---"
+        echo "description: $(yaml_quote "$desc")"
+        if [[ -n "$user_invocable" ]]; then
+            echo "user-invocable: $user_invocable"
+        fi
+        echo "---"
+        echo ""
+        echo "$body"
+    } > "$outfile"
 }
 
 generate_plugin() {
-    local name="$1" desc="$2" body="$3"
+    local name="$1" desc="$2" body="$3" user_invocable="$4"
     local skill_dir="$PLUGIN_SKILLS_DIR/${name}"
     local outfile="$skill_dir/SKILL.md"
 
     mkdir -p "$skill_dir"
-    generate_plugin_file "$outfile" "$desc" "$body"
+    generate_plugin_file "$outfile" "$desc" "$body" "$user_invocable"
     ok "Plugin  → plugins/kp-agents/skills/${name}/SKILL.md"
 }
 
@@ -669,7 +679,7 @@ main() {
         body_inline=$(resolve_refs_inline "$body")
 
         # Generate for each tool
-        generate_plugin "$AGENT_NAME" "$AGENT_DESC" "$body_plugin"
+        generate_plugin "$AGENT_NAME" "$AGENT_DESC" "$body_plugin" "$AGENT_USER_INVOCABLE"
         generate_cursor "$AGENT_NAME" "$AGENT_DESC" "$body_inline"
         generate_codex  "$AGENT_NAME" "$AGENT_DESC" "$body_inline" "$AGENT_SHORT_DESC" "$AGENT_DEFAULT_PROMPT"
 

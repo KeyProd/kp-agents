@@ -283,6 +283,17 @@ Quand `product.mode: external` est actif et le chemin est valide, les outputs su
 
 **Toujours écrits en local** quelle que soit la config, car relevant du périmètre technique ou de l'index local du repo : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/INDEX.md`, toute doc technique. Les epics (`project/epics/E-XXXX-*/readme.md`) et stories (`S-XXXX-*.md`) suivent la dimension `tickets` (voir ci-dessous).
 
+#### Création implicite de sous-dossiers
+
+Au premier write dans un sous-dossier du chemin externe (`<product.path>/ideas/`, `<product.path>/features/<group>/`, `<product.path>/project/`), créer le sous-dossier à la volée si absent (équivalent `mkdir -p`). Ne jamais prompter l'utilisateur pour confirmer la création d'un sous-dossier attendu par la convention.
+
+#### Résolution de conflit local + externe
+
+Si un fichier existe **à la fois** localement (`./docs/<path>`) et sur `<product.path>/<path>` (cas typique : mode externe activé sur un projet qui avait une doc locale existante) :
+- **Lecture** : privilégier le fichier externe (source de vérité en mode `product.mode: external`).
+- **Écriture** : écrire sur l'externe ; ne pas toucher au fichier local.
+- **Warn** une seule fois par session, à la première détection : « Fichier dupliqué détecté entre `./docs/<path>` et `<product.path>/<path>`. Le externe fait foi. Envisage de supprimer la copie locale pour éviter toute confusion future. »
+
 ### Mode `tickets.mode: mcp`
 
 Quand `tickets.mode: mcp` est actif, les epics et stories sont créées / lues / mises à jour via les outils MCP du serveur `mcp_server` dans le projet `project_key`. Aucun fichier `E-XXXX-*/readme.md` ni `S-XXXX-*.md` n'est créé localement pour ces tickets. L'utilisateur doit avoir configuré le serveur MCP correspondant dans ses `settings.json` Claude Code — l'agent ne configure pas le MCP lui-même.
@@ -292,7 +303,34 @@ Quand `tickets.mode: mcp` est actif, les epics et stories sont créées / lues /
 Toute écriture sur une source externe (chemin `product.path` ou serveur MCP) suit ce protocole :
 
 1. Tenter l'écriture au chemin externe ou via l'outil MCP.
-2. Si erreur (permission refusée, dossier inexistant, MCP injoignable) → **basculer sur `docs/` local** en reproduisant l'arborescence relative, et **warner explicitement** l'utilisateur en indiquant le chemin exact du fichier écrit.
+2. Si l'écriture échoue, **basculer sur `docs/` local** en reproduisant **l'arborescence relative exacte** (ex: échec sur `<product.path>/ideas/foo.md` → fallback sur `./docs/ideas/foo.md`, jamais à la racine), et **warner explicitement** l'utilisateur.
+
+#### Format standardisé du warn de fallback
+
+Utiliser ce format exact (avec l'emoji d'alerte pour visibilité maximale) :
+
+> ⚠️ **Fallback d'écriture local** — impossible d'écrire sur `<chemin externe complet>` (raison : `<raison courte>`). Fichier écrit localement dans `<chemin local complet>`. <conseil de résolution>
+
+Exemple concret :
+
+> ⚠️ **Fallback d'écriture local** — impossible d'écrire sur `/Users/vincent/Library/CloudStorage/OneDrive-KeyProd/MonProjet/ideas/auth.md` (raison : Permission denied). Fichier écrit localement dans `./docs/ideas/auth.md`. Vérifier les droits sur le dossier OneDrive ou invoquer `/kp-agents:setup` pour changer de chemin.
+
+#### Cas d'erreur distingués
+
+Trois causes d'échec d'écriture externe à traiter différemment dans le warn :
+
+| Cause | Signal technique | Conseil à formuler |
+|---|---|---|
+| **Path inaccessible** (OneDrive non monté, disque déplacé) | `product.path` n'existe pas ou est inaccessible au moment de l'écriture | « Source externe introuvable — vérifier que OneDrive est bien monté (ouvre Finder ou relance l'app OneDrive). Sinon, invoquer `/kp-agents:setup` pour corriger le chemin. » |
+| **Permission refusée** (lecture seule pour l'utilisateur) | Erreur système `Permission denied` (EACCES) | « Droits insuffisants sur la source externe — vérifier auprès du propriétaire du OneDrive / dossier partagé. La config reste valide, pas besoin de lancer `/kp-agents:setup`. » |
+| **Erreur d'écriture transitoire** (espace plein, I/O error, réseau) | `ENOSPC`, `EIO`, timeout | « Erreur d'écriture temporaire — réessayer après avoir vérifié l'espace disque et la connexion. » |
+
+Le warn est émis **à chaque fallback** (pas de dédoublonnage), pour que l'utilisateur constate immédiatement où son fichier a réellement été écrit.
+
+#### Détection au démarrage vs au write
+
+- **Au démarrage** (lecture initiale de la config) : vérifier que `product.path` est lisible. Si `product.path` est inaccessible dès le démarrage → warn global + proposer `/kp-agents:setup` + poursuivre en **mode local dégradé** pour toute la session (plus de tentative externe, directement local).
+- **Au write** (pendant la session, sur un chemin initialement validé) : fallback par opération avec warn standardisé.
 
 ### Redirection vers `/kp-agents:setup`
 

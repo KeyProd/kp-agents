@@ -1,13 +1,13 @@
 {
   "name": "kp-agents",
   "description": "KeyProd agents for the development workflow: brainstorm, product, architect, developer, review, documentation, ux-ui, setup",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "KeyProd",
     "email": "contact@keyprod.com"
   },
   "homepage": "https://github.com/KeyProd/kp-agents",
   "repository": "https://github.com/KeyProd/kp-agents",
-  "_contentHash": "sha256:08ed4375393d6b26c3587551f26fc7ef0e3d8731481d27502251fd8187a494f7",
-  "_lastAutoVersion": "1.0.1"
+  "_contentHash": "sha256:2e06bd43440f3004e826f50c35cab424d9712a9d0274623887998fb585d24dfc",
+  "_lastAutoVersion": "1.0.2"
 }

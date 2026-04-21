@@ -196,9 +196,8 @@ Quand `product.mode: external` est actif et le chemin est valide, les outputs su
 - `product.md`
 - `features/<group>/product.md`
 - `project/roadmap.md`
-- `project/epics/E-XXXX-*/readme.md`
 
-**Toujours écrits en local** quelle que soit la config, car relevant du périmètre technique ou de l'index local du repo : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/INDEX.md`, toute doc technique. Les stories individuelles (`S-XXXX-*.md`) suivent la dimension `tickets` (voir ci-dessous).
+**Toujours écrits en local** quelle que soit la config, car relevant du périmètre technique ou de l'index local du repo : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/INDEX.md`, toute doc technique. Les epics (`project/epics/E-XXXX-*/readme.md`) et stories (`S-XXXX-*.md`) suivent la dimension `tickets` (voir ci-dessous).
 
 ### Mode `tickets.mode: mcp`
 

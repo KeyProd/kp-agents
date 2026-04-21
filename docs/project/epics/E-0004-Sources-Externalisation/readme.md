@@ -67,6 +67,7 @@ Sans solution, l'utilisateur est forcé soit de dupliquer manuellement la doc, s
 - **Non-régression absolue** : un projet sans `.kp-agents.yml` doit se comporter exactement comme aujourd'hui
 - **Confidentialité des chemins** : `.kp-agents.local.yml` est ajouté au `.gitignore` du projet (jamais commité)
 - **Granularité indépendante** : `product.mode` et `tickets.mode` sont découplés (tous les 4 combinaisons valides)
+- **Mode lecture seule produit** : `product.access: read-only` (pertinent uniquement si `mode: external`) bloque toute écriture d'outputs produit, y compris le fallback local — cas d'usage OneDrive partagé maintenu par un PM humain
 - **Périmètre externalisable de `product`** : `docs/ideas/`, `docs/product.md`, `docs/features/*/product.md`, `docs/project/roadmap.md`
 - **Périmètre externalisable de `tickets`** : `docs/project/epics/` (readme d'epic + stories)
 - **Toujours local** : `docs/architect.md`, `docs/features/*/architect.md`, `docs/INDEX.md`, toute la doc technique
@@ -96,6 +97,7 @@ Sans solution, l'utilisateur est forcé soit de dupliquer manuellement la doc, s
 - [S-0006 - Mode tickets.mode: mcp (JIRA)](S-0006-Tickets-Mcp-Jira.md) — implémentation du mapping validé
 - [S-0007 - Préférences Git dans setup](S-0007-Git-Preferences.md) — extension de setup aux règles Git projet
 - [S-0008 - Documentation et release v1.1.0](S-0008-Doc-Release.md) — finalisation doc et publication
+- [S-0009 - Mode product.access: read-only](S-0009-Product-ReadOnly.md) — doc produit externe figée (lecture seule), agents product et brainstorm en mode conversationnel
 
 ## Critères de succès
 

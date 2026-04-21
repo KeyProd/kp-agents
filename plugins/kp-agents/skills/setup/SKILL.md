@@ -91,6 +91,8 @@ Regroupe les questions par dimension. **Ne demande que ce qui est nécessaire** 
 **Dimension `product`** :
 - Mode ? (local par défaut / external)
 - Si external → chemin absolu du dossier (ex: OneDrive)
+- Si external → **accès** ? (read-write par défaut / read-only). Formuler ainsi :
+  > La doc produit externe sera-t-elle **modifiable par les agents** (read-write, défaut) ou **en lecture seule** (read-only) ? Le mode read-only convient quand un PM humain maintient la doc ailleurs (OneDrive partagé, Notion exporté) : les agents la lisent comme source de vérité mais n'y touchent jamais. Les epics et stories restent créables indépendamment via la dimension `tickets`.
 
 **Dimension `tickets`** :
 - Mode ? (local par défaut / mcp)
@@ -128,6 +130,8 @@ Termine par :
 - **Config complète sans modification demandée** → l'agent affiche la config, confirme qu'elle est valide, et propose un handoff direct (pas d'écriture).
 - **`.kp-agents.yml` existe mais `.kp-agents.local.yml` manquant alors que mode externe actif** → compléter uniquement le fichier local, ne pas retoucher `.kp-agents.yml`.
 - **Chemin externe avec espaces / caractères spéciaux** (ex: `Library/CloudStorage/OneDrive - Entity/`) → enregistrer tel quel dans le YAML, le parser YAML gère les chaînes.
+- **`access` omis ou absent** → ne pas écrire le champ dans `.kp-agents.yml` (laisser les agents appliquer le défaut `read-write`). N'écris le champ que s'il vaut explicitement `read-only`, ou si l'utilisateur l'a explicité même à `read-write`.
+- **`access` en mode local** → inutile, ne jamais le proposer ni l'écrire. Si déjà présent dans un `.kp-agents.yml` existant lors d'une modification, warn l'utilisateur (« champ ignoré en mode local ») et propose de le retirer.
 
 ## Gotchas
 
@@ -167,6 +171,7 @@ Ce projet peut pointer vers des sources externes (doc produit OneDrive, tickets 
 ```yaml
 product:
   mode: local | external      # défaut: local
+  access: read-write | read-only   # défaut: read-write, ignoré si mode: local
 tickets:
   mode: local | mcp           # défaut: local
   mcp_server: <nom>           # requis si mode: mcp
@@ -209,6 +214,42 @@ Si un fichier existe **à la fois** localement (`./docs/<path>`) et sur `<produc
 - **Lecture** : privilégier le fichier externe (source de vérité en mode `product.mode: external`).
 - **Écriture** : écrire sur l'externe ; ne pas toucher au fichier local.
 - **Warn** une seule fois par session, à la première détection : « Fichier dupliqué détecté entre `./docs/<path>` et `<product.path>/<path>`. Le externe fait foi. Envisage de supprimer la copie locale pour éviter toute confusion future. »
+
+### Mode `product.access: read-only` (doc produit externe figée)
+
+Quand `product.mode: external` **et** `product.access: read-only`, la doc produit externe est consommée comme **source de vérité figée** : les agents la **lisent** mais n'y écrivent **jamais** — ni sur le chemin externe, ni en fallback local. Cas d'usage typique : OneDrive partagé maintenu par un PM humain, agents en consommation.
+
+#### Matrice comportementale par output
+
+| Output | `mode: local` | `external` + `read-write` | `external` + `read-only` |
+|---|---|---|---|
+| `product.md` | écrit local | écrit externe | **refus, contenu rendu en chat** |
+| `ideas/*.md` | écrit local | écrit externe | **refus, contenu rendu en chat** |
+| `features/<g>/product.md` | écrit local | écrit externe | **refus, contenu rendu en chat** |
+| `project/roadmap.md` | écrit local | écrit externe | **refus, contenu rendu en chat** |
+| Epics / stories | suit `tickets.mode` | suit `tickets.mode` | suit `tickets.mode` (indépendant) |
+| Lecture de tous les outputs ci-dessus | local | externe | **externe (lecture autorisée)** |
+
+Agents concernés par le refus d'écriture en read-only : `product` et `brainstorm`. Les autres agents (`architect`, `developer`, `review`, `documentation`, `ux-ui`) n'écrivent pas sur la dimension produit et ne sont donc pas affectés.
+
+#### Format standardisé du refus read-only
+
+Utiliser ce format exact (avec l'emoji cadenas pour distinguer du warn de fallback technique) :
+
+> 🔒 **Mode produit read-only** — la doc produit externe (`<product.path>`) est configurée en lecture seule. Je n'écris pas `<chemin relatif>`. Contenu proposé conservé ci-dessous pour copie manuelle. Pour autoriser l'écriture : `/kp-agents:setup` puis bascule `product.access: read-write`.
+>
+> ```markdown
+> <contenu complet rédigé par l'agent>
+> ```
+
+Le contenu rédigé est **toujours rendu en chat** en bloc markdown — l'utilisateur ne perd jamais le travail de l'agent, il décide lui-même où le coller.
+
+#### Règles spécifiques
+
+- Le refus d'écriture est **absolu** en read-only : pas de fallback local, pas de contournement « écris quand même ». Si l'utilisateur insiste, redirige vers `/kp-agents:setup`.
+- `access: read-only` est **ignoré** si `mode: local` (warn au démarrage, pas de blocage).
+- `access` par défaut à `read-write` si omis (rétro-compatibilité).
+- Les dimensions `product.access` et `tickets.mode` restent **découplées** : un projet peut très bien avoir `product.access: read-only` + `tickets.mode: local` (ou `mcp`) — les epics et stories sont créées normalement.
 
 ### Mode `tickets.mode: mcp`
 

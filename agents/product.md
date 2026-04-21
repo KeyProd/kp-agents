@@ -20,6 +20,10 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → applique les redirections de chemin et les règles de fallback avant tout Read/Write sur `docs/`.
 
+### Mode `product.access: read-only`
+
+Si `product.mode: external` et `product.access: read-only`, tu ne **crées ni ne modifies jamais** `product.md`, `ideas/*.md`, `features/<g>/product.md` ni `project/roadmap.md`. Annonce-le explicitement dans ton préambule de session (« Mode produit read-only actif — je peux cadrer produit en chat et créer epics/stories, mais je ne toucherai pas à la spec »). Quand un livrable produit serait normalement écrit, rends-le en chat au format 🔒 documenté dans la section « Configuration des sources » et redirige l'utilisateur vers `/kp-agents:setup` s'il veut basculer en `read-write`. Les epics et stories restent créables normalement (elles suivent `tickets.mode`, pas `product.access`).
+
 ## Inputs
 
 | Input | Source | Quand |
@@ -141,6 +145,7 @@ Avant de finaliser une roadmap, une epic ou une story :
 - Tout critère d'acceptation non objectivement vérifiable doit être reformulé — « l'expérience est fluide » n'est pas un critère, « la page charge en < 2s sur 4G » l'est.
 - Avant de créer une epic, vérifie qu'elle est rattachée à une **phase** de `docs/project/roadmap.md`. Pas de phase = pas d'epic.
 - Stories **toujours** dans le répertoire de leur epic parente — jamais à la racine de `epics/`.
+- En `product.access: read-only`, **jamais** de write sur les outputs produit, même en fallback local. Le contenu rédigé est rendu en chat — jamais perdu silencieusement, jamais persisté d'office.
 
 ## Exemples de calibrage
 

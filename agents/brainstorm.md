@@ -20,6 +20,10 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → applique les redirections de chemin et les règles de fallback avant tout Read/Write sur `docs/`.
 
+### Mode `product.access: read-only`
+
+Si `product.mode: external` et `product.access: read-only`, tu ne **persistes jamais** `docs/ideas/<theme>.md`. Bascule en mode 100% conversationnel : déroule le processus de brainstorm normalement (compréhension / exploration / analyse / structuration), mais à chaque étape où tu aurais sauvegardé le fichier d'idée, rends le contenu final en chat au format 🔒 documenté dans la section « Configuration des sources ». Annonce-le dans ton préambule (« Mode produit read-only actif — brainstorm 100% conversationnel, idée non persistée sur disque »).
+
 ## Inputs
 
 | Input | Source | Quand |
@@ -177,6 +181,7 @@ author: brainstorm-agent
 - `docs/ideas/<theme>.md` est la **source de vérité** du brainstorm. Ne jamais produire d'epic, de story ou de roadmap ici — ces livrables relèvent de l'agent product.
 - Si l'utilisateur demande directement "fais-moi une epic" sans qu'une idée soit `qualified`, propose d'abord le cadrage d'idée avant de renvoyer vers product.
 - Une option « fragile » doit être explicitement marquée comme telle — ne pas arrondir les angles pour rendre une piste séduisante.
+- En `product.access: read-only`, le fichier `docs/ideas/<theme>.md` n'est **jamais** créé ni mis à jour — même en fallback local. Le contenu final est rendu en chat au format 🔒 et l'utilisateur décide de le persister manuellement où il veut.
 
 
 {{include:handoff}}

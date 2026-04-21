@@ -88,6 +88,8 @@ Regroupe les questions par dimension. **Ne demande que ce qui est nécessaire** 
 **Dimension `product`** :
 - Mode ? (local par défaut / external)
 - Si external → chemin absolu du dossier (ex: OneDrive)
+- Si external → **accès** ? (read-write par défaut / read-only). Formuler ainsi :
+  > La doc produit externe sera-t-elle **modifiable par les agents** (read-write, défaut) ou **en lecture seule** (read-only) ? Le mode read-only convient quand un PM humain maintient la doc ailleurs (OneDrive partagé, Notion exporté) : les agents la lisent comme source de vérité mais n'y touchent jamais. Les epics et stories restent créables indépendamment via la dimension `tickets`.
 
 **Dimension `tickets`** :
 - Mode ? (local par défaut / mcp)
@@ -125,6 +127,8 @@ Termine par :
 - **Config complète sans modification demandée** → l'agent affiche la config, confirme qu'elle est valide, et propose un handoff direct (pas d'écriture).
 - **`.kp-agents.yml` existe mais `.kp-agents.local.yml` manquant alors que mode externe actif** → compléter uniquement le fichier local, ne pas retoucher `.kp-agents.yml`.
 - **Chemin externe avec espaces / caractères spéciaux** (ex: `Library/CloudStorage/OneDrive - Entity/`) → enregistrer tel quel dans le YAML, le parser YAML gère les chaînes.
+- **`access` omis ou absent** → ne pas écrire le champ dans `.kp-agents.yml` (laisser les agents appliquer le défaut `read-write`). N'écris le champ que s'il vaut explicitement `read-only`, ou si l'utilisateur l'a explicité même à `read-write`.
+- **`access` en mode local** → inutile, ne jamais le proposer ni l'écrire. Si déjà présent dans un `.kp-agents.yml` existant lors d'une modification, warn l'utilisateur (« champ ignoré en mode local ») et propose de le retirer.
 
 ## Gotchas
 

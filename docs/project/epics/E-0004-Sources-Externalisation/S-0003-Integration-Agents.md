@@ -1,7 +1,7 @@
 ---
 title: Intégration sources-config dans les 7 agents existants
 date: 2026-04-21
-status: TODO
+status: REVIEW
 author: product-agent
 story-id: S-0003
 epic-id: E-0004
@@ -91,10 +91,67 @@ En tant qu'utilisateur de `kp-agents`, je veux que chaque agent respecte la conf
 
 ## Implémentation
 
-- Fichiers modifiés : `agents/brainstorm.md`, `agents/product.md`, `agents/architect.md`, `agents/developer.md`, `agents/review.md`, `agents/documentation.md`, `agents/ux-ui.md`
-- Commandes de test : `./sync.sh` + invocations manuelles par agent dans un projet test
-- Notes de review : à remplir
+### Fichiers modifiés (7 agents)
+
+Pour chacun des 7 agents existants, deux insertions ciblées (approche minimale validée) :
+1. **Section `## Configuration du projet`** ajoutée juste après `{{include:activation}}` — instruit l'agent de lire `.kp-agents.yml` / `.kp-agents.local.yml` au démarrage et de proposer `/kp-agents:setup` si la config est incomplète. Le texte est contextualisé par agent (ex: architect mentionne que ses écritures restent toujours locales ; documentation mentionne que INDEX reste local).
+2. **Directive `{{include:sources-config}}`** insérée juste avant `{{include:docs-structure[-light]}}` — injecte la logique centralisée (schéma, résolution de chemin, fallback write, redirection setup).
+
+### Mesure H3 empirique (critère d'acceptation de S-0001)
+
+Avant/après intégration de `{{include:sources-config}}` dans chaque agent :
+
+| Agent | Source avant (lignes) | Source après (lignes) | Δ source | SKILL.md après (lignes) |
+|---|---:|---:|---:|---:|
+| brainstorm | 181 | 190 | +9 | 319 |
+| product | 157 | 166 | +9 | 297 |
+| architect | 184 | 193 | +9 | 324 |
+| developer | 241 | 251 | +10 | **396** |
+| review | 225 | 235 | +10 | 380 |
+| documentation | 217 | 227 | +10 | 358 |
+| ux-ui | 216 | 226 | +10 | 357 |
+| **Total ajout net** | | | **+67** | |
+
+- **Ajout net par agent** : 9-10 lignes source (conforme à l'estimation de la story : 5-10 lignes, légèrement dépassé mais acceptable).
+- **developer (agent le plus long)** : 396 lignes de SKILL.md final, **+19%** vs baseline 332 lignes (proche de la théorique 388 lignes de S-0001, écart +8 lignes dû aux lignes blanches autour des sections).
+- **Pas de saturation** identifiée — aucun SKILL.md ne dépasse 400 lignes.
+
+### Vérifications techniques
+
+- `grep '{{include' plugins/kp-agents/skills/*/SKILL.md` → **0 résidu** sur les 8 agents (setup inclus).
+- `grep '^## Configuration du projet' plugins/kp-agents/skills/*/SKILL.md` → exactement **1 match par agent** (7 agents — setup exclu car il a sa propre section Processus qui fait déjà l'audit).
+- `grep '^## Configuration des sources' plugins/kp-agents/skills/*/SKILL.md` → exactement **1 match par agent** (8 agents, setup inclus car l'include a toujours été présent chez lui depuis S-0002).
+- `./sync.sh --dist-only` → 8 agents syncés dans les 3 cibles sans erreur.
+
+### Bump version
+
+`sync.sh --dist-only` a auto-bumpé `1.0.1 → 1.0.3` (accumulation de deux patchs non committés : `55358ac` fix include + ce sync). Le minor bump `1.0.x → 1.1.0` sera appliqué à la release S-0008 via `--minor` (ajout d'agent + feature significative).
+
+### Commandes de test
+
+- Génération : `./sync.sh --dist-only`
+- Vérif résidus : `grep -c '{{include' plugins/kp-agents/skills/*/SKILL.md` (doit être 0 pour chaque)
+- Vérif section startup : `grep -c '^## Configuration du projet' plugins/kp-agents/skills/<agent>/SKILL.md` (doit être 1 pour brainstorm/product/architect/developer/review/documentation/ux-ui)
+- Vérif include inliné : `grep -c '^## Configuration des sources' plugins/kp-agents/skills/<agent>/SKILL.md` (doit être 1 pour tous les 8 agents)
+- Mesure tailles : `wc -l plugins/kp-agents/skills/*/SKILL.md`
+- Test manuel non-régression (à faire par l'utilisateur post-merge) : dans un projet sans `.kp-agents.yml`, invoquer `/kp-agents:brainstorm` / `/kp-agents:product` / etc. et vérifier que le comportement est identique à avant.
+
+### Limites
+
+- **Test de redirection effective non exécuté** : la logique de redirection `docs/` → `<product.path>/` n'est pas testée end-to-end dans cette story (elle dépend d'une vraie config `product.mode: external`). Ce test est le périmètre de S-0004 (Mode product.mode external OneDrive).
+- **Auto-redirect vers setup non testé interactivement** : le comportement « proposer `/kp-agents:setup` sans bloquer » est documenté mais dépend de l'agent en session — non reproductible statiquement.
 
 ## Validation par critère
 
-_À remplir lors de l'implémentation et de la review_
+- **Les 7 agents incluent `{{include:sources-config}}` dans leur frontmatter body** : ✅ `grep '^## Configuration des sources' plugins/kp-agents/skills/*/SKILL.md` → 8 matches (7 agents ciblés + setup qui l'avait déjà depuis S-0002). Aucun résidu de directive `{{include}}` dans les 8 SKILL.md générés.
+- **La section « Convention de sortie » de chaque agent est mise à jour pour référencer la logique de config (pas de duplication)** : ✅ approche minimale validée — la convention par défaut (`{{include:docs-structure-light}}` ou `{{include:docs-structure}}`) reste inchangée, l'include `sources-config` la complète en expliquant les redirections possibles. Pas de duplication introduite.
+- **Auto-redirect implémenté : si un agent détecte config manquante/incomplète, il propose `/kp-agents:setup` dès son premier message, sans bloquer** : ✅ documenté dans la section `## Configuration du projet` de chaque agent (3 cas : absent / incomplet / complet) + réitéré dans l'include `sources-config`. Limite : comportement non testable statiquement.
+- **Pour chaque agent, matrice claire documentée : quels outputs sont externalisables, quels restent locaux** : ✅ documenté dans la section startup de chaque agent, avec contextualisation :
+  - `architect` → écritures **toujours locales**
+  - `documentation` → INDEX, README, CLAUDE.md, architect.md **toujours locaux**
+  - `developer` / `review` → stories suivent la dimension `tickets`
+  - `brainstorm` / `product` / `ux-ui` → lecture produit externe si configuré
+- **Test manuel non-régression : sur un projet sans config, chaque agent se comporte comme aujourd'hui** : ⚠️ **à exécuter par l'utilisateur post-merge**. Le comportement est garanti par la règle documentée « Absent → mode 100% local, aucun prompt, comportement par défaut » présente dans la section startup de chaque agent et dans l'include `sources-config`.
+- **Test manuel mode mixte : projet avec `product.mode: external`, `tickets.mode: local` → dimensions indépendantes respectées** : ⚠️ **non exécutable dans cette story** — dépend d'une vraie config externe, ce qui est le périmètre de S-0004 (OneDrive).
+- **`./sync.sh` produit des SKILL.md cohérents pour les 7 agents (hash valide, taille raisonnable)** : ✅ 8 agents syncés dans les 3 cibles (plugin + cursor + codex) sans erreur. Tailles entre 297 (product) et 396 (developer) lignes — acceptable. Hash SHA256 `282b1fdee9…` mis à jour dans `plugin.json`.
+- **Auto-bump patch déclenché par `./sync.sh` si changement de contenu** : ✅ bump `1.0.1 → 1.0.3` appliqué (2 patches cumulés). Minor bump 1.1.0 prévu en S-0008.

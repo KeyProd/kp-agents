@@ -106,7 +106,8 @@ Invocations via le plugin Claude Code : `/kp-agents:<nom>`.
 
 ```mermaid
 flowchart LR
-    B["/kp-agents:brainstorm"] -->|idée qualifiée| P["/kp-agents:product"]
+    S["/kp-agents:setup"] -->|config prête| P["/kp-agents:product"]
+    B["/kp-agents:brainstorm"] -->|idée qualifiée| P
     P -->|epics et stories| A["/kp-agents:architect"]
     P -->|besoin UX| UX["/kp-agents:ux-ui"]
     A -->|design technique| D["/kp-agents:developer"]
@@ -115,10 +116,13 @@ flowchart LR
     R -->|NO-GO| D
     R -->|GO + écarts| DOC["/kp-agents:documentation"]
     D -->|écarts détectés| DOC
+    P -. config manquante .-> S
+    A -. config manquante .-> S
+    D -. config manquante .-> S
 ```
 
 **Pipeline standard** : brainstorm → product → architect → developer → review
-**Agents transversaux** : ux-ui (entre product et developer), documentation (après review ou developer)
+**Agents transversaux** : ux-ui (entre product et developer), documentation (après review ou developer), setup (auto-redirect depuis tout agent détectant une config manquante)
 **Relais** : chaque agent produit un bloc de handoff structuré pour transmettre le contexte au suivant
 
 ## Agents disponibles
@@ -132,6 +136,7 @@ flowchart LR
 | review | `agents/review.md` | `/kp-agents:review` | Relire, tester, valider le code |
 | documentation | `agents/documentation.md` | `/kp-agents:documentation` | Analyser et maintenir la documentation |
 | ux-ui | `agents/ux-ui.md` | `/kp-agents:ux-ui` | Designer UX/UI et identité visuelle |
+| setup | `agents/setup.md` | `/kp-agents:setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
 
 Pour Cursor : `@kp-<nom>` via le sélecteur de règles.
 Pour Codex : skill auto-détectée `kp-<nom>`.

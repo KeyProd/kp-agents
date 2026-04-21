@@ -6,3 +6,6 @@ dist/
 
 # Claude Code local config
 .claude/
+
+# kp-agents: chemins machine-spécifiques (E-0004 Sources Externalisation)
+.kp-agents.local.yml

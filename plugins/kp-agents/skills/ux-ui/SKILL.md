@@ -247,6 +247,23 @@ tickets:
   mode: local | mcp           # défaut: local
   mcp_server: <nom>           # requis si mode: mcp
   project_key: <clé>          # requis si mode: mcp
+  mapping:                    # optionnel, pertinent si mode: mcp — voir section dédiée pour les défauts
+    summary_prefix: <string>
+    issue_type_story: Story
+    issue_type_epic: Epic
+    status:
+      TODO: "À faire"
+      IN_PROGRESS: "En cours"
+      REVIEW: "Examiner"
+      DONE: "Terminé(e)"
+    labels: [kp-agents]
+    label_patterns:
+      story_id: "kp-story-{id}"
+      epic_id: "kp-epic-{id}"
+      author: "kp-author-{name}"
+      status: "kp-status-{value}"
+    custom_fields: {}
+    review_placement: description   # ou "comment"
 ```
 
 ### Fichier `.kp-agents.local.yml` (gitignoré) — chemins machine-spécifiques
@@ -325,6 +342,106 @@ Le contenu rédigé est **toujours rendu en chat** en bloc markdown — l'utilis
 ### Mode `tickets.mode: mcp`
 
 Quand `tickets.mode: mcp` est actif, les epics et stories sont créées / lues / mises à jour via les outils MCP du serveur `mcp_server` dans le projet `project_key`. Aucun fichier `E-XXXX-*/readme.md` ni `S-XXXX-*.md` n'est créé localement pour ces tickets. L'utilisateur doit avoir configuré le serveur MCP correspondant dans ses `settings.json` Claude Code — l'agent ne configure pas le MCP lui-même.
+
+#### Override local via `.kp-agents.local.yml`
+
+Un développeur peut surcharger `tickets.project_key` (et uniquement ce champ en pratique) dans son `.kp-agents.local.yml` pour envoyer les tickets dans **son** projet de test sans toucher la config partagée :
+
+```yaml
+# .kp-agents.local.yml
+tickets:
+  project_key: TODO    # override du KP partagé
+```
+
+Règle de merge : `.kp-agents.local.yml` surcharge `.kp-agents.yml` **champ par champ** (deep merge par dimension). Les champs absents du local héritent du partagé. Ne jamais override `mode` ou `mapping` en local sauf cas très ciblé — ça casserait la cohérence d'équipe.
+
+#### Schéma `tickets.mapping`
+
+Le mapping gouverne **comment** une story markdown est transcodée en ticket JIRA (et inversement). Le bloc YAML de la section « Fichier `.kp-agents.yml` » en tête de document en donne la forme complète. Sémantique champ par champ :
+
+| Champ | Type | Défaut | Rôle |
+|---|---|---|---|
+| `summary_prefix` | string | `""` | Préfixe ajouté au début de chaque `summary` JIRA (ex: `[KP]`). Utile pour isoler les tickets kp-agents dans un projet partagé. |
+| `issue_type_story` | string | `"Story"` | Nom du issue type utilisé pour les stories. Peut être `"User Story"` selon projet. |
+| `issue_type_epic` | string | `"Epic"` | Nom du issue type utilisé pour les epics. Peut être `"Initiative"` ou `"Feature"` selon projet. |
+| `status.TODO` / `IN_PROGRESS` / `REVIEW` / `DONE` | string | voir bloc YAML | Noms **exacts** des statuts workflow JIRA correspondants. Variable par projet (localisation + custom). |
+| `labels` | array<string> | `["kp-agents"]` | Labels systématiquement ajoutés à tout ticket créé par un agent. |
+| `label_patterns.story_id` | string | `"kp-story-{id}"` | Pattern pour encoder l'ID story kp-agents en label JIRA (ex: `S-0009` → `kp-story-S0009`). `{id}` sans tiret par convention (labels JIRA n'aiment pas les tirets dans certaines versions). |
+| `label_patterns.epic_id` | string | `"kp-epic-{id}"` | Idem pour l'ID epic. |
+| `label_patterns.author` | string | `"kp-author-{name}"` | Idem pour l'auteur (nom d'agent). |
+| `label_patterns.status` | string | `"kp-status-{value}"` | Label redondant avec le workflow JIRA, mais utile pour retrouver les tickets en JQL par statut conceptuel. |
+| `custom_fields` | object | `{}` | Clé-valeur de customfield_XXXXX à injecter à la création. Réservé aux projets exigeant Story Points / Sprint / etc. |
+| `review_placement` | `description` \| `comment` | `"description"` | Où l'agent `review` écrit la section `## Review` : directement dans la description du ticket (append) ou comme commentaire JIRA dédié. Choix projet, pas imposé. |
+
+#### Pipeline d'écriture (create epic ou story)
+
+Suivi par `product`, `developer`, `review`, selon l'opération :
+
+1. **Extraire le frontmatter** du markdown source (si agent a composé localement un brouillon) : `story-id`, `epic-id`, `status`, `author`, `title`, etc.
+2. **Composer le `summary`** : `<mapping.summary_prefix><space><titre ou user story abrégée>` — 255 chars max côté JIRA, tronquer proprement avec `…` si besoin.
+3. **Composer la `description`** : **body markdown uniquement**, sans frontmatter YAML (qui serait cassé par JIRA, voir rapport spike). Inclure explicitement le `contentFormat: markdown` à l'appel MCP si l'outil le supporte.
+4. **Composer les `labels`** : union de `mapping.labels` + labels dérivés via `mapping.label_patterns` (un par `story_id`, `epic_id`, `author`, `status`). Convention : ne jamais laisser de `-` dans `{id}` (utiliser `S0009`, pas `S-0009`).
+5. **Composer le `parent`** (pour une story) : clé JIRA de l'epic parente (ex: `KP-42`) — l'agent doit l'avoir obtenu au préalable via recherche ou argument utilisateur.
+6. **Appeler `createJiraIssue`** avec `projectKey`, `issueTypeName` (`mapping.issue_type_story` ou `mapping.issue_type_epic`), `summary`, `description`, `parent`, et `additional_fields: { labels, ...custom_fields }`.
+7. **Transitionner** si le statut visé n'est pas l'initial `TODO` : récupérer les transitions via `getTransitionsForJiraIssue`, trouver celle dont `to.name === mapping.status[<cible>]`, appeler `transitionJiraIssue`.
+8. **Afficher** la clé JIRA + URL au format standardisé (voir ci-dessous).
+
+#### Pipeline de lecture (récupérer une story/epic existante)
+
+1. Appeler `getJiraIssue` avec `responseContentFormat: markdown` (fidélité suffisante mesurée au spike S-0005). Si plus tard ADF s'avère nécessaire, évaluer.
+2. **Reconstruire le frontmatter** en chat ou en rendu markdown (pas de persistance disque en mode mcp) :
+   - `title` ← `summary` (sans le `summary_prefix`)
+   - `status` ← déduit du `status.name` JIRA via reverse-lookup dans `mapping.status` (ex: `Examiner` → `REVIEW`). Si aucune correspondance, fallback `status: UNKNOWN` + warn.
+   - `story-id`, `epic-id`, `author` ← extraits des labels via les patterns inversés (`kp-story-S0009` → `S-0009`).
+   - `date` ← `created` natif JIRA.
+3. **Afficher** la story reconstruite à l'utilisateur sous forme markdown standard (frontmatter + body) — elle n'est **pas** persistée sur disque.
+
+#### Mise à jour d'une story existante
+
+- **Body** : appeler `editJiraIssue` avec `fields: { description: <nouveau markdown sans frontmatter> }`. Toujours **relire** d'abord la description actuelle pour préserver les sections rédigées hors agent (PM qui a ajouté un commentaire, par exemple — à laisser si détecté).
+- **Statut** : `transitionJiraIssue` avec l'ID de transition vers `mapping.status[<nouvelle cible>]`. Si aucune transition disponible vers la cible, warn explicite.
+- **Labels** : pour un changement de statut, `editJiraIssue` avec `fields: { labels: [...anciens sauf kp-status-*, nouveau kp-status-<cible>] }` si `label_patterns.status` est utilisé. Sinon, la transition de statut suffit.
+
+#### Affichage standardisé des liens JIRA
+
+Chaque fois qu'un agent a manipulé un ticket, il affiche dans sa réponse la référence complète. Format exact :
+
+> **JIRA** : [`KP-42`](https://<site>.atlassian.net/browse/KP-42) — `<summary sans le prefix>` *(status: <Status>)*
+
+L'URL est construite à partir de la ressource Atlassian (cloudId → hostname du site, récupéré une fois par session via `getAccessibleAtlassianResources`). En cas d'URL indisponible, afficher la clé seule.
+
+#### Gestion d'erreur MCP
+
+Quand un appel MCP échoue (timeout, 401, 403, 500, outil non chargé, etc.), l'agent warn l'utilisateur et propose **3 options** sans bloquer :
+
+> ⚠️ **Échec MCP JIRA** — l'opération `<nom opération>` sur `<issue>` a échoué (raison : `<raison courte>`).
+>
+> 1. **Réessayer** — je retente immédiatement la même opération.
+> 2. **Bascule locale pour cette opération** — je crée/modifie en local `docs/project/epics/...` pour que tu puisses reprendre plus tard. La config reste `mode: mcp`, seul ce ticket est désynchronisé.
+> 3. **Annuler** — aucune modification, on repart en arrière.
+>
+> Quelle option préfères-tu ?
+
+Trois causes typiques à distinguer dans le « raison courte » :
+
+| Cause | Signal technique | Conseil à glisser dans le warn |
+|---|---|---|
+| **MCP server non chargé / déconnecté** | Tool indisponible, erreur « tool not found » | « Vérifier que le MCP JIRA est activé dans la session Claude Code, ou invoquer `/kp-agents:setup` pour valider `mcp_server`. » |
+| **Auth expirée** | 401 / 403 | « Reconnexion OAuth Atlassian nécessaire (via Claude Code settings). » |
+| **Champ requis manquant** | 400 avec `errors.fieldName` | « Champ JIRA obligatoire absent (`<nom>`). Ajouter dans `tickets.mapping.custom_fields` via `/kp-agents:setup`. » |
+
+#### Non-régression en mode `tickets.mode: local`
+
+**Comportement inchangé** : si `tickets.mode` est absent ou vaut `local`, tout le pipeline ci-dessus est **désactivé**. Les agents créent/lisent `docs/project/epics/E-XXXX-*/readme.md` et `S-XXXX-*.md` exactement comme aujourd'hui. Le mapping, les labels et les transitions MCP ne sont jamais considérés en mode local.
+
+#### Agents concernés
+
+| Agent | Opérations en `tickets.mode: mcp` |
+|---|---|
+| `product` | Crée epic et stories (pipeline d'écriture, statut initial `TODO`). Lit une epic/story existante pour découpage. |
+| `developer` | Transitionne story : `TODO → IN_PROGRESS` au démarrage, `IN_PROGRESS → REVIEW` ou `DONE` en fin. Met à jour la description (section `## Implémentation` + `## Validation par critère` intégrées au body). |
+| `review` | Transitionne story : `REVIEW → DONE` (GO) ou `REVIEW → IN_PROGRESS` (NO-GO). Ajoute la section `## Review` soit dans la description (edit), soit en commentaire JIRA (si la politique projet le préfère — choix pris à `setup`, pas de défaut imposé, demander à la première utilisation). |
+| `brainstorm`, `architect`, `documentation`, `ux-ui`, `setup` | Non concernés (ni création ni transition de ticket). `documentation` maintient `docs/INDEX.md` local, qui reste indépendant de `tickets.mode`. |
 
 ### Écriture avec fallback local
 

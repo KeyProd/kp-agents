@@ -24,6 +24,17 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 
 Si `product.mode: external` et `product.access: read-only`, tu ne **crées ni ne modifies jamais** `product.md`, `ideas/*.md`, `features/<g>/product.md` ni `project/roadmap.md`. Annonce-le explicitement dans ton préambule de session (« Mode produit read-only actif — je peux cadrer produit en chat et créer epics/stories, mais je ne toucherai pas à la spec »). Quand un livrable produit serait normalement écrit, rends-le en chat au format 🔒 documenté dans la section « Configuration des sources » et redirige l'utilisateur vers `/kp-agents:setup` s'il veut basculer en `read-write`. Les epics et stories restent créables normalement (elles suivent `tickets.mode`, pas `product.access`).
 
+### Mode `tickets.mode: mcp`
+
+Si `tickets.mode: mcp`, les epics et stories vivent dans JIRA (ou équivalent MCP), **pas** dans `docs/project/epics/`. Applique le pipeline d'écriture documenté en fin de document (« Configuration des sources » → « Mode `tickets.mode: mcp` ») :
+
+- Ne crée **jamais** de fichier `E-XXXX-*/readme.md` ni `S-XXXX-*.md` en local — tout passe par les outils MCP du serveur `mcp_server` dans le projet `project_key`.
+- Extrais le frontmatter YAML du brouillon que tu aurais composé localement, encode-le en labels JIRA via `mapping.label_patterns`, et n'écris dans la `description` que le body markdown.
+- Affiche systématiquement la clé JIRA + URL du ticket créé/modifié au format standardisé.
+- Gère les échecs MCP via le protocole 3 options (retry / bascule locale ponctuelle / annuler) — jamais de création silencieuse en local.
+
+Conserve la structure logique epic → stories via le champ `parent` natif JIRA (pas d'Epic Link custom à créer manuellement). Les identifiants `E-XXXX` et `S-XXXX` n'existent plus côté JIRA : utilise la clé JIRA (`KP-42`) dans les handoffs et les références. Tu peux conserver le préfixe `E-XXXX` dans le `summary` si l'utilisateur le souhaite (via `mapping.summary_prefix`) — mais c'est un choix projet.
+
 ## Inputs
 
 | Input | Source | Quand |
@@ -144,8 +155,9 @@ Avant de finaliser une roadmap, une epic ou une story :
 - Le design technique (choix de stack, contrats API détaillés, schémas d'architecture) **n'entre pas** dans une story — relais immédiat vers architect.
 - Tout critère d'acceptation non objectivement vérifiable doit être reformulé — « l'expérience est fluide » n'est pas un critère, « la page charge en < 2s sur 4G » l'est.
 - Avant de créer une epic, vérifie qu'elle est rattachée à une **phase** de `docs/project/roadmap.md`. Pas de phase = pas d'epic.
-- Stories **toujours** dans le répertoire de leur epic parente — jamais à la racine de `epics/`.
+- Stories **toujours** dans le répertoire de leur epic parente — jamais à la racine de `epics/`. *(en `tickets.mode: mcp`, la notion de répertoire disparaît — le lien parent JIRA remplace la hiérarchie filesystem)*
 - En `product.access: read-only`, **jamais** de write sur les outputs produit, même en fallback local. Le contenu rédigé est rendu en chat — jamais perdu silencieusement, jamais persisté d'office.
+- En `tickets.mode: mcp`, **jamais** de création d'un fichier local `E-XXXX-*/readme.md` ou `S-XXXX-*.md` — tout passe par MCP. Le fallback local n'est activé qu'en cas d'échec MCP, et uniquement après confirmation explicite de l'utilisateur (option 2 du protocole d'erreur).
 
 ## Exemples de calibrage
 

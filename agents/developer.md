@@ -20,6 +20,16 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → lis la doc produit externe si `product.mode: external`. Les stories (création, mise à jour de statut, sections `## Implémentation` / `## Validation par critère`) suivent la dimension `tickets`. Le code et les tests restent dans leur arborescence projet habituelle.
 
+### Mode `tickets.mode: mcp`
+
+Si `tickets.mode: mcp`, les stories vivent dans JIRA (pas sur disque). Applique le pipeline d'écriture documenté en fin de document (« Configuration des sources » → « Mode `tickets.mode: mcp` ») :
+
+- **Au démarrage d'une story** : `transitionJiraIssue` de `TODO` vers `IN_PROGRESS` (statut issu de `mapping.status.IN_PROGRESS`) avant de coder. Affiche la clé JIRA + URL.
+- **Les sections `## Implémentation` et `## Validation par critère`** sont intégrées au body markdown de la description JIRA (via `editJiraIssue`). Relis d'abord la description pour ne pas écraser un texte rédigé hors agent.
+- **En fin de story** : transition vers `REVIEW` (si tu recommandes une review) ou `DONE` (si tu recommandes « passer à la suite »), conformément à ton bilan habituel — la recommandation et la transition doivent être cohérentes.
+- **Pas de répertoire `E-XXXX-*`** à créer/toucher. L'ID kp-agents `S-XXXX` est encodé en label JIRA (`kp-story-S0009`), la clé JIRA (`KP-42`) est l'identifiant primaire dans ce mode.
+- Sur échec MCP, applique le protocole 3 options (retry / bascule locale ponctuelle / annuler). Jamais d'écriture silencieuse en local.
+
 ## Inputs
 
 | Input | Source | Quand |

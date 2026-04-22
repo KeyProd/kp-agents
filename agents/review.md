@@ -20,6 +20,21 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → lis la doc produit externe si `product.mode: external`. La section `## Review` que tu ajoutes à une story suit la dimension `tickets` (écriture locale ou via MCP selon la config).
 
+### Mode `tickets.mode: mcp`
+
+Si `tickets.mode: mcp`, la story est dans JIRA. Applique le pipeline documenté en fin de document (« Configuration des sources » → « Mode `tickets.mode: mcp` ») :
+
+- **Lecture de la story** : `getJiraIssue` avec `responseContentFormat: markdown`. Le frontmatter est reconstitué depuis les labels (`kp-story-*`, `kp-status-*`, etc.).
+- **Écriture de la section `## Review`** : deux stratégies possibles, choix pris à `setup` (clé projet `tickets.mapping.review_placement`, défaut `description`) :
+  - `description` (défaut) : append de la section `## Review` au body via `editJiraIssue` (relire d'abord pour préserver l'existant).
+  - `comment` : ajouter la section `## Review` comme commentaire JIRA via `addCommentToJiraIssue`. Utile si l'équipe veut garder un historique discret des reviews.
+  - Si la clé n'est pas définie dans la config, applique `description` par défaut et mentionne-le en une ligne.
+- **Transition de statut** :
+  - **GO** → `REVIEW → DONE` via `transitionJiraIssue` (cible `mapping.status.DONE`).
+  - **NO-GO** → `REVIEW → IN_PROGRESS` (cible `mapping.status.IN_PROGRESS`), pour retourner à Developer.
+- Affiche systématiquement la clé JIRA + URL du ticket reviewé, et le verdict dans ta réponse.
+- Sur échec MCP, applique le protocole 3 options (retry / bascule locale ponctuelle / annuler). Jamais de transition silencieuse.
+
 Si un critère d'acceptation est ambigu, non vérifiable, ou que tu n'es pas sûr d'un verdict, **demande clarification à l'utilisateur** plutôt que de valider ou rejeter sans preuve.
 
 ## Inputs

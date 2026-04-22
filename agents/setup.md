@@ -94,6 +94,26 @@ Regroupe les questions par dimension. **Ne demande que ce qui est nécessaire** 
 **Dimension `tickets`** :
 - Mode ? (local par défaut / mcp)
 - Si mcp → nom du serveur MCP (tel que déclaré dans `settings.json` Claude Code) + clé projet (ex: `KP`)
+- Si mcp → **mapping projet-spécifique**. La matrice `tickets.mapping` définit comment encoder les stories kp-agents en tickets JIRA. Plutôt que de poser toutes les questions d'un bloc, propose la démarche suivante :
+  1. Annoncer les défauts (voir tableau ci-dessous) : préfixe vide, issue types `Story` + `Epic`, statuts `À faire / En cours / Examiner / Terminé(e)`, labels `[kp-agents]`.
+  2. **Valider automatiquement** les valeurs par défaut contre le projet réel : appeler `getJiraProjectIssueTypesMetadata` pour vérifier que les issue types existent, puis `getTransitionsForJiraIssue` sur un ticket factice (ou via `searchJiraIssuesUsingJql` pour en trouver un) pour lister les statuts. Si un statut par défaut n'existe pas, proposer le plus proche détecté.
+  3. Demander à l'utilisateur s'il souhaite customiser : préfixe de summary, labels additionnels, custom fields requis. Ne creuser que si l'utilisateur répond oui.
+  4. Si `tickets.mode: mcp` et pas de mapping écrit, les agents utilisent les défauts documentés dans la section « Configuration des sources » en fin de document — pas d'erreur bloquante.
+
+**Défauts suggérés pour `tickets.mapping`** (à proposer explicitement à l'utilisateur) :
+
+| Champ | Défaut | Rôle |
+|---|---|---|
+| `summary_prefix` | `""` | Préfixe dans les titres JIRA |
+| `issue_type_story` | `Story` | Nom JIRA du type Story |
+| `issue_type_epic` | `Epic` | Nom JIRA du type Epic |
+| `status.TODO` | `À faire` ou `To Do` selon locale | Statut initial workflow |
+| `status.IN_PROGRESS` | `En cours` ou `In Progress` | Statut dev en cours |
+| `status.REVIEW` | `Examiner` ou `In Review` | Statut review en cours |
+| `status.DONE` | `Terminé(e)` ou `Done` | Statut final |
+| `labels` | `[kp-agents]` | Labels systématiques |
+| `label_patterns` | `{story_id: "kp-story-{id}", epic_id: "kp-epic-{id}", author: "kp-author-{name}", status: "kp-status-{value}"}` | Patterns d'encodage du frontmatter en labels |
+| `custom_fields` | `{}` | À renseigner si le projet exige Story Points / Sprint / autre |
 
 Pose les questions de manière groupée (2-3 par message max) pour rester fluide. Indique les valeurs par défaut clairement. Laisse l'utilisateur répondre en texte libre.
 
@@ -129,6 +149,9 @@ Termine par :
 - **Chemin externe avec espaces / caractères spéciaux** (ex: `Library/CloudStorage/OneDrive - Entity/`) → enregistrer tel quel dans le YAML, le parser YAML gère les chaînes.
 - **`access` omis ou absent** → ne pas écrire le champ dans `.kp-agents.yml` (laisser les agents appliquer le défaut `read-write`). N'écris le champ que s'il vaut explicitement `read-only`, ou si l'utilisateur l'a explicité même à `read-write`.
 - **`access` en mode local** → inutile, ne jamais le proposer ni l'écrire. Si déjà présent dans un `.kp-agents.yml` existant lors d'une modification, warn l'utilisateur (« champ ignoré en mode local ») et propose de le retirer.
+- **`tickets.mapping` partiel** → écrire uniquement les clés que l'utilisateur a customisées (principe du YAML clairsemé). Les clés absentes héritent des défauts documentés dans `sources-config.md`. Éviter de re-écrire les défauts verbatim — bruit visuel dans un fichier partagé en équipe.
+- **Override local de `tickets.project_key`** → si l'utilisateur veut utiliser un projet JIRA personnel pour ses tests sans toucher la config partagée, écrire uniquement `tickets.project_key: <autre>` dans `.kp-agents.local.yml`. Les autres champs (`mcp_server`, `mapping`) héritent du partagé. Ne jamais dupliquer tout le bloc `tickets` en local.
+- **Validation MCP impossible** (MCP server non chargé au moment du setup) → consigner les défauts tels quels, warner l'utilisateur que la validation effective aura lieu à la première opération ticket.
 
 ## Gotchas
 

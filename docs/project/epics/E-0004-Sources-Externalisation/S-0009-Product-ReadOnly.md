@@ -1,7 +1,7 @@
 ---
 title: Mode product.access read-only (doc produit externe figée)
 date: 2026-04-21
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0009
 epic-id: E-0004

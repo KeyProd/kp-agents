@@ -30,6 +30,7 @@ L'installation se fait directement depuis le repo git — aucun clone ni `sync.s
 Puis invoque les agents avec le namespace `kp-agents:` :
 
 ```
+/kp-agents:setup
 /kp-agents:brainstorm
 /kp-agents:product
 /kp-agents:architect
@@ -138,16 +139,50 @@ docs/              Documentation projet (vision, architecture, epics, stories)
 | `review` | Relire, tester, valider le code |
 | `documentation` | Analyser et maintenir la documentation |
 | `ux-ui` | Designer UX/UI et identité visuelle |
+| `setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
 
 ### Flux entre agents
 
 ```
+setup ┐
+      ↓
 brainstorm → product → architect → developer → review → documentation
                                        ↑                    ↓
                                        └────────────────────┘
 ```
 
-Détails dans [docs/agents.md](docs/agents.md).
+`setup` est transversal : auto-redirect depuis tout agent détectant une config manquante. Détails dans [docs/agents.md](docs/agents.md).
+
+## Configuration projet (`.kp-agents.yml` — optionnel)
+
+**v1.1.0** — Chaque projet peut déclarer une politique de sources : doc produit sur OneDrive, tickets dans JIRA via MCP, préférences Git d'équipe. **Par défaut (absence de fichier), le comportement est 100% local — rétro-compatible avec toute version antérieure.**
+
+```yaml
+# .kp-agents.yml (commité — politique partagée par l'équipe)
+product:
+  mode: external          # local | external (OneDrive, ...)
+  access: read-only       # read-write | read-only (pertinent si external)
+tickets:
+  mode: mcp               # local | mcp (JIRA via MCP)
+  mcp_server: atlassian
+  project_key: KP
+git:
+  branch_pattern: "feat/{slug}"
+  auto_commit: ask        # yes | no | ask
+  auto_push: no
+```
+
+```yaml
+# .kp-agents.local.yml (gitignoré — chemins machine-spécifiques et override local)
+product:
+  path: /Users/alice/OneDrive/MonProjet
+tickets:
+  project_key: POC        # override local pour pousser dans un projet sandbox
+```
+
+Invoque `/kp-agents:setup` pour configurer ces fichiers interactivement — l'agent est audit-first et ne modifie rien sans confirmation.
+
+> **Important** : `.kp-agents.local.yml` doit être gitignoré (l'agent `setup` le fait automatiquement). Ne jamais committer de chemin machine-spécifique.
 
 ## Troubleshooting
 

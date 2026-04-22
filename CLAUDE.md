@@ -29,6 +29,8 @@ dist/              ← GÉNÉRÉ. NON commité (.gitignore)
   codex/           ← Skills Codex (kp-*/SKILL.md + agents/openai.yaml)
 sync.sh            ← Script de synchronisation agents/ → plugins/ + dist/
 .installed-agents  ← Manifeste local (non versionné) : liste des agents installés au dernier sync
+.kp-agents.yml         ← OPTIONNEL — politique de sources du projet (commité)
+.kp-agents.local.yml   ← OPTIONNEL — chemins machine-spécifiques (gitignoré)
 docs/              ← Documentation projet (vision, architecture, epics, stories)
 ```
 
@@ -48,7 +50,7 @@ docs/              ← Documentation projet (vision, architecture, epics, storie
 4. Le script génère le SKILL.md dans `plugins/kp-agents/skills/<nom>/` et les artefacts Cursor/Codex préfixés `kp-`
 5. Publier la mise à jour Claude :
    - `sync.sh` **bumpe automatiquement la version patch** si le contenu des skills a changé (cf. `_contentHash` + `_lastAutoVersion` dans `plugin.json` — géré par le script, ne pas modifier à la main)
-   - Pour un bump mineur ou majeur (ajout/retrait d'agent, rupture), utiliser `./sync.sh --minor` ou `./sync.sh --major` (à venir dans S-0002 de E-0002)
+   - Pour un bump mineur ou majeur (ajout/retrait d'agent, rupture), utiliser `./sync.sh --minor` ou `./sync.sh --major`
    - `git add agents/ plugins/` puis commit, tag `kp-agents-v<X.Y.Z>` et push
    - Les utilisateurs reçoivent la maj au prochain `/plugin marketplace update`
 
@@ -72,6 +74,7 @@ Sans `--minor` ni `--major`, `sync.sh` **auto-bumpe le patch** si le contenu des
 - **Toujours passer par `agents/`** pour toute modification d'agent
 - Nettoyage automatique au début de chaque sync : utilise `.installed-agents` pour supprimer chirurgicalement les agents du run précédent (permet de supprimer proprement un agent retiré de `agents/`). Fallback sur glob `kp-*` si le manifeste est absent.
 - Cleanup one-shot des résidus d'installations Claude locales antérieures (`dist/claude/` + `~/.claude/commands/kp-*.md`) au début de chaque `sync.sh` — idempotent
+- **Configuration projet (`.kp-agents.yml` / `.kp-agents.local.yml`)** — depuis v1.1.0. **Seul l'agent `setup`** a le droit d'écrire ces fichiers. Les autres agents les lisent au démarrage et appliquent les règles de l'include `sources-config` (redirection chemin, fallback write, protocole d'erreur MCP). Absence de fichier = mode 100% local, comportement identique à v1.0.x.
 
 ## Includes et references
 
@@ -84,7 +87,8 @@ Pour le contenu transverse *léger* qui doit être présent immédiatement à l'
 - `docs-structure` — Convention de structure documentaire (complète, inclut les 4 {{ref}} de templates)
 - `docs-structure-light` — Arborescence + règles, sans templates
 - `handoff` — Convention de relais inter-agents
-- `gotchas-transverses` — Gotchas communs aux 7 agents
+- `gotchas-transverses` — Gotchas communs aux 8 agents
+- `sources-config` — Schéma `.kp-agents.yml`, règles de résolution de chemin, pipelines MCP pour tickets, préférences git (v1.1.0)
 
 ### `{{ref:nom}}` — reference file (progressive disclosure, agentskills.io)
 Pour le contenu *lourd* ne servant que ponctuellement (templates de livrables) :

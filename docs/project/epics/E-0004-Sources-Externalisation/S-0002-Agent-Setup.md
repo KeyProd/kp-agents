@@ -1,7 +1,7 @@
 ---
 title: Agent setup (périmètre sources)
 date: 2026-04-21
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0002
 epic-id: E-0004

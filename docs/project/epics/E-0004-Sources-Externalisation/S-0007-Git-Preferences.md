@@ -1,7 +1,7 @@
 ---
 title: Préférences Git dans setup
 date: 2026-04-21
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0007
 epic-id: E-0004

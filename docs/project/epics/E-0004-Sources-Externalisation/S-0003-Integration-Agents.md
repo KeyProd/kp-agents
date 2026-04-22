@@ -1,7 +1,7 @@
 ---
 title: Intégration sources-config dans les 7 agents existants
 date: 2026-04-21
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0003
 epic-id: E-0004

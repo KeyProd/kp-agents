@@ -1,7 +1,7 @@
 ---
 title: Sources Externalisation
 date: 2026-04-21
-status: draft
+status: done
 author: product-agent
 epic-id: E-0004
 phase: 3

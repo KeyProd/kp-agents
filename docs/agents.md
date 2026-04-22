@@ -16,7 +16,7 @@ author: documentation-agent
 
 ## Vue d'ensemble
 
-Le projet expose **7 agents génériques** pour le workflow de développement : de l'exploration d'une idée à la validation du code implémenté. Les agents sont indépendants mais chaînables via un bloc de handoff structuré.
+Le projet expose **8 agents** : 7 agents génériques pour le workflow de développement (de l'exploration d'une idée à la validation du code implémenté) + 1 agent transversal `setup` pour la configuration projet (`.kp-agents.yml` / `.kp-agents.local.yml`). Les agents sont indépendants mais chaînables via un bloc de handoff structuré.
 
 ---
 
@@ -24,6 +24,7 @@ Le projet expose **7 agents génériques** pour le workflow de développement : 
 
 ```mermaid
 flowchart LR
+    S["/kp-agents:setup"]
     B["/kp-agents:brainstorm"]
     P["/kp-agents:product"]
     A["/kp-agents:architect"]
@@ -33,6 +34,7 @@ flowchart LR
     DOC["/kp-agents:documentation"]
     FIN((DONE))
 
+    S -->|config prête| P
     B -->|idée qualifiée| P
     P -->|epics et stories| A
     A -->|design technique| D
@@ -45,7 +47,11 @@ flowchart LR
     UX -.->|specs visuelles| D
     R -.->|écarts documentaires| DOC
     D -.->|écarts détectés| DOC
+    P -.->|config manquante| S
+    A -.->|config manquante| S
+    D -.->|config manquante| S
 
+    style S fill:#f3e5f5,stroke:#8E24AA
     style B fill:#e8f4fd,stroke:#2196F3
     style P fill:#e8f4fd,stroke:#2196F3
     style A fill:#e8f4fd,stroke:#2196F3
@@ -57,7 +63,7 @@ flowchart LR
 ```
 
 **Chemin obligatoire** : brainstorm --> product --> architect --> developer --> review
-**Agents transversaux** (facultatifs) : ux-ui (entre product et developer), documentation (après review ou developer)
+**Agents transversaux** (facultatifs) : ux-ui (entre product et developer), documentation (après review ou developer), setup (auto-redirect depuis tout agent détectant une config manquante)
 
 ---
 
@@ -407,6 +413,55 @@ flowchart TD
     style PRODUCT fill:#fff3e0,stroke:#FF9800
     style ARCHITECT fill:#fff3e0,stroke:#FF9800
 ```
+
+---
+
+### 8. Setup (`/kp-agents:setup`)
+
+**Rôle** : configurateur du projet. Audite l'état de `.kp-agents.yml` et `.kp-agents.local.yml`, guide l'utilisateur pas à pas pour les compléter ou les corriger, et écrit les fichiers de config sans jamais écraser sans confirmation. **Seul agent autorisé** à écrire `.kp-agents.yml` et `.kp-agents.local.yml` — les 7 autres agents sont en lecture seule sur ces fichiers.
+
+**Dimensions gérées** (3, indépendantes) :
+- **`product`** : mode local ou external (OneDrive), avec option `access: read-only` si le PM humain maintient la doc ailleurs.
+- **`tickets`** : mode local ou MCP (JIRA), avec matrice de mapping configurable par projet.
+- **`git`** : `branch_pattern`, `auto_commit`, `auto_push` — préférences Git d'équipe.
+
+**Sortie** : `.kp-agents.yml` (commité, politique partagée), `.kp-agents.local.yml` (gitignoré, chemins machine et override local), ajout automatique de l'entrée `.kp-agents.local.yml` au `.gitignore`.
+
+```mermaid
+flowchart TD
+    START([Demande de config ou auto-redirect])
+    START --> AUDIT[1. Audit des fichiers existants<br/>.kp-agents.yml, .local.yml, .gitignore]
+    AUDIT --> INTENT{Intention claire ?}
+    INTENT -->|non| ORIENT[Question d'orientation<br/>création / modification / vérification]
+    INTENT -->|oui| QUEST
+    ORIENT --> QUEST
+    QUEST[2. Questions ciblées<br/>groupées par dimension<br/>product / tickets / git]
+    QUEST --> VERIFY{Mode externe actif ?}
+    VERIFY -->|product.mode=external| CHECK_PATH[3a. Vérifier accessibilité du chemin]
+    VERIFY -->|tickets.mode=mcp| CHECK_MCP[3b. Valider issue types + statuts via MCP]
+    VERIFY -->|aucun| ANNONCE
+    CHECK_PATH --> ANNONCE
+    CHECK_MCP --> ANNONCE
+    ANNONCE[4. Annonce du contenu à écrire<br/>diff lisible, demande confirmation]
+    ANNONCE --> CONFIRM{Confirmation ?}
+    CONFIRM -->|non| CANCEL[Aucune modification, annonce explicite]
+    CONFIRM -->|oui| WRITE[5. Écriture atomique<br/>.kp-agents.yml<br/>.kp-agents.local.yml si nécessaire<br/>maj .gitignore]
+    WRITE --> HANDOFF[Bloc de handoff<br/>vers agent appelant ou /kp-agents:product]
+    CANCEL --> FIN((Fin))
+    HANDOFF --> FIN
+
+    style AUDIT fill:#f3e5f5,stroke:#8E24AA
+    style QUEST fill:#f3e5f5,stroke:#8E24AA
+    style CHECK_PATH fill:#f3e5f5,stroke:#8E24AA
+    style CHECK_MCP fill:#f3e5f5,stroke:#8E24AA
+    style ANNONCE fill:#f3e5f5,stroke:#8E24AA
+    style WRITE fill:#f3e5f5,stroke:#8E24AA
+    style HANDOFF fill:#c8e6c9,stroke:#4CAF50
+    style CANCEL fill:#ffebee,stroke:#E53935
+    style FIN fill:#eeeeee,stroke:#9E9E9E
+```
+
+**Auto-redirect** : tout agent qui détecte une config manquante / incomplète dans `.kp-agents.yml` propose `/kp-agents:setup` à l'utilisateur — la redirection est une **suggestion, jamais un blocage**. L'utilisateur peut toujours refuser et continuer en mode local dégradé.
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: Mode tickets.mode mcp (JIRA)
 date: 2026-04-21
-status: REVIEW
+status: DONE
 author: product-agent
 story-id: S-0006
 epic-id: E-0004

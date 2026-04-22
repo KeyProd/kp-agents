@@ -8,6 +8,44 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v1.1.0] — 2026-04-22 (epic E-0004 terminée)
+
+Externalisation des sources de documentation produit (OneDrive) et des tickets (JIRA via MCP), avec un 8ème agent `setup` dédié à la configuration projet. **Rétro-compatibilité 100%** : un projet sans `.kp-agents.yml` se comporte exactement comme avant.
+
+### Ajouté
+
+- **Agent `setup`** (`/kp-agents:setup`) : configure les sources du projet (`product.mode`, `tickets.mode`), les préférences Git et la matrice de mapping JIRA. Audit-first, non-destructif — annonce avant d'écrire, demande confirmation. Seul agent autorisé à écrire `.kp-agents.yml` / `.kp-agents.local.yml`.
+- **Fichiers de config projet** (S-0001) :
+  - `.kp-agents.yml` commité — politique de sources, mapping tickets, préférences git partagées.
+  - `.kp-agents.local.yml` gitignoré — chemins machine-spécifiques (OneDrive) et override local (projet JIRA personnel).
+- **Include partagé `sources-config`** — injecté dans les 8 agents par `sync.sh`. Centralise la logique de lecture config, résolution de chemin, fallback write, protocole d'erreur MCP.
+- **Mode `product.mode: external`** (S-0004) : doc produit sur OneDrive (ou tout chemin filesystem). 4 outputs redirigeables (`product.md`, `ideas/*.md`, `features/<g>/product.md`, `roadmap.md`). Fallback local avec warn standardisé en cas d'échec.
+- **Mode `product.access: read-only`** (S-0009) : doc produit externe en lecture seule. Agents `product` et `brainstorm` rendent le contenu en chat au format 🔒 au lieu d'écrire. Cas d'usage : OneDrive partagé maintenu par un PM humain.
+- **Mode `tickets.mode: mcp`** (S-0006) : epics et stories dans JIRA via MCP. Pipeline d'écriture/lecture/update documenté, frontmatter YAML encodé en labels, `description` = body markdown uniquement. Support du champ `parent` natif pour la hiérarchie epic → story. Protocole d'erreur MCP en 3 options (retry / bascule locale ponctuelle / annuler).
+- **Schéma `tickets.mapping`** : configurable par projet (issue types, status workflow, préfixe summary, labels systématiques, label patterns, custom fields, placement section Review). Override local du `project_key` via `.kp-agents.local.yml` (deep merge champ par champ).
+- **Préférences Git `git:`** (S-0007) : `branch_pattern` (template de nommage de branches), `auto_commit` (yes/no/ask), `auto_push` (yes/no/ask). Défauts : `ask` pour commit, `no` pour push, pas de pattern imposé — comportement actuel préservé en l'absence de config.
+- **Spike JIRA mapping** (S-0005) : `docs/project/epics/E-0004-Sources-Externalisation/spike-jira-mapping.md` documente la faisabilité (GO partiel), le schéma de mapping, les défauts setup et les 6 ajustements intégrés à S-0006.
+
+### Modifié
+
+- **7 agents existants** (S-0003) intégrent l'include `sources-config` et la section `## Configuration du projet` adaptée à leur périmètre :
+  - `product`, `brainstorm`, `ux-ui` : lisent la doc produit externe si configurée. `product` et `brainstorm` respectent `read-only`.
+  - `architect` : écritures **toujours locales** (périmètre technique).
+  - `developer`, `review` : epics/stories suivent `tickets.mode` (local ou MCP). Respectent les préférences `git:`.
+  - `documentation` : `INDEX.md`, README, CLAUDE.md, architect.md **toujours locaux** (index du repo code).
+- **Auto-redirect vers `/kp-agents:setup`** : tout agent détectant une config manquante ou incomplète propose l'invocation setup sans bloquer l'utilisateur.
+- **CLAUDE.md** : workflow diagram enrichi (setup + dotted arrows `config manquante`), tableau des agents à 8 entrées.
+- **Plugin manifest** (`plugins/kp-agents/.claude-plugin/plugin.json`) et **marketplace** (`.claude-plugin/marketplace.json`) : description listant les 8 agents.
+
+### Notes
+
+- **Non-régression absolue** garantie par construction : chaque ajout est conditionnel à la présence d'une clé dans `.kp-agents.yml`. Un projet existant (ex: `kp-agents` lui-même) continue de fonctionner sans friction.
+- **Guide de migration pour les utilisateurs v1.0.x** : rien à faire. Si tu veux activer l'externalisation, invoque `/kp-agents:setup` dans ton projet.
+- **Tailles SKILL.md** : les 8 agents grossissent de ~150-200 lignes chacun (include `sources-config` inliné). Plus gros agent : `developer` à 635 lignes. Acceptable, pas de saturation observée.
+- **Dépendances** : MCP Atlassian à configurer dans les `settings.json` Claude Code pour activer `tickets.mode: mcp`. L'agent `setup` référence le MCP mais ne le configure pas lui-même.
+
+---
+
 ## [kp-agents-v0.3.0] — à venir (épic E-0002 terminée)
 
 Introduction de l'auto-bump de version du plugin `kp-agents` — le composant `patch` est désormais incrémenté automatiquement à chaque modification du contenu des skills, sans action manuelle du contributeur.

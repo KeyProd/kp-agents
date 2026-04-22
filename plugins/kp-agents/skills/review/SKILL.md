@@ -38,6 +38,17 @@ Si `tickets.mode: mcp`, la story est dans JIRA. Applique le pipeline documenté 
 - Affiche systématiquement la clé JIRA + URL du ticket reviewé, et le verdict dans ta réponse.
 - Sur échec MCP, applique le protocole 3 options (retry / bascule locale ponctuelle / annuler). Jamais de transition silencieuse.
 
+### Préférences Git (`git:`)
+
+Si la section `git:` existe dans `.kp-agents.yml`, adapte ton comportement autour de l'écriture de la section `## Review` dans le fichier de story (mode `tickets.mode: local` uniquement — en mode `mcp`, tu écris via `editJiraIssue`, git n'intervient pas) :
+
+- **`git.auto_commit: yes`** → commit la modification de la story (`git add <story.md>` + `git commit`) avec un message standard `review: S-XXXX GO` ou `review: S-XXXX NO-GO + recos`. Annonce le commit créé.
+- **`git.auto_commit: no`** → stage uniquement, annonce la modif et laisse la main.
+- **`git.auto_commit: ask`** (défaut) → demande confirmation avant commit.
+- Même logique pour `git.auto_push` qu'avec l'agent `developer`.
+- `git.branch_pattern` ne te concerne pas — tu ne crées pas de branches.
+- **Règle de sécurité** : `auto_commit: yes` n'autorise **jamais** le skip de hooks. Si un hook échoue, annonce l'erreur et laisse la main.
+
 Si un critère d'acceptation est ambigu, non vérifiable, ou que tu n'es pas sûr d'un verdict, **demande clarification à l'utilisateur** plutôt que de valider ou rejeter sans preuve.
 
 ## Inputs
@@ -288,6 +299,10 @@ tickets:
       status: "kp-status-{value}"
     custom_fields: {}
     review_placement: description   # ou "comment"
+git:                            # optionnel, préférences projet pour opérations git
+  branch_pattern: <string>      # défaut: non renseigné. Ex: "feat/{slug}" ou "feature/{ticket}-{slug}"
+  auto_commit: yes | no | ask   # défaut: ask
+  auto_push: yes | no | ask     # défaut: no
 ```
 
 ### Fichier `.kp-agents.local.yml` (gitignoré) — chemins machine-spécifiques
@@ -500,6 +515,26 @@ Le warn est émis **à chaque fallback** (pas de dédoublonnage), pour que l'uti
 
 - **Au démarrage** (lecture initiale de la config) : vérifier que `product.path` est lisible. Si `product.path` est inaccessible dès le démarrage → warn global + proposer `/kp-agents:setup` + poursuivre en **mode local dégradé** pour toute la session (plus de tentative externe, directement local).
 - **Au write** (pendant la session, sur un chemin initialement validé) : fallback par opération avec warn standardisé.
+
+### Préférences Git (`git:`)
+
+Bloc optionnel de `.kp-agents.yml` qui régule le comportement des agents qui touchent git (`developer`, `review`). **Non-régression absolue** : si la clé `git:` est absente du fichier, les agents se comportent comme aujourd'hui (demande de confirmation avant commit/push, pas d'imposition de nom de branche).
+
+#### Schéma et défauts
+
+| Champ | Valeurs | Défaut | Rôle |
+|---|---|---|---|
+| `branch_pattern` | string avec placeholders | non renseigné | Template de nommage pour les branches feature créées par `developer`. Placeholders supportés : `{slug}` (nom de story kebab-case), `{ticket}` (clé JIRA si `tickets.mode: mcp`, sinon ID `S-XXXX`), `{epic}` (ID epic ou clé JIRA parent). Exemples : `feat/{slug}`, `feature/KP-{ticket}-{slug}`. Si non renseigné, l'agent demande le nom à l'utilisateur (comportement actuel). |
+| `auto_commit` | `yes` / `no` / `ask` | `ask` | `yes` : commit sans demander après validation d'une story. `no` : ne commit jamais, annonce ce qui est prêt et laisse la main. `ask` : demande confirmation avant chaque commit (comportement actuel). |
+| `auto_push` | `yes` / `no` / `ask` | `no` | Même sémantique que `auto_commit` mais pour `git push`. Défaut `no` : push est toujours une décision utilisateur explicite. |
+
+#### Règles d'application
+
+- **Priorité sur les règles de sécurité globales** : `auto_commit: yes` ou `auto_push: yes` **n'autorise jamais** le skip de hooks, de signature GPG, ou tout autre bypass documenté dans `CLAUDE.md`. La préférence projet accélère le flow « OK » ; elle ne débloque pas de contournements.
+- **Échec silencieux interdit** : si un commit auto échoue (hook, signature, sandbox), l'agent **annonce explicitement** l'erreur et laisse la main. Ne jamais considérer `auto_commit: yes` comme un « fait au mieux silencieux ».
+- **Validation du `branch_pattern`** : à l'écriture par `setup`, parser le pattern et vérifier qu'il ne contient pas d'accolade non fermée. Les placeholders inconnus (hors `{slug}`, `{ticket}`, `{epic}`) → warn à l'utilisateur mais accepter (il décide).
+- **Préférences partielles** : un `.kp-agents.yml` avec seulement `git.branch_pattern` mais pas `auto_commit` → défaut `ask` appliqué sur le champ manquant, pas de blocage.
+- **Dimension indépendante** : `git:` est découplée de `product:` et `tickets:`. Un projet peut très bien avoir `tickets.mode: mcp` + `git.auto_commit: no` (cas typique : tickets dans JIRA mais commit contrôlé à la main).
 
 ### Redirection vers `/kp-agents:setup`
 

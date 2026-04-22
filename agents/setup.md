@@ -83,7 +83,9 @@ Selon le résultat de l'audit, demande **une seule question d'orientation** :
 
 ### 3. Questions ciblées (selon dimensions à configurer)
 
-Regroupe les questions par dimension. **Ne demande que ce qui est nécessaire** — si l'utilisateur veut configurer seulement `product`, n'aborde pas `tickets`.
+Regroupe les questions par dimension. **Ne demande que ce qui est nécessaire** — si l'utilisateur veut configurer seulement `product`, n'aborde pas `tickets` ni `git`.
+
+Trois dimensions indépendantes : `product`, `tickets`, `git`. L'utilisateur peut vouloir configurer l'une, deux ou les trois. Pose une méta-question d'orientation si ce n'est pas explicite dans sa demande initiale.
 
 **Dimension `product`** :
 - Mode ? (local par défaut / external)
@@ -114,6 +116,14 @@ Regroupe les questions par dimension. **Ne demande que ce qui est nécessaire** 
 | `labels` | `[kp-agents]` | Labels systématiques |
 | `label_patterns` | `{story_id: "kp-story-{id}", epic_id: "kp-epic-{id}", author: "kp-author-{name}", status: "kp-status-{value}"}` | Patterns d'encodage du frontmatter en labels |
 | `custom_fields` | `{}` | À renseigner si le projet exige Story Points / Sprint / autre |
+
+**Dimension `git`** :
+- Proposer ces 3 questions groupées, avec les défauts explicites :
+  1. « **Convention de nommage de branches ?** Laisse vide pour que l'agent demande à chaque fois (comportement actuel). Exemples de patterns : `feat/{slug}`, `feature/KP-{ticket}-{slug}`. Placeholders supportés : `{slug}`, `{ticket}`, `{epic}`. »
+  2. « **Commit automatique par l'agent ?** `ask` (défaut, demande avant chaque commit) / `yes` (commit sans demander) / `no` (ne commit jamais, annonce et laisse la main). »
+  3. « **Push automatique par l'agent ?** `ask` / `yes` / `no` (défaut `no` — push reste une décision explicite). »
+- Valider le `branch_pattern` avant écriture : parser et vérifier qu'il n'y a pas d'accolade non fermée. Placeholders inconnus → warn mais accepter. Pattern vide → ne pas écrire le champ.
+- Si une seule des 3 réponses est donnée, n'écrire que ce champ dans `.kp-agents.yml` (YAML clairsemé). Les autres héritent du défaut documenté dans `sources-config.md`.
 
 Pose les questions de manière groupée (2-3 par message max) pour rester fluide. Indique les valeurs par défaut clairement. Laisse l'utilisateur répondre en texte libre.
 
@@ -152,6 +162,8 @@ Termine par :
 - **`tickets.mapping` partiel** → écrire uniquement les clés que l'utilisateur a customisées (principe du YAML clairsemé). Les clés absentes héritent des défauts documentés dans `sources-config.md`. Éviter de re-écrire les défauts verbatim — bruit visuel dans un fichier partagé en équipe.
 - **Override local de `tickets.project_key`** → si l'utilisateur veut utiliser un projet JIRA personnel pour ses tests sans toucher la config partagée, écrire uniquement `tickets.project_key: <autre>` dans `.kp-agents.local.yml`. Les autres champs (`mcp_server`, `mapping`) héritent du partagé. Ne jamais dupliquer tout le bloc `tickets` en local.
 - **Validation MCP impossible** (MCP server non chargé au moment du setup) → consigner les défauts tels quels, warner l'utilisateur que la validation effective aura lieu à la première opération ticket.
+- **`git.auto_commit: yes` ou `auto_push: yes`** : rappeler à l'utilisateur que cela **n'autorise jamais** le skip de hooks / signature GPG / autres bypass — c'est un raccourci pour sauter la confirmation, pas pour désactiver les règles de sécurité globales (voir `CLAUDE.md`).
+- **`git.branch_pattern` modifié en cours de projet** : les branches déjà créées ne sont pas renommées rétroactivement. Prévenir l'utilisateur que le nouveau pattern s'applique uniquement aux prochaines branches créées par `developer`.
 
 ## Gotchas
 
@@ -175,6 +187,7 @@ Termine par :
 
 - **« configure les sources »** / **« setup le projet »** — Setup complet depuis un état vierge ou partiel
 - **« vérifie la config »** — Audit sans modification, affichage du rapport
-- **« modifie [dimension] »** (ex: « modifie tickets ») — Modification ciblée d'une dimension
+- **« modifie [dimension] »** (ex: « modifie tickets », « modifie git ») — Modification ciblée d'une dimension (product / tickets / git)
+- **« configure git »** / **« préférences git »** — Flow dédié aux 3 préférences git (branch_pattern, auto_commit, auto_push)
 - **« désactive [dimension] »** — Retour en mode local pour une dimension
 - **Auto-redirect** — Invocation transparente depuis un autre agent qui a détecté une config manquante

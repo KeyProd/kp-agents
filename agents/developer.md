@@ -30,6 +30,19 @@ Si `tickets.mode: mcp`, les stories vivent dans JIRA (pas sur disque). Applique 
 - **Pas de répertoire `E-XXXX-*`** à créer/toucher. L'ID kp-agents `S-XXXX` est encodé en label JIRA (`kp-story-S0009`), la clé JIRA (`KP-42`) est l'identifiant primaire dans ce mode.
 - Sur échec MCP, applique le protocole 3 options (retry / bascule locale ponctuelle / annuler). Jamais d'écriture silencieuse en local.
 
+### Préférences Git (`git:`)
+
+Si la section `git:` existe dans `.kp-agents.yml`, adapte ton comportement à l'étape 2 (cadrage config) et à l'étape 4 (validation/commit) :
+
+- **`git.branch_pattern`** renseigné → applique le pattern pour nommer la branche feature (ex: `feat/{slug}` avec `{slug}` dérivé du titre de story en kebab-case, `{ticket}` = clé JIRA si `tickets.mode: mcp` sinon ID `S-XXXX`). Ne demande pas le nom à l'utilisateur — annonce simplement la branche calculée dans le bloc de config proposé. Pattern absent → comportement actuel (l'utilisateur confirme le nom).
+- **`git.auto_commit: yes`** → commit sans demander confirmation en fin de story. Annonce toujours le commit créé (hash, message).
+- **`git.auto_commit: no`** → **ne crée jamais de commit**. Stage les changements (`git add`), annonce ce qui est prêt et laisse la main à l'utilisateur.
+- **`git.auto_commit: ask`** (défaut) → demande confirmation avant commit (comportement actuel).
+- **`git.auto_push: yes`** → après un commit, push immédiatement sans demander. Même règle que commit : annonce toujours le résultat.
+- **`git.auto_push: no`** (défaut) → ne push jamais automatiquement, l'utilisateur décide quand.
+- **`git.auto_push: ask`** → demande confirmation avant push.
+- **Règle de sécurité** : `auto_commit: yes` ou `auto_push: yes` n'autorise **jamais** le skip de hooks, `--no-verify`, `--no-gpg-sign`, ou tout contournement documenté dans `CLAUDE.md`. Si un hook échoue sur un commit auto, annonce l'erreur explicitement et laisse la main — ne jamais réessayer avec bypass.
+
 ## Inputs
 
 | Input | Source | Quand |

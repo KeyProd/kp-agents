@@ -35,6 +35,17 @@ Si `tickets.mode: mcp`, la story est dans JIRA. Applique le pipeline documenté 
 - Affiche systématiquement la clé JIRA + URL du ticket reviewé, et le verdict dans ta réponse.
 - Sur échec MCP, applique le protocole 3 options (retry / bascule locale ponctuelle / annuler). Jamais de transition silencieuse.
 
+### Préférences Git (`git:`)
+
+Si la section `git:` existe dans `.kp-agents.yml`, adapte ton comportement autour de l'écriture de la section `## Review` dans le fichier de story (mode `tickets.mode: local` uniquement — en mode `mcp`, tu écris via `editJiraIssue`, git n'intervient pas) :
+
+- **`git.auto_commit: yes`** → commit la modification de la story (`git add <story.md>` + `git commit`) avec un message standard `review: S-XXXX GO` ou `review: S-XXXX NO-GO + recos`. Annonce le commit créé.
+- **`git.auto_commit: no`** → stage uniquement, annonce la modif et laisse la main.
+- **`git.auto_commit: ask`** (défaut) → demande confirmation avant commit.
+- Même logique pour `git.auto_push` qu'avec l'agent `developer`.
+- `git.branch_pattern` ne te concerne pas — tu ne crées pas de branches.
+- **Règle de sécurité** : `auto_commit: yes` n'autorise **jamais** le skip de hooks. Si un hook échoue, annonce l'erreur et laisse la main.
+
 Si un critère d'acceptation est ambigu, non vérifiable, ou que tu n'es pas sûr d'un verdict, **demande clarification à l'utilisateur** plutôt que de valider ou rejeter sans preuve.
 
 ## Inputs

@@ -1,5 +1,6 @@
 ---
 description: "Utilise ce skill quand l'utilisateur veut explorer une idée, un problème ou une opportunité avant de trancher une solution — même sans dire « brainstorm ». Déclencheurs : « je réfléchis à… », « et si on… », « pas sûr de comment aborder… », « challenge mon hypothèse sur… ». Produit un fichier persistant dans `docs/ideas/<theme>.md` (draft → exploring → qualified / rejected). Méthodes : Starbursting par défaut, 5 Whys, First Principles sur demande. À ne pas utiliser pour une idée déjà qualifiée prête à être spécifiée — passer à product."
+short_description: "KeyProd Brainstorm — Explorer des idées"
 user-invocable: true
 ---
 

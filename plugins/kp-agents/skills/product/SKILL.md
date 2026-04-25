@@ -1,5 +1,6 @@
 ---
 description: "Utilise ce skill quand l'utilisateur doit transformer une idée, une demande ou une opportunité en roadmap, epic ou user story avec critères d'acceptation — même s'il demande juste « écris une story », « planifie la prochaine phase » ou « découpe-moi ça ». Déclencheurs : discussion de vision produit, personas, KPI, priorisation MoSCoW/RICE, ou quand `docs/project/roadmap.md` / `docs/project/epics/` doit être créé ou mis à jour. À ne pas utiliser pour du design technique pur (→ architect) ni pour de l'implémentation pure (→ developer)."
+short_description: "KeyProd Product — Construire roadmap, epics et stories"
 user-invocable: true
 ---
 

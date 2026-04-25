@@ -285,15 +285,18 @@ clean_plugin_refs() {
 
 # ─────────────────────────────────────────────────────────────
 # Generate Claude Code plugin skill (plugins/kp-agents/skills/<name>/SKILL.md)
-# Format: minimal YAML frontmatter (description only) + body
+# Format: minimal YAML frontmatter (description + optional short_description) + body
 # Committed to git, distributed via plugin marketplace.
 # ─────────────────────────────────────────────────────────────
 generate_plugin_file() {
-    local outfile="$1" desc="$2" body="$3" user_invocable="$4"
+    local outfile="$1" desc="$2" body="$3" user_invocable="$4" short_desc="$5"
 
     {
         echo "---"
         echo "description: $(yaml_quote "$desc")"
+        if [[ -n "$short_desc" ]]; then
+            echo "short_description: $(yaml_quote "$short_desc")"
+        fi
         if [[ -n "$user_invocable" ]]; then
             echo "user-invocable: $user_invocable"
         fi
@@ -304,12 +307,12 @@ generate_plugin_file() {
 }
 
 generate_plugin() {
-    local name="$1" desc="$2" body="$3" user_invocable="$4"
+    local name="$1" desc="$2" body="$3" user_invocable="$4" short_desc="$5"
     local skill_dir="$PLUGIN_SKILLS_DIR/${name}"
     local outfile="$skill_dir/SKILL.md"
 
     mkdir -p "$skill_dir"
-    generate_plugin_file "$outfile" "$desc" "$body" "$user_invocable"
+    generate_plugin_file "$outfile" "$desc" "$body" "$user_invocable" "$short_desc"
     ok "Plugin  → plugins/kp-agents/skills/${name}/SKILL.md"
 }
 
@@ -679,7 +682,7 @@ main() {
         body_inline=$(resolve_refs_inline "$body")
 
         # Generate for each tool
-        generate_plugin "$AGENT_NAME" "$AGENT_DESC" "$body_plugin" "$AGENT_USER_INVOCABLE"
+        generate_plugin "$AGENT_NAME" "$AGENT_DESC" "$body_plugin" "$AGENT_USER_INVOCABLE" "$AGENT_SHORT_DESC"
         generate_cursor "$AGENT_NAME" "$AGENT_DESC" "$body_inline"
         generate_codex  "$AGENT_NAME" "$AGENT_DESC" "$body_inline" "$AGENT_SHORT_DESC" "$AGENT_DEFAULT_PROMPT"
 

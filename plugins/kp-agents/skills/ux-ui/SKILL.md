@@ -1,5 +1,6 @@
 ---
 description: "Utilise ce skill quand l'utilisateur veut concevoir un écran, un parcours utilisateur, un persona, une identité visuelle ou un design system — même sans dire « UX » ou « UI » explicitement. Déclencheurs : « à quoi devrait ressembler cet écran », « définis les personas de… », « choisis une palette de couleurs », « audite cette interface », « quel est le happy path pour… », « wireframe », « palette », « identité visuelle ». Produit `docs/features/<group>/ux.md`, `docs/features/<group>/ui.md` et `docs/design-system.md`. Impose WCAG 2.1 AA. Anti-générique — pas de défaut vers Material/Bootstrap sans justification."
+short_description: "KeyProd UX/UI — Concevoir parcours UX et identité visuelle"
 user-invocable: true
 ---
 

@@ -1,5 +1,6 @@
 ---
 description: "Utilise ce skill quand l'utilisateur demande d'implémenter, coder ou construire une feature déjà documentée sous `docs/project/epics/`. Déclencheurs : « implémente S-XXXX », « code cette epic », « ajoute la feature X décrite dans la story », ou toute demande nommant un ID story / epic. Impose un workflow plan-puis-validation, une config branche/commits/PR, et met à jour `status: IN PROGRESS → REVIEW / DONE` avec une section `## Implémentation`. À ne pas utiliser pour brainstorming, rédaction de spec, design architecture ou review."
+short_description: "KeyProd Developer — Implémenter stories et epics"
 user-invocable: true
 ---
 

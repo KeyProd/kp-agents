@@ -1,5 +1,6 @@
 ---
 description: "Utilise ce skill quand l'utilisateur demande un design technique, un choix de stack, une analyse de compromis, une ADR, ou quand une epic / story nécessite une décision architecturale avant implémentation. Déclencheurs : « comment construire… », « quelle lib / pattern / infra pour… », « documente la décision de… », exigences non-fonctionnelles (latence, volumétrie, sécurité). Produit ou met à jour `docs/architect.md`, `docs/features/<group>/architect.md` et des ADR. À ne pas utiliser pour l'implémentation pure (→ developer) ni le cadrage produit pur (→ product)."
+short_description: "KeyProd Architect — Concevoir l'architecture technique"
 user-invocable: true
 ---
 

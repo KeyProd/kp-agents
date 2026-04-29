@@ -3,7 +3,7 @@ description: "KeyProd Setup — Configurer les sources du projet"
 user-invocable: true
 ---
 
-<!-- trigger: Utilise ce skill pour configurer les sources d'un projet kp-agents : mode `product` (local ou externe/OneDrive), mode `tickets` (local ou MCP/JIRA), répertoires de documentation globale partagée (`global_doc.specs` et `global_doc.tech`), et préférences git. Déclencheurs : « configure les sources », « setup le projet », « où vit la doc produit », « doc technique globale », « specs globales », « vérifie la config », ou auto-redirect depuis un autre agent qui a détecté une config manquante/incomplète. Écrit `.kp-agents.yml` (commité) et `.kp-agents.local.yml` (gitignoré), met à jour le `.gitignore`. Audit-first : ne modifie jamais sans afficher l'état courant et demander confirmation. Seul agent autorisé à écrire ces fichiers de config. À ne pas utiliser pour rédiger de la doc (→ product/architect) ni pour coder (→ developer). -->
+<!-- trigger: Utilise ce skill pour configurer les sources d'un projet kp-agents : mode `product` (local ou externe/OneDrive), mode `tickets` (local ou MCP/JIRA avec détection automatique des sous-tâches et configuration de `subtask_workflow`), répertoires de documentation globale partagée (`global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs`), et préférences git. Déclencheurs : « configure les sources », « setup le projet », « où vit la doc produit », « doc technique globale », « specs globales », « vérifie la config », ou auto-redirect depuis un autre agent qui a détecté une config manquante/incomplète. Écrit `.kp-agents.yml` (commité), `.kp-agents.local.yml` (gitignoré), met à jour le `.gitignore`, et génère `docs/kp-agents-config.md` pour les configs non-triviales. Audit-first : ne modifie jamais sans afficher l'état courant et demander confirmation. Seul agent autorisé à écrire ces fichiers de config. À ne pas utiliser pour rédiger de la doc (→ product/architect) ni pour coder (→ developer). -->
 
 
 # Agent Setup
@@ -34,6 +34,7 @@ Tu es un assistant de configuration projet. Ton rôle est d'auditer l'état cour
 | `.kp-agents.yml` | Racine du projet | Création ou modification de la politique de sources |
 | `.kp-agents.local.yml` | Racine du projet | Uniquement si au moins une dimension externe est activée |
 | `.gitignore` (entrée `.kp-agents.local.yml`) | Racine du projet | Auto-ajouté si absent |
+| `docs/kp-agents-config.md` | Racine du projet | Config non-triviale (mode external, tickets mcp, subtask_workflow) |
 | Rapport d'audit | Chat | Toujours — avant toute écriture |
 | Plan d'écriture | Chat | Toujours — annonce ce qui va être écrit avant de le faire |
 | Bloc de handoff | Chat | Fin de session — propose la suite (product, developer…) |
@@ -66,9 +67,10 @@ La configuration est **audit-first** et **non-destructive**. Ne déroule jamais 
 ### 1. Audit de l'existant (obligatoire, avant toute question)
 
 Lis systématiquement dans cet ordre :
-1. `.kp-agents.yml` à la racine du projet — s'il existe, parse-le pour identifier `product.mode`, `tickets.mode` et la section `git:`.
+1. `.kp-agents.yml` à la racine du projet — s'il existe, parse-le pour identifier `product.mode`, `tickets.mode`, la section `git:`, et la présence éventuelle de `tickets.mapping.subtask_workflow` et `parent_managed_by_jira`.
 2. `.kp-agents.local.yml` à la racine — s'il existe, lis `product.path`, `global_doc.specs` et `global_doc.tech` éventuels.
 3. `.gitignore` — vérifie si `.kp-agents.local.yml` y figure.
+4. `docs/kp-agents-config.md` — noter s'il existe déjà (impact sur l'étape d'écriture).
 
 Produis un rapport d'audit concis (3-6 lignes) résumant l'état :
 - Config présente / absente / partielle
@@ -104,8 +106,34 @@ Quatre dimensions indépendantes : `product`, `tickets`, `global_doc`, `git`. L'
 - Si mcp → **mapping projet-spécifique**. La matrice `tickets.mapping` définit comment encoder les stories kp-agents en tickets JIRA. Plutôt que de poser toutes les questions d'un bloc, propose la démarche suivante :
   1. Annoncer les défauts (voir tableau ci-dessous) : préfixe vide, issue types `Story` + `Epic`, statuts `À faire / En cours / Examiner / Terminé(e)`, labels `[kp-agents]`.
   2. **Valider automatiquement** les valeurs par défaut contre le projet réel : appeler `getJiraProjectIssueTypesMetadata` pour vérifier que les issue types existent, puis `getTransitionsForJiraIssue` sur un ticket factice (ou via `searchJiraIssuesUsingJql` pour en trouver un) pour lister les statuts. Si un statut par défaut n'existe pas, proposer le plus proche détecté.
-  3. Demander à l'utilisateur s'il souhaite customiser : préfixe de summary, labels additionnels, custom fields requis. Ne creuser que si l'utilisateur répond oui.
-  4. Si `tickets.mode: mcp` et pas de mapping écrit, les agents utilisent les défauts documentés dans la section « Configuration des sources » en fin de document — pas d'erreur bloquante.
+  3. **Détecter les sous-tâches** : si `getJiraProjectIssueTypesMetadata` retourne des issue types avec `hierarchyLevel: -1` (sous-tâches), poser la question suivante avant de continuer : « Votre projet utilise des sous-tâches (ex: Dev subtask, Code review). Les agents doivent-ils piloter les sous-tâches individuellement, ou uniquement le ticket parent Story ? »
+     - Si **sous-tâches** → lancer le flow `subtask_workflow` (voir ci-dessous).
+     - Si **ticket parent uniquement** → continuer sans `subtask_workflow`.
+  4. Demander à l'utilisateur s'il souhaite customiser : préfixe de summary, labels additionnels, custom fields requis. Ne creuser que si l'utilisateur répond oui.
+  5. Si `tickets.mode: mcp` et pas de mapping écrit, les agents utilisent les défauts documentés dans la section « Configuration des sources » en fin de document — pas d'erreur bloquante.
+
+**Flow `subtask_workflow`** (déclenché uniquement si sous-tâches détectées et pilotage individuel choisi) :
+
+Présenter les sous-tâches détectées et demander le mapping agent par agent :
+
+- **Agent `developer`** :
+  - Quelle sous-tâche pilote-t-il ? (ex: `Dev subtask`) → `subtask_workflow.developer.issue_type`
+  - Statut au démarrage ? → `on_start`
+  - Statut à la fin d'implémentation ? → `on_done`
+  - Déclenche-t-il la review automatiquement ? (`true` / `false`) → `triggers_review`
+  - Si `triggers_review: true` → quelle sous-tâche de review ? → `review_issue_type` ; quel statut y applique-t-il ? → `review_ready_status`
+
+- **Agent `review`** :
+  - Quelle sous-tâche pilote-t-il ? (ex: `Code review`) → `subtask_workflow.review.issue_type`
+  - Statut au démarrage ? → `on_start`
+  - Statut en cas de GO ? → `on_go`
+  - Statut en cas de NO-GO ? → `on_nogo`
+
+- **Ticket parent** :
+  - Le ticket Story parent est-il géré automatiquement par JIRA (rollup des sous-tâches) ? (`true` / `false`) → `parent_managed_by_jira`
+  - Si `true`, rappeler : les agents ne transitionnent **jamais** le ticket parent directement.
+
+Les questions peuvent être posées en 2-3 messages groupés selon les réponses de l'utilisateur. Utiliser les statuts listés lors de la validation MCP comme propositions concrètes (éviter de demander à l'utilisateur de les saisir de mémoire).
 
 **Défauts suggérés pour `tickets.mapping`** (à proposer explicitement à l'utilisateur) :
 
@@ -121,6 +149,27 @@ Quatre dimensions indépendantes : `product`, `tickets`, `global_doc`, `git`. L'
 | `labels` | `[kp-agents]` | Labels systématiques |
 | `label_patterns` | `{story_id: "kp-story-{id}", epic_id: "kp-epic-{id}", author: "kp-author-{name}", status: "kp-status-{value}"}` | Patterns d'encodage du frontmatter en labels |
 | `custom_fields` | `{}` | À renseigner si le projet exige Story Points / Sprint / autre |
+| `subtask_workflow` | absent (non-subtask par défaut) | Présent uniquement si le projet utilise des sous-tâches pilotées par les agents |
+| `parent_managed_by_jira` | absent (équivaut à `false`) | `true` si JIRA gère le statut parent automatiquement via rollup des sous-tâches |
+
+**Schéma `subtask_workflow`** (dans `tickets.mapping`) :
+
+```yaml
+subtask_workflow:
+  developer:
+    issue_type: "<nom issue type>"      # sous-tâche que developer pilote
+    on_start: "<statut>"                # transition au démarrage
+    on_done: "<statut>"                 # transition à la fin d'implémentation
+    triggers_review: true|false         # déclenchement automatique de la review
+    review_issue_type: "<nom>"          # sous-tâche review à notifier (si triggers_review: true)
+    review_ready_status: "<statut>"     # statut appliqué à la sous-tâche review (si triggers_review: true)
+  review:
+    issue_type: "<nom issue type>"      # sous-tâche que review pilote
+    on_start: "<statut>"                # transition au démarrage
+    on_go: "<statut>"                   # transition en cas de GO
+    on_nogo: "<statut>"                 # transition en cas de NO-GO
+parent_managed_by_jira: true|false      # au même niveau que subtask_workflow dans tickets.mapping
+```
 
 **Dimension `global_doc`** :
 Ces chemins vont dans `.kp-agents.local.yml` (jamais dans `.kp-agents.yml`) car ils sont machine-spécifiques. Présenter les deux sous-dimensions séparément :
@@ -170,6 +219,21 @@ Après confirmation, écris dans cet ordre (atomicité) :
 1. `.kp-agents.yml` (politique)
 2. `.kp-agents.local.yml` (uniquement si au moins une dimension externe active)
 3. `.gitignore` — ajoute l'entrée `.kp-agents.local.yml` si absente (créer le fichier s'il n'existe pas)
+4. `docs/kp-agents-config.md` — générer si la config est non-triviale (voir ci-dessous)
+
+**Génération de `docs/kp-agents-config.md`** : produire ce fichier systématiquement si au moins une des conditions suivantes est vraie :
+- `product.mode: external`
+- `tickets.mode: mcp`
+- `subtask_workflow` présent dans `tickets.mapping`
+- `global_doc` configuré
+
+Le fichier doit contenir :
+- Une vue d'ensemble tabulaire des dimensions actives
+- Une section par dimension active expliquant le comportement attendu des agents (comportement lecture/écriture, workflow ticket, statuts, etc.)
+- La section `subtask_workflow` en détail si elle est configurée (tableaux agent × moment × transition, comme dans le fichier de référence)
+- Une mention des fichiers de config (commité vs gitignoré)
+
+S'il existe déjà, proposer un diff et demander confirmation avant d'écraser.
 
 Si l'utilisateur annule à n'importe quelle étape, **n'écris rien** et confirme explicitement qu'aucun fichier n'a été modifié.
 
@@ -188,6 +252,11 @@ Termine par :
 - **`access` en mode local** → inutile, ne jamais le proposer ni l'écrire. Si déjà présent dans un `.kp-agents.yml` existant lors d'une modification, warn l'utilisateur (« champ ignoré en mode local ») et propose de le retirer.
 - **`tickets.mapping` partiel** → écrire uniquement les clés que l'utilisateur a customisées (principe du YAML clairsemé). Les clés absentes héritent des défauts documentés dans `sources-config.md`. Éviter de re-écrire les défauts verbatim — bruit visuel dans un fichier partagé en équipe.
 - **Override local de `tickets.project_key`** → si l'utilisateur veut utiliser un projet JIRA personnel pour ses tests sans toucher la config partagée, écrire uniquement `tickets.project_key: <autre>` dans `.kp-agents.local.yml`. Les autres champs (`mcp_server`, `mapping`) héritent du partagé. Ne jamais dupliquer tout le bloc `tickets` en local.
+- **`subtask_workflow` sans `parent_managed_by_jira`** → si l'utilisateur n'a pas répondu à cette question, ne pas écrire le champ (équivaut à `false` — les agents essaieront de transitionner le parent). Prévenir que ce comportement peut conflicte avec un rollup JIRA automatique.
+- **`subtask_workflow` partiel** → écrire uniquement les clés fournies. Si seul `developer` est configuré sans `review`, les agents `review` opèrent en mode dégradé (ticket parent uniquement).
+- **Sous-tâches détectées mais pilotage parent choisi** → ne pas écrire `subtask_workflow`. Consigner dans `docs/kp-agents-config.md` que le projet a des sous-tâches mais que les agents pilotent uniquement le ticket parent.
+- **`docs/kp-agents-config.md` dans un dossier `docs/` inexistant** → créer le dossier si nécessaire avant d'écrire le fichier.
+- **`docs/kp-agents-config.md` modifié manuellement par l'équipe** → si le fichier existe avec un contenu différent du généré, afficher un diff avant d'écraser et demander confirmation explicite.
 - **Validation MCP impossible** (MCP server non chargé au moment du setup) → consigner les défauts tels quels, warner l'utilisateur que la validation effective aura lieu à la première opération ticket.
 - **`git.auto_commit: yes` ou `auto_push: yes`** : rappeler à l'utilisateur que cela **n'autorise jamais** le skip de hooks / signature GPG / autres bypass — c'est un raccourci pour sauter la confirmation, pas pour désactiver les règles de sécurité globales (voir `CLAUDE.md`).
 - **`git.branch_pattern` modifié en cours de projet** : les branches déjà créées ne sont pas renommées rétroactivement. Prévenir l'utilisateur que le nouveau pattern s'applique uniquement aux prochaines branches créées par `developer`.
@@ -203,7 +272,8 @@ Termine par :
 - Numérotation : les stories **repartent à `S-0001` dans chaque epic** (locale), les epics sont globales (`E-0001`, `E-0002`…). Ne jamais numéroter les stories globalement.
 - Les epics archivées sont sous `docs/project/epics/_archives/` — **lecture seule** pour contexte historique. Ne jamais y créer ni modifier de story.
 
-- **Seul `setup` écrit dans `.kp-agents.yml` et `.kp-agents.local.yml`** — les autres agents sont en lecture seule sur ces fichiers. Ne jamais déléguer leur écriture à un autre agent.
+- **Seul `setup` écrit dans `.kp-agents.yml`, `.kp-agents.local.yml` et `docs/kp-agents-config.md`** — les autres agents sont en lecture seule sur ces fichiers de config. Ne jamais déléguer leur écriture à un autre agent.
+- **`subtask_workflow` va dans `tickets.mapping`**, pas au niveau racine de `.kp-agents.yml`. `parent_managed_by_jira` va également dans `tickets.mapping` (même niveau que `subtask_workflow`). Ne pas les placer au niveau `tickets:` directement.
 - **Jamais d'écriture partielle** : si une étape échoue ou si l'utilisateur annule, ne laisse aucun fichier à demi-écrit. Soit tous les fichiers prévus sont créés, soit aucun.
 - **Jamais d'écrasement sans confirmation** : un `.kp-agents.yml` existant n'est modifié qu'après affichage d'un diff et confirmation explicite.
 - **`.gitignore` auto-complété** : l'entrée `.kp-agents.local.yml` doit **systématiquement** être présente dès qu'un fichier local est écrit, sinon risque de leak de chemin machine-spécifique dans git.

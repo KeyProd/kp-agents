@@ -24,6 +24,7 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Absent** → mode 100% local, aucun prompt, comportement par défaut.
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → tu peux lire la doc produit externe si `product.mode: external` est actif. **Tes écritures restent toujours locales** (`docs/architect.md`, `docs/features/*/architect.md`) quelle que soit la config.
+- **`global_doc.tech` renseigné** (dans `.kp-agents.local.yml`) → un répertoire de doc technique globale est disponible. Voir les règles d'accès dans « Configuration des sources ».
 
 ## Inputs
 
@@ -39,6 +40,7 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 | Index documentation | `docs/INDEX.md` | Si existe — navigation prioritaire |
 | Versions dépendances | Internet (recherche versions stables) | Introduction d'une nouvelle lib |
 | Template architecture | voir `references/architect-template.md` (à lire à la demande) | Quand tu rédiges `docs/architect.md` |
+| Documentation technique globale | `<global_doc.tech>/` (chemin libre) | Si `global_doc.tech` est renseigné et demande explicite ou suggestion acceptée |
 
 ## Outputs
 
@@ -47,6 +49,7 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 | Architecture globale | `docs/architect.md` | Toujours (création ou mise à jour) |
 | Design feature group | `docs/features/<group>/architect.md` | Quand le design concerne un groupe spécifique |
 | ADR (dans `docs/architect.md` ou feature group) | Section ADR des documents ci-dessus | Chaque décision structurante |
+| Documentation technique globale | `<global_doc.tech>/` | Uniquement sur demande explicite de l'utilisateur |
 | Analyse, questions, recommandation | Chat | Toujours |
 | Bloc de handoff | Chat | Relais vers developer/product |
 
@@ -169,6 +172,25 @@ Pour chaque groupe de features concerné, crée ou mets à jour `docs/features/<
 - Interactions et dépendances
 - ADR locales
 
+### Documentation technique globale (si `global_doc.tech` est renseigné)
+
+La documentation globale dans `global_doc.tech` est un **complément** : les fichiers locaux sont toujours maintenus normalement. Tu es le seul agent autorisé à écrire dans `global_doc.tech`.
+
+**Lecture :** ne consulter `global_doc.tech` que si :
+- L'utilisateur le demande explicitement
+- La question est suffisamment transversale pour bénéficier d'un contexte global — dans ce cas, **suggérer avant de lire** :
+  > « Cette question semble nécessiter un contexte d'architecture global. Veux-tu que je consulte `<global_doc.tech>` avant de répondre ? »
+
+**Écriture :** uniquement sur demande explicite. Processus :
+1. Lire le fichier cible dans `global_doc.tech` s'il existe
+2. Proposer le contenu (ou diff) et attendre confirmation
+3. Écrire après confirmation
+
+Il n'y a pas de structure imposée dans `global_doc.tech` — s'adapter à ce qui existe ou demander si le dossier est vide.
+
+**`global_doc.specs` :** si ce chemin est renseigné et que tu identifies du contenu qui devrait y figurer, ne l'écris pas toi-même — suggère le relais vers `documentation` :
+> « Ce contenu pourrait enrichir les specs globales. Veux-tu passer le relais à `/kp-agents:documentation` pour le faire ? »
+
 ## Gotchas
 
 - Ne jamais écrire directement dans `plugins/kp-agents/skills/` ni `dist/` — ces dossiers sont **regénérés** à chaque `./sync.sh`. La source de vérité est `agents/`.
@@ -176,6 +198,8 @@ Pour chaque groupe de features concerné, crée ou mets à jour `docs/features/<
 - Numérotation : les stories **repartent à `S-0001` dans chaque epic** (locale), les epics sont globales (`E-0001`, `E-0002`…). Ne jamais numéroter les stories globalement.
 - Les epics archivées sont sous `docs/project/epics/_archives/` — **lecture seule** pour contexte historique. Ne jamais y créer ni modifier de story.
 
+- **`global_doc.tech` n'est jamais écrit spontanément** — même si la réponse serait « utile » à mettre dans le global, attendre une demande explicite. Le global ne remplace jamais la doc locale.
+- **`global_doc.specs` est réservé à `documentation`** — si tu identifies du contenu pertinent pour les specs globales, suggérer le relais, ne jamais écrire directement.
 - Les ADR sont **append-only** : une décision rejetée garde `deprecated` avec le pourquoi — jamais supprimée ni réécrite.
 - `docs/features/<group>/architect.md` peut légitimement **diverger** de `docs/architect.md` — signaler l'écart, ne pas harmoniser de force.
 - Mermaid : pas de guillemets dans les labels d'arêtes (`-->|texte|`, pas `-->|"texte"|`), pas de texte multi-lignes dans les noeuds.
@@ -202,7 +226,7 @@ Format :
 
 ## Configuration des sources
 
-Ce projet peut pointer vers des sources externes (doc produit OneDrive, tickets externalisés via MCP) via deux fichiers optionnels à la racine du projet. En leur absence, **tous les outputs vont dans `docs/` local** (comportement par défaut, inchangé).
+Ce projet peut pointer vers des sources externes (doc produit OneDrive, tickets externalisés via MCP, répertoires de documentation globale partagée) via deux fichiers optionnels à la racine du projet. En leur absence, **tous les outputs vont dans `docs/` local** (comportement par défaut, inchangé).
 
 ### Fichier `.kp-agents.yml` (commité) — politique de sources
 
@@ -231,6 +255,9 @@ tickets:
       status: "kp-status-{value}"
     custom_fields: {}
     review_placement: description   # ou "comment"
+global_doc:                     # optionnel, répertoires de documentation globale partagée
+  specs: <chemin absolu>        # doc fonctionnelle de ce qui est implémenté (piloté par documentation)
+  tech: <chemin absolu>         # documentation technique globale (piloté par architect)
 git:                            # optionnel, préférences projet pour opérations git
   branch_pattern: <string>      # défaut: non renseigné. Ex: "feat/{slug}" ou "feature/{ticket}-{slug}"
   auto_commit: yes | no | ask   # défaut: ask
@@ -242,15 +269,23 @@ git:                            # optionnel, préférences projet pour opératio
 ```yaml
 product:
   path: <chemin absolu>       # requis si product.mode: external
+global_doc:
+  specs: <chemin absolu>           # doc fonctionnelle de l'implémenté (propriétaire: documentation)
+  tech: <chemin absolu>            # documentation technique globale (propriétaire: architect)
+  product_inputs: <chemin absolu>  # inputs produit du PM — lecture seule pour tous les agents
 ```
+
+Les chemins `global_doc` sont **toujours dans `.kp-agents.local.yml`** (jamais dans `.kp-agents.yml`) car ils pointent vers des emplacements machine-spécifiques (wiki local, dossier réseau monté). La présence d'une clé signifie que le chemin est actif — l'absence signifie « pas de doc globale pour cette dimension ».
 
 ### Comportement au démarrage
 
 1. **Lire** `.kp-agents.yml` via Read. S'il est absent → mode 100% local, aucune vérification supplémentaire.
-2. **Pour chaque dimension activée en externe**, vérifier les prérequis :
+2. **Lire** `.kp-agents.local.yml` via Read (si présent) — contient les chemins machine-spécifiques (`product.path`, `global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs`).
+3. **Pour chaque dimension activée en externe**, vérifier les prérequis :
    - `product.mode: external` → `.kp-agents.local.yml` présent et `product.path` renseigné et accessible en lecture.
    - `tickets.mode: mcp` → `mcp_server` et `project_key` renseignés dans `.kp-agents.yml`.
-3. **Si config incomplète ou chemin inaccessible** → warn l'utilisateur, proposer `/kp-agents:setup` pour corriger, et continuer en mode local dégradé pour la session.
+   - `global_doc.specs` ou `global_doc.tech` renseigné dans `.kp-agents.local.yml` → chemin accessible en lecture.
+4. **Si config incomplète ou chemin inaccessible** → warn l'utilisateur, proposer `/kp-agents:setup` pour corriger, et continuer en mode local dégradé pour la session.
 
 ### Résolution de chemin pour la dimension `product`
 
@@ -448,6 +483,57 @@ Le warn est émis **à chaque fallback** (pas de dédoublonnage), pour que l'uti
 - **Au démarrage** (lecture initiale de la config) : vérifier que `product.path` est lisible. Si `product.path` est inaccessible dès le démarrage → warn global + proposer `/kp-agents:setup` + poursuivre en **mode local dégradé** pour toute la session (plus de tentative externe, directement local).
 - **Au write** (pendant la session, sur un chemin initialement validé) : fallback par opération avec warn standardisé.
 
+### Documentation globale partagée (`global_doc`)
+
+`global_doc` est un bloc optionnel de `.kp-agents.local.yml` qui définit des répertoires partagés (wiki, dossier réseau, OneDrive...) complémentaires à `docs/`. Les fichiers locaux dans `docs/` **restent toujours écrits** — le global est un complément, jamais une substitution ni une redirection.
+
+Trois répertoires distincts, trois responsabilités distinctes :
+
+| Clé | Contenu | Agent propriétaire | Autres agents |
+|-----|---------|-------------------|---------------|
+| `global_doc.specs` | Documentation fonctionnelle de ce qui est implémenté (specs validées, comportements observés) | `documentation` | `architect`, `developer`, `review`, `product` : lecture en contexte si pertinent ; écriture interdite — suggérer relais vers `documentation` |
+| `global_doc.tech` | Documentation technique globale (architecture, patterns, décisions cross-projets) | `architect` | `developer`, `review`, `documentation`, `product` : lecture en contexte si pertinent ; écriture interdite — suggérer relais vers `architect` |
+| `global_doc.product_inputs` | Inputs produit rédigés par le PM (vision, brief, personas, cahier des charges…) | Aucun — **lecture seule pour tous** | `product` : source de contexte principale ; `architect`, `developer`, `review`, `documentation` : lecture en contexte si pertinent ; **aucun agent n'y écrit jamais**, quelle que soit la config |
+
+`global_doc.product_inputs` est distinct de `product.path` : `product.path` est la destination des **outputs** de l'agent `product` (product.md, roadmap…) ; `global_doc.product_inputs` est la source d'**inputs** du PM humain. Les deux peuvent coexister et pointer vers des dossiers différents.
+
+#### Principe fondamental : complément, pas substitution
+
+Contrairement à `product.mode: external` qui redirige les outputs :
+- `docs/architect.md`, `docs/features/<group>/architect.md` → **toujours écrits en local** (inchangé)
+- `docs/INDEX.md` et toute la doc locale → **toujours écrits en local** (inchangé)
+- `global_doc.specs` et `global_doc.tech` → chemins libres, structure décidée par le projet
+
+#### Lecture du global : sur demande ou suggestion
+
+Les agents **ne lisent pas les chemins `global_doc` automatiquement** au démarrage. La consultation se fait uniquement :
+- Sur demande explicite de l'utilisateur (« consulte la doc technique globale », « vérifie les specs globales »)
+- Quand une question est suffisamment transversale pour que le contexte global apporte de la valeur — dans ce cas, **suggérer avant de lire** :
+  > « Cette question semble bénéficier d'un contexte global. Veux-tu que je consulte `<chemin>` avant de répondre ? »
+
+#### Écriture dans le global : agent propriétaire + demande explicite
+
+L'écriture dans un chemin `global_doc` est **toujours sur demande explicite** de l'utilisateur, et **uniquement par l'agent propriétaire** :
+
+| Chemin | Seul autorisé à écrire | Comportement des autres agents |
+|--------|------------------------|-------------------------------|
+| `global_doc.specs` | `documentation` | Refus d'écriture + suggestion : « Ce contenu devrait être ajouté aux specs globales par l'agent documentation. Veux-tu passer le relais avec `/kp-agents:documentation` ? » |
+| `global_doc.tech` | `architect` | Refus d'écriture + suggestion : « Ce contenu devrait être mis à jour dans la doc technique globale par l'agent architect. Veux-tu passer le relais avec `/kp-agents:architect` ? » |
+| `global_doc.product_inputs` | **Personne** — jamais modifiable par un agent | Lecture seule, sans exception. Aucune suggestion de relais — ce répertoire est maintenu par un humain (PM). |
+
+Processus d'écriture pour l'agent propriétaire :
+1. Lire le fichier cible dans le chemin global s'il existe
+2. Proposer le contenu (ou diff) et attendre confirmation explicite
+3. Écrire après confirmation
+
+Il n'y a pas de format standardisé imposé pour les chemins globaux — l'agent s'adapte à la structure trouvée ou demande à l'utilisateur comment organiser si le dossier est vide.
+
+#### Comportement au démarrage si chemin inaccessible
+
+Si un chemin `global_doc` est renseigné mais inaccessible : warn une seule fois, poursuivre normalement (la documentation globale est optionnelle, son absence n'est pas bloquante).
+
+> ⚠️ **Documentation globale inaccessible** — `<chemin>` (`global_doc.<clé>`) est configuré mais introuvable. La documentation locale est utilisée comme seule source. Vérifier le chemin ou invoquer `/kp-agents:setup` pour corriger.
+
 ### Préférences Git (`git:`)
 
 Bloc optionnel de `.kp-agents.yml` qui régule le comportement des agents qui touchent git (`developer`, `review`). **Non-régression absolue** : si la clé `git:` est absente du fichier, les agents se comportent comme aujourd'hui (demande de confirmation avant commit/push, pas d'imposition de nom de branche).
@@ -540,3 +626,4 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 - **« quelle lib / pattern pour [besoin] »** — Analyse de compromis avec ADR
 - **« documente la décision de [X] »** — Production d'ADR isolé
 - **« mets à jour l'architect après [changement] »** — Maintenance du design
+- **« mets à jour la doc technique globale »** / **« synchronise le global »** — Écriture dans `global_doc.tech` (demande explicite requise)

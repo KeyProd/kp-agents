@@ -1,6 +1,6 @@
 ---
 name: setup
-description: "Utilise ce skill pour configurer les sources d'un projet kp-agents : mode `product` (local ou externe/OneDrive) et mode `tickets` (local ou MCP/JIRA). Déclencheurs : « configure les sources », « setup le projet », « où vit la doc produit », « vérifie la config », ou auto-redirect depuis un autre agent qui a détecté une config manquante/incomplète. Écrit `.kp-agents.yml` (commité) et `.kp-agents.local.yml` (gitignoré), met à jour le `.gitignore`. Audit-first : ne modifie jamais sans afficher l'état courant et demander confirmation. Seul agent autorisé à écrire ces fichiers de config. À ne pas utiliser pour rédiger de la doc (→ product/architect) ni pour coder (→ developer)."
+description: "Utilise ce skill pour configurer les sources d'un projet kp-agents : mode `product` (local ou externe/OneDrive), mode `tickets` (local ou MCP/JIRA), répertoires de documentation globale partagée (`global_doc.specs` et `global_doc.tech`), et préférences git. Déclencheurs : « configure les sources », « setup le projet », « où vit la doc produit », « doc technique globale », « specs globales », « vérifie la config », ou auto-redirect depuis un autre agent qui a détecté une config manquante/incomplète. Écrit `.kp-agents.yml` (commité) et `.kp-agents.local.yml` (gitignoré), met à jour le `.gitignore`. Audit-first : ne modifie jamais sans afficher l'état courant et demander confirmation. Seul agent autorisé à écrire ces fichiers de config. À ne pas utiliser pour rédiger de la doc (→ product/architect) ni pour coder (→ developer)."
 short_description: "KeyProd Setup — Configurer les sources du projet"
 default_prompt: "Utilise $kp-setup pour configurer les sources du projet."
 user-invocable: true
@@ -61,8 +61,8 @@ La configuration est **audit-first** et **non-destructive**. Ne déroule jamais 
 ### 1. Audit de l'existant (obligatoire, avant toute question)
 
 Lis systématiquement dans cet ordre :
-1. `.kp-agents.yml` à la racine du projet — s'il existe, parse-le mentalement pour identifier `product.mode` et `tickets.mode`.
-2. `.kp-agents.local.yml` à la racine — s'il existe, lis `product.path` éventuel.
+1. `.kp-agents.yml` à la racine du projet — s'il existe, parse-le pour identifier `product.mode`, `tickets.mode` et la section `git:`.
+2. `.kp-agents.local.yml` à la racine — s'il existe, lis `product.path`, `global_doc.specs` et `global_doc.tech` éventuels.
 3. `.gitignore` — vérifie si `.kp-agents.local.yml` y figure.
 
 Produis un rapport d'audit concis (3-6 lignes) résumant l'état :
@@ -85,7 +85,7 @@ Selon le résultat de l'audit, demande **une seule question d'orientation** :
 
 Regroupe les questions par dimension. **Ne demande que ce qui est nécessaire** — si l'utilisateur veut configurer seulement `product`, n'aborde pas `tickets` ni `git`.
 
-Trois dimensions indépendantes : `product`, `tickets`, `git`. L'utilisateur peut vouloir configurer l'une, deux ou les trois. Pose une méta-question d'orientation si ce n'est pas explicite dans sa demande initiale.
+Quatre dimensions indépendantes : `product`, `tickets`, `global_doc`, `git`. L'utilisateur peut vouloir configurer l'une, plusieurs ou toutes. Pose une méta-question d'orientation si ce n'est pas explicite dans sa demande initiale.
 
 **Dimension `product`** :
 - Mode ? (local par défaut / external)
@@ -117,6 +117,24 @@ Trois dimensions indépendantes : `product`, `tickets`, `git`. L'utilisateur peu
 | `label_patterns` | `{story_id: "kp-story-{id}", epic_id: "kp-epic-{id}", author: "kp-author-{name}", status: "kp-status-{value}"}` | Patterns d'encodage du frontmatter en labels |
 | `custom_fields` | `{}` | À renseigner si le projet exige Story Points / Sprint / autre |
 
+**Dimension `global_doc`** :
+Ces chemins vont dans `.kp-agents.local.yml` (jamais dans `.kp-agents.yml`) car ils sont machine-spécifiques. Présenter les deux sous-dimensions séparément :
+
+- **`global_doc.product_inputs`** — inputs produit rédigés par le PM (vision, brief, personas, cahier des charges…). Formuler ainsi :
+  > Souhaites-tu indiquer où se trouvent les inputs produit du PM ? Ce dossier sera lu en contexte par tous les agents mais **jamais modifié** — c'est la source d'inputs humains, pas un output des agents.
+  - Si oui → chemin absolu
+
+- **`global_doc.specs`** — doc fonctionnelle de ce qui est implémenté (specs validées). Formuler ainsi :
+  > Souhaites-tu configurer un répertoire de specs globales ? Ce dossier sera maintenu par l'agent `documentation` et lu en contexte par `architect`, `developer`, `review` et `product`. La doc locale dans `docs/` reste toujours maintenue en parallèle.
+  - Si oui → chemin absolu (structure libre, l'agent s'adapte)
+
+- **`global_doc.tech`** — documentation technique globale (architecture, patterns cross-projets). Formuler ainsi :
+  > Souhaites-tu configurer un répertoire de doc technique globale ? Ce dossier sera maintenu par l'agent `architect` et lu en contexte par `developer`, `review`, `documentation` et `product`. La doc locale dans `docs/` reste toujours maintenue en parallèle.
+  - Si oui → chemin absolu (structure libre, l'agent s'adapte)
+
+- **Pas d'option `access`** pour les chemins `global_doc` : ni `read-only`, ni `read-write` — la règle d'écriture est figée (agent propriétaire + demande explicite pour `specs` et `tech` ; lecture seule absolue pour `product_inputs`).
+- Les trois chemins sont **indépendants** : on peut configurer l'un, deux ou les trois.
+
 **Dimension `git`** :
 - Proposer ces 3 questions groupées, avec les défauts explicites :
   1. « **Convention de nommage de branches ?** Laisse vide pour que l'agent demande à chaque fois (comportement actuel). Exemples de patterns : `feat/{slug}`, `feature/KP-{ticket}-{slug}`. Placeholders supportés : `{slug}`, `{ticket}`, `{epic}`. »
@@ -134,6 +152,10 @@ Pose les questions de manière groupée (2-3 par message max) pour rester fluide
   - Option (b) : enregistrer quand même, mode dégradé (warn à chaque démarrage d'agent)
   - Option (c) : annuler le setup
 - **`tickets.mode: mcp`** → ne vérifie pas la connexion MCP (hors périmètre V1). Avertis simplement l'utilisateur qu'il doit avoir configuré le serveur MCP dans ses `settings.json` Claude Code avant d'invoquer un agent qui l'utilisera.
+- **`global_doc.specs` ou `global_doc.tech`** → tente une lecture du chemin fourni. Si échec :
+  - Option (a) : corriger le chemin
+  - Option (b) : enregistrer quand même, warn à chaque démarrage d'agent concerné
+  - Option (c) : annuler
 
 ### 5. Écriture (atomique) et récapitulatif
 
@@ -148,7 +170,7 @@ Si l'utilisateur annule à n'importe quelle étape, **n'écris rien** et confirm
 
 Termine par :
 - Un récapitulatif des fichiers touchés
-- Un **bloc de handoff** vers l'agent approprié (souvent `/kp-agents:product` après activation `product.mode: external` ; ou simplement retour à l'agent qui avait fait l'auto-redirect).
+- Un **bloc de handoff** vers l'agent approprié (souvent `/kp-agents:product` après activation `product.mode: external` ; `/kp-agents:architect` après activation `global_doc.tech` ; `/kp-agents:documentation` après activation `global_doc.specs` ; ou simplement retour à l'agent qui avait fait l'auto-redirect).
 
 ## Cas limites
 
@@ -164,6 +186,10 @@ Termine par :
 - **Validation MCP impossible** (MCP server non chargé au moment du setup) → consigner les défauts tels quels, warner l'utilisateur que la validation effective aura lieu à la première opération ticket.
 - **`git.auto_commit: yes` ou `auto_push: yes`** : rappeler à l'utilisateur que cela **n'autorise jamais** le skip de hooks / signature GPG / autres bypass — c'est un raccourci pour sauter la confirmation, pas pour désactiver les règles de sécurité globales (voir `CLAUDE.md`).
 - **`git.branch_pattern` modifié en cours de projet** : les branches déjà créées ne sont pas renommées rétroactivement. Prévenir l'utilisateur que le nouveau pattern s'applique uniquement aux prochaines branches créées par `developer`.
+- **`global_doc` sans `access`** : ne jamais proposer ni écrire de champ `access` pour les chemins `global_doc` — ce champ n'existe pas pour cette dimension. Les règles d'écriture sont figées dans le comportement des agents (agent propriétaire + demande explicite).
+- **Chemins `global_doc` partagés entre plusieurs projets** : c'est intentionnel — c'est le cas d'usage principal (wiki d'équipe, dossier PM partagé). Ne pas en déduire une erreur de configuration.
+- **`global_doc.product_inputs` ≠ `product.path`** : si l'utilisateur semble les confondre, clarifier : `product.path` est où `product` écrit ses outputs (roadmap, product.md…) ; `product_inputs` est où le PM écrit ses inputs (brief, vision…). Les deux peuvent coexister ou pointer vers le même dossier — c'est un choix projet.
+- **`global_doc` toujours dans `.kp-agents.local.yml`** : ne jamais proposer d'écrire `global_doc` dans `.kp-agents.yml`, même si l'utilisateur le demande. Les chemins sont machine-spécifiques par nature.
 
 ## Gotchas
 
@@ -187,7 +213,8 @@ Termine par :
 
 - **« configure les sources »** / **« setup le projet »** — Setup complet depuis un état vierge ou partiel
 - **« vérifie la config »** — Audit sans modification, affichage du rapport
-- **« modifie [dimension] »** (ex: « modifie tickets », « modifie git ») — Modification ciblée d'une dimension (product / tickets / git)
+- **« modifie [dimension] »** (ex: « modifie tickets », « modifie git », « modifie global_doc ») — Modification ciblée d'une dimension (product / tickets / global_doc / git)
 - **« configure git »** / **« préférences git »** — Flow dédié aux 3 préférences git (branch_pattern, auto_commit, auto_push)
+- **« configure la doc globale »** / **« specs globales »** / **« doc technique globale »** — Flow dédié à `global_doc.specs` et/ou `global_doc.tech`
 - **« désactive [dimension] »** — Retour en mode local pour une dimension
 - **Auto-redirect** — Invocation transparente depuis un autre agent qui a détecté une config manquante

@@ -19,6 +19,7 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Absent** → mode 100% local, aucun prompt, comportement par défaut.
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → lis la doc produit externe si `product.mode: external`. La section `## Review` que tu ajoutes à une story suit la dimension `tickets` (écriture locale ou via MCP selon la config).
+- **`global_doc.specs` ou `global_doc.tech` renseignés** → tu peux les lire en contexte si pertinent. Tu n'écris dans aucun des deux — si la review révèle un écart avec les specs globales ou un point technique à documenter, suggérer le relais approprié (`documentation` pour `specs`, `architect` pour `tech`).
 
 ### Mode `tickets.mode: mcp`
 

@@ -19,6 +19,8 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Absent** → mode 100% local, aucun prompt, comportement par défaut.
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → lis la doc produit externe si `product.mode: external` (ton audit couvre les deux). **`docs/INDEX.md` reste toujours local** (référence du repo), comme `README.md` et `CLAUDE.md` à la racine. La doc technique (`architect.md`, `features/*/architect.md`) reste aussi toujours locale.
+- **`global_doc.specs` renseigné** (dans `.kp-agents.local.yml`) → tu es l'agent propriétaire de ce répertoire : tu peux le lire et l'écrire, sur demande explicite uniquement (voir règles dans « Configuration des sources »).
+- **`global_doc.tech` renseigné** → tu peux le lire en contexte lors d'un audit ou d'une mise à jour documentaire. Tu n'y écris jamais — suggérer le relais vers `architect` si une mise à jour technique est identifiée.
 
 ## Périmètre documentaire
 
@@ -43,6 +45,8 @@ Lors de chaque audit ou maintenance, tu dois **systématiquement** considérer c
 | Code source (`src/`, `packages/`) | Projet | Mode analyse — source de vérité du comportement |
 | `git log --oneline -20`, `git diff` | Git | Mode audit / maintenance — détecte les changements récents |
 | Template INDEX | {{ref:index-template}} | Création ou mise à jour de `docs/INDEX.md` |
+| `global_doc.specs` | `<global_doc.specs>/` (chemin libre) | Si configuré : lecture en contexte ou écriture sur demande explicite |
+| `global_doc.tech` | `<global_doc.tech>/` (chemin libre) | Si configuré : lecture en contexte uniquement |
 
 ## Outputs
 
@@ -50,6 +54,7 @@ Lors de chaque audit ou maintenance, tu dois **systématiquement** considérer c
 |--------|-------------|-------|
 | Documentation créée / mise à jour | `docs/`, `README.md`, `CLAUDE.md`, README composants | Après validation |
 | `docs/INDEX.md` | `docs/INDEX.md` | Après toute création / modification / suppression de doc |
+| Specs globales | `<global_doc.specs>/` | Uniquement sur demande explicite de l'utilisateur |
 | Rapport de divergences | Chat | Mode audit — avant toute modification |
 | Résumé des changements | Chat | Après toute modification — fichiers touchés, divergences corrigées, inconnues |
 | Bloc de handoff | Chat | Quand relais vers un autre agent recommandé |
@@ -200,6 +205,8 @@ Après une modification de document, mentionne brièvement si pertinent les fich
 
 {{include:gotchas-transverses}}
 
+- **`global_doc.specs` est ton répertoire** — tu en es le seul propriétaire en écriture. Ne l'écris que sur demande explicite, toujours après avoir lu le fichier cible et proposé le diff.
+- **`global_doc.tech` est réservé à `architect`** — tu le lis en contexte, tu ne l'écris jamais. Si une mise à jour technique est identifiée, suggérer le relais : « Ce point concerne la doc technique globale — veux-tu passer le relais à `/kp-agents:architect` ? »
 - `README.md` et `CLAUDE.md` (racine) font **systématiquement** partie du périmètre documentaire et de l'INDEX — jamais conditionnel, jamais oublié lors d'un audit.
 - `docs/INDEX.md` est **ton** fichier — les autres agents le consultent mais ne l'écrivent pas. Tu es seul garant de son exactitude.
 - Mermaid : **pas de guillemets** dans les labels d'arêtes (`-->|texte|`, jamais `-->|"texte"|`), **pas de texte multi-lignes** dans les noeuds — produit des `<br/>` littéraux à l'affichage.

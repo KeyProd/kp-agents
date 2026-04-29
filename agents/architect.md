@@ -19,6 +19,7 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Absent** → mode 100% local, aucun prompt, comportement par défaut.
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → tu peux lire la doc produit externe si `product.mode: external` est actif. **Tes écritures restent toujours locales** (`docs/architect.md`, `docs/features/*/architect.md`) quelle que soit la config.
+- **`global_doc.tech` renseigné** (dans `.kp-agents.local.yml`) → un répertoire de doc technique globale est disponible. Voir les règles d'accès dans « Configuration des sources ».
 
 ## Inputs
 
@@ -34,6 +35,7 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 | Index documentation | `docs/INDEX.md` | Si existe — navigation prioritaire |
 | Versions dépendances | Internet (recherche versions stables) | Introduction d'une nouvelle lib |
 | Template architecture | {{ref:architect-template}} | Quand tu rédiges `docs/architect.md` |
+| Documentation technique globale | `<global_doc.tech>/` (chemin libre) | Si `global_doc.tech` est renseigné et demande explicite ou suggestion acceptée |
 
 ## Outputs
 
@@ -42,6 +44,7 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 | Architecture globale | `docs/architect.md` | Toujours (création ou mise à jour) |
 | Design feature group | `docs/features/<group>/architect.md` | Quand le design concerne un groupe spécifique |
 | ADR (dans `docs/architect.md` ou feature group) | Section ADR des documents ci-dessus | Chaque décision structurante |
+| Documentation technique globale | `<global_doc.tech>/` | Uniquement sur demande explicite de l'utilisateur |
 | Analyse, questions, recommandation | Chat | Toujours |
 | Bloc de handoff | Chat | Relais vers developer/product |
 
@@ -164,10 +167,31 @@ Pour chaque groupe de features concerné, crée ou mets à jour `docs/features/<
 - Interactions et dépendances
 - ADR locales
 
+### Documentation technique globale (si `global_doc.tech` est renseigné)
+
+La documentation globale dans `global_doc.tech` est un **complément** : les fichiers locaux sont toujours maintenus normalement. Tu es le seul agent autorisé à écrire dans `global_doc.tech`.
+
+**Lecture :** ne consulter `global_doc.tech` que si :
+- L'utilisateur le demande explicitement
+- La question est suffisamment transversale pour bénéficier d'un contexte global — dans ce cas, **suggérer avant de lire** :
+  > « Cette question semble nécessiter un contexte d'architecture global. Veux-tu que je consulte `<global_doc.tech>` avant de répondre ? »
+
+**Écriture :** uniquement sur demande explicite. Processus :
+1. Lire le fichier cible dans `global_doc.tech` s'il existe
+2. Proposer le contenu (ou diff) et attendre confirmation
+3. Écrire après confirmation
+
+Il n'y a pas de structure imposée dans `global_doc.tech` — s'adapter à ce qui existe ou demander si le dossier est vide.
+
+**`global_doc.specs` :** si ce chemin est renseigné et que tu identifies du contenu qui devrait y figurer, ne l'écris pas toi-même — suggère le relais vers `documentation` :
+> « Ce contenu pourrait enrichir les specs globales. Veux-tu passer le relais à `/kp-agents:documentation` pour le faire ? »
+
 ## Gotchas
 
 {{include:gotchas-transverses}}
 
+- **`global_doc.tech` n'est jamais écrit spontanément** — même si la réponse serait « utile » à mettre dans le global, attendre une demande explicite. Le global ne remplace jamais la doc locale.
+- **`global_doc.specs` est réservé à `documentation`** — si tu identifies du contenu pertinent pour les specs globales, suggérer le relais, ne jamais écrire directement.
 - Les ADR sont **append-only** : une décision rejetée garde `deprecated` avec le pourquoi — jamais supprimée ni réécrite.
 - `docs/features/<group>/architect.md` peut légitimement **diverger** de `docs/architect.md` — signaler l'écart, ne pas harmoniser de force.
 - Mermaid : pas de guillemets dans les labels d'arêtes (`-->|texte|`, pas `-->|"texte"|`), pas de texte multi-lignes dans les noeuds.
@@ -191,3 +215,4 @@ Pour chaque groupe de features concerné, crée ou mets à jour `docs/features/<
 - **« quelle lib / pattern pour [besoin] »** — Analyse de compromis avec ADR
 - **« documente la décision de [X] »** — Production d'ADR isolé
 - **« mets à jour l'architect après [changement] »** — Maintenance du design
+- **« mets à jour la doc technique globale »** / **« synchronise le global »** — Écriture dans `global_doc.tech` (demande explicite requise)

@@ -19,6 +19,7 @@ Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine 
 - **Absent** → mode 100% local, aucun prompt, comportement par défaut.
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
 - **Complet** → lis la doc produit externe si `product.mode: external`. Les stories (création, mise à jour de statut, sections `## Implémentation` / `## Validation par critère`) suivent la dimension `tickets`. Le code et les tests restent dans leur arborescence projet habituelle.
+- **`global_doc.specs` ou `global_doc.tech` renseignés** → tu peux les lire en contexte si pertinent. Tu n'écris dans aucun des deux — si tu identifies du contenu à y ajouter, suggérer le relais approprié (`documentation` pour `specs`, `architect` pour `tech`).
 
 ### Mode `tickets.mode: mcp`
 

@@ -287,21 +287,30 @@ clean_plugin_refs() {
 # Generate Claude Code plugin skill (plugins/kp-agents/skills/<name>/SKILL.md)
 # Format: minimal YAML frontmatter (description + optional short_description) + body
 # Committed to git, distributed via plugin marketplace.
+#
+# description   = short_desc (used by Claude Code for autocomplete filtering)
+# The long trigger text is injected at the top of the body for context matching.
 # ─────────────────────────────────────────────────────────────
 generate_plugin_file() {
     local outfile="$1" desc="$2" body="$3" user_invocable="$4" short_desc="$5"
+    # Use short_desc for `description` so autocomplete filters on the concise label.
+    # Fall back to desc if short_desc is absent (e.g. agents without short_description).
+    local autocomplete_desc="${short_desc:-$desc}"
 
     {
         echo "---"
-        echo "description: $(yaml_quote "$desc")"
-        if [[ -n "$short_desc" ]]; then
-            echo "short_description: $(yaml_quote "$short_desc")"
-        fi
+        echo "description: $(yaml_quote "$autocomplete_desc")"
         if [[ -n "$user_invocable" ]]; then
             echo "user-invocable: $user_invocable"
         fi
         echo "---"
         echo ""
+        # Prepend long trigger text as a hidden comment so Claude can still read
+        # the invocation conditions without polluting the autocomplete index.
+        if [[ -n "$short_desc" && "$desc" != "$short_desc" ]]; then
+            echo "<!-- trigger: $desc -->"
+            echo ""
+        fi
         echo "$body"
     } > "$outfile"
 }

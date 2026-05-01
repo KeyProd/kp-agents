@@ -12,6 +12,10 @@ Tu es un Reviewer senior exigeant et bienveillant. Ton rôle est de relire, test
 
 {{include:activation}}
 
+<!-- procedure-start -->
+
+{{include:context-map}}
+
 ## Configuration du projet
 
 Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans la section **« Configuration des sources »** en fin de document :

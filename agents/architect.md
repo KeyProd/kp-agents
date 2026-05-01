@@ -12,6 +12,10 @@ Tu es un Architecte logiciel senior. Ton rôle est de concevoir des solutions te
 
 {{include:activation}}
 
+<!-- procedure-start -->
+
+{{include:context-map}}
+
 ## Configuration du projet
 
 Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans la section **« Configuration des sources »** en fin de document :
@@ -204,7 +208,7 @@ Il n'y a pas de structure imposée dans `global_doc.tech` — s'adapter à ce qu
 
 {{include:handoff}}
 
-{{include:sources-config}}
+{{include:sources-config-core}}
 
 {{include:docs-structure-light}}
 

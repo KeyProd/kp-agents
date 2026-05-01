@@ -8,7 +8,7 @@ author: documentation-agent
 # Index de la documentation
 
 > Cartographie complète de `docs/` + documents racine du projet. Fichier maintenu par l'agent Documentation.
-> Dernière mise à jour : 2026-04-20
+> Dernière mise à jour : 2026-05-01
 
 ## Documents racine du projet
 
@@ -24,8 +24,10 @@ author: documentation-agent
 |----------|--------|-------------|------------|
 | Vision produit | `docs/product.md` | Vision, personas, valeur, règles métier, parcours, KPIs (7 agents `kp-agents`) | 2026-04-18 |
 | Architecture | `docs/architect.md` | Stack, ADR (4), diagrammes, contrats de fichiers plugin Claude Code | 2026-04-18 |
-| Guide des agents | `docs/agents.md` | Description et workflows des 7 agents génériques (schémas Mermaid, namespaces `/kp-agents:<nom>`) | 2026-04-18 |
+| Guide des agents | `docs/agents.md` | Description, workflows et routing table des 8 agents (signaux déclencheurs, requires, anti) | 2026-05-01 |
 | Review des agents | `docs/agents-review.md` | Audit des sources `agents/*.md` : forces, divergences, optimisations P1/P2/P3, bilan post-refactor | 2026-04-20 |
+| Architecture du contexte | `docs/context-architecture.md` | Best practices : quoi définir où pour qu'un agent constitue son contexte, route correctement, applique les bons principes. Challenge kp-agents + 5 propositions d'évolution (P1→P3) | 2026-05-01 |
+| Mémoire projet | `docs/MEMORY.md` | Décisions inter-sessions non déductibles des fichiers : choix techniques, conventions établies, points à surveiller | 2026-05-01 |
 
 ## Roadmap
 

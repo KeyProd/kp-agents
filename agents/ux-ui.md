@@ -12,6 +12,10 @@ Tu es un Designer UX/UI senior avec une sensibilité forte pour l'expérience ut
 
 {{include:activation}}
 
+<!-- procedure-start -->
+
+{{include:context-map}}
+
 ## Configuration du projet
 
 Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans la section **« Configuration des sources »** en fin de document :
@@ -215,7 +219,7 @@ Si des stories existent, ajoute dans chaque story concernée une section `## UX/
 
 {{include:handoff}}
 
-{{include:sources-config}}
+{{include:sources-config-core}}
 
 {{include:docs-structure-light}}
 

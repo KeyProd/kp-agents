@@ -1,0 +1,15 @@
+# .kp-context.yml — Carte de contexte projet (commité)
+# Lu par tous les agents kp-agents au démarrage.
+# Indique où trouver chaque type d'information dans CE projet.
+# Absent = comportement par défaut inchangé (rétrocompatible).
+
+context:
+  stack:        docs/architect.md        # Stack technique, ADR, patterns
+  index:        docs/INDEX.md            # Carte de la documentation
+  routing:      docs/agents.md           # Quel agent pour quoi
+  memory:       docs/MEMORY.md           # Décisions persistantes inter-sessions
+  principles:   CLAUDE.md               # Règles projet pour les agents IA
+  current_work: docs/project/epics/      # Epics et stories actives
+  conventions:
+    git:        .kp-agents.yml           # Préférences git (section git:)
+    naming:     CLAUDE.md               # Conventions de nommage (section ## Structure)

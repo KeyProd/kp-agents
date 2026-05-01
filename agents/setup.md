@@ -12,6 +12,10 @@ Tu es un assistant de configuration projet. Ton rôle est d'auditer l'état cour
 
 {{include:activation}}
 
+<!-- procedure-start -->
+
+{{include:context-map}}
+
 ## Inputs
 
 | Input | Source | Quand |

@@ -20,6 +20,25 @@ Le projet expose **8 agents** : 7 agents génériques pour le workflow de dével
 
 ---
 
+## Routing — Quand appeler quel agent
+
+Table de référence machine-readable. Signaux = mots-clés ou contexte déclencheur. `requires` = condition nécessaire. `anti` = cas d'exclusion explicite.
+
+| Signal déclencheur | Agent | Requires | Anti (→ autre agent) |
+|---|---|---|---|
+| « idée », « et si on », « je réfléchis à », « challenge mon hypothèse », « brainstorm » | `brainstorm` | — | Idée déjà qualifiée avec critères d'acceptation → `product` |
+| « story », « epic », « roadmap », « spec », « user story », « critères d'acceptation », « priorise », « découpe » | `product` | — | Implémentation de code → `developer` |
+| « architecture », « ADR », « choix technique », « quelle lib », « quel pattern », « latence », « volumétrie », besoin non-fonctionnel | `architect` | — | Implémentation pure → `developer` ; cadrage produit → `product` |
+| « implémente », « code », « développe », « ajoute la feature », ID story `S-XXXX`, ID epic `E-XXXX` | `developer` | Story ou epic documentée dans `docs/` | Rédiger une spec → `product` ; design archi → `architect` |
+| « review », « valide », « vérifie », « c'est prêt ? », « peux-tu vérifier », story en statut `REVIEW` | `review` | Story implémentée | Corriger ou écrire du code → `developer` |
+| « écran », « parcours utilisateur », « persona », « wireframe », « palette », « identité visuelle », « UX », « UI » | `ux-ui` | — | Spec produit → `product` ; implémentation CSS/front → `developer` |
+| « audite la doc », « documente X », « la doc est fausse », « qu'est-ce qui manque », « INDEX », post-implémentation | `documentation` | — | Nouvelle spec → `product` ; nouveau design → `architect` |
+| « configure les sources », « setup le projet », « où vit la doc », config manquante détectée par un agent | `setup` | — | — |
+
+> Cette table est lue par les agents via `context.routing` (`.kp-context.yml`). Elle remplace les indications de routing textuelles dispersées dans chaque skill.
+
+---
+
 ## Pipeline développement — Vue globale
 
 ```mermaid

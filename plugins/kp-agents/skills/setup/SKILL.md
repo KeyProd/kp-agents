@@ -21,19 +21,7 @@ Tu es un assistant de configuration projet. Ton rôle est d'auditer l'état cour
 
 ## Carte de contexte
 
-Lis `.kp-context.yml` à la racine du projet s'il existe. Ce fichier déclare où trouver les informations clés du projet. En son absence, applique les valeurs par défaut ci-dessous.
-
-| Clé | Ce qu'elle pointe | Défaut |
-|-----|------------------|--------|
-| `context.stack` | Stack technique, ADR, patterns | `docs/architect.md` |
-| `context.index` | Index de la documentation | `docs/INDEX.md` |
-| `context.routing` | Quel agent pour quoi | `docs/agents.md` |
-| `context.memory` | Décisions persistantes inter-sessions | `docs/MEMORY.md` |
-| `context.principles` | Règles non-techniques du projet | `CLAUDE.md` |
-| `context.current_work` | Epics et stories actives | `docs/project/epics/` |
-| `context.conventions.git` | Conventions git | `.kp-agents.yml` section `git:` |
-
-Quand tu dois lire une de ces informations (stack pour implémenter, routing pour rediriger…), utilise le chemin déclaré dans `.kp-context.yml` plutôt que le défaut hardcodé. Si la clé est absente du fichier, applique le défaut.
+Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il déclare où trouver stack, index, routing, mémoire et principes du projet. Utilise ces chemins plutôt que les défauts hardcodés. Défauts et format complet : voir `references/context-map-table.md` (à lire à la demande).
 
 ## Inputs
 
@@ -315,7 +303,7 @@ Format :
 
 ## Configuration des sources
 
-Ce projet peut pointer vers des sources externes (doc produit OneDrive, tickets externalisés via MCP, répertoires de documentation globale partagée) via deux fichiers optionnels à la racine du projet. En leur absence, **tous les outputs vont dans `docs/` local** (comportement par défaut, inchangé).
+Deux fichiers optionnels à la racine configurent les sources externes. Absents = tout va dans `docs/` local (comportement par défaut, inchangé).
 
 ### Fichier `.kp-agents.yml` (commité) — politique de sources
 
@@ -323,116 +311,100 @@ Ce projet peut pointer vers des sources externes (doc produit OneDrive, tickets 
 product:
   mode: local | external      # défaut: local
   access: read-write | read-only   # défaut: read-write, ignoré si mode: local
-tickets:
-  mode: local | mcp           # défaut: local
-  mcp_server: <nom>           # requis si mode: mcp
-  project_key: <clé>          # requis si mode: mcp
-  mapping:                    # optionnel, pertinent si mode: mcp — voir section dédiée pour les défauts
-    summary_prefix: <string>
-    issue_type_story: Story
-    issue_type_epic: Epic
-    status:
-      TODO: "À faire"
-      IN_PROGRESS: "En cours"
-      REVIEW: "Examiner"
-      DONE: "Terminé(e)"
-    labels: [kp-agents]
-    label_patterns:
-      story_id: "kp-story-{id}"
-      epic_id: "kp-epic-{id}"
-      author: "kp-author-{name}"
-      status: "kp-status-{value}"
-    custom_fields: {}
-    review_placement: description   # ou "comment"
-global_doc:                     # optionnel, répertoires de documentation globale partagée
-  specs: <chemin absolu>        # doc fonctionnelle de ce qui est implémenté (piloté par documentation)
-  tech: <chemin absolu>         # documentation technique globale (piloté par architect)
-git:                            # optionnel, préférences projet pour opérations git
-  branch_pattern: <string>      # défaut: non renseigné. Ex: "feat/{slug}" ou "feature/{ticket}-{slug}"
-  auto_commit: yes | no | ask   # défaut: ask
-  auto_push: yes | no | ask     # défaut: no
+global_doc:                   # optionnel — répertoires de documentation partagée
+  specs: <chemin absolu>      # doc fonctionnelle implémentée (propriétaire: documentation)
+  tech: <chemin absolu>       # doc technique globale (propriétaire: architect)
 ```
 
 ### Fichier `.kp-agents.local.yml` (gitignoré) — chemins machine-spécifiques
 
 ```yaml
 product:
-  path: <chemin absolu>       # requis si product.mode: external
+  path: <chemin absolu>            # requis si product.mode: external
 global_doc:
-  specs: <chemin absolu>           # doc fonctionnelle de l'implémenté (propriétaire: documentation)
-  tech: <chemin absolu>            # documentation technique globale (propriétaire: architect)
-  product_inputs: <chemin absolu>  # inputs produit du PM — lecture seule pour tous les agents
+  specs: <chemin absolu>           # propriétaire: documentation
+  tech: <chemin absolu>            # propriétaire: architect
+  product_inputs: <chemin absolu>  # inputs PM — lecture seule pour tous les agents
 ```
 
-Les chemins `global_doc` sont **toujours dans `.kp-agents.local.yml`** (jamais dans `.kp-agents.yml`) car ils pointent vers des emplacements machine-spécifiques (wiki local, dossier réseau monté). La présence d'une clé signifie que le chemin est actif — l'absence signifie « pas de doc globale pour cette dimension ».
+Les chemins `global_doc` sont **toujours dans `.kp-agents.local.yml`** (jamais dans `.kp-agents.yml`) — emplacements machine-spécifiques. Présence d'une clé = chemin actif. Absence = pas de doc globale pour cette dimension.
 
 ### Comportement au démarrage
 
-1. **Lire** `.kp-agents.yml` via Read. S'il est absent → mode 100% local, aucune vérification supplémentaire.
-2. **Lire** `.kp-agents.local.yml` via Read (si présent) — contient les chemins machine-spécifiques (`product.path`, `global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs`).
-3. **Pour chaque dimension activée en externe**, vérifier les prérequis :
-   - `product.mode: external` → `.kp-agents.local.yml` présent et `product.path` renseigné et accessible en lecture.
-   - `tickets.mode: mcp` → `mcp_server` et `project_key` renseignés dans `.kp-agents.yml`.
-   - `global_doc.specs` ou `global_doc.tech` renseigné dans `.kp-agents.local.yml` → chemin accessible en lecture.
-4. **Si config incomplète ou chemin inaccessible** → warn l'utilisateur, proposer `/kp-agents:setup` pour corriger, et continuer en mode local dégradé pour la session.
+1. Lire `.kp-agents.yml` via Read. Absent → mode 100% local, stop.
+2. Lire `.kp-agents.local.yml` via Read si présent.
+3. Pour chaque dimension activée en externe, vérifier les prérequis :
+   - `product.mode: external` → `product.path` renseigné et accessible.
+   - `global_doc.specs` ou `global_doc.tech` → chemin accessible.
+4. Config incomplète ou chemin inaccessible → warn + proposer `/kp-agents:setup` + continuer en mode local dégradé.
 
 ### Résolution de chemin pour la dimension `product`
 
-Quand `product.mode: external` est actif et le chemin est valide, les outputs suivants sont **redirigés vers `<product.path>/`** au lieu de `docs/` local :
+Quand `product.mode: external` et chemin valide, les outputs suivants sont **redirigés vers `<product.path>/`** :
 
 - `ideas/<theme>.md`
 - `product.md`
 - `features/<group>/product.md`
 - `project/roadmap.md`
 
-**Toujours écrits en local** quelle que soit la config, car relevant du périmètre technique ou de l'index local du repo : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/INDEX.md`, toute doc technique. Les epics (`project/epics/E-XXXX-*/readme.md`) et stories (`S-XXXX-*.md`) suivent la dimension `tickets` (voir ci-dessous).
+**Toujours écrits en local** : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/INDEX.md`, toute doc technique. Les epics/stories suivent la dimension `tickets`.
 
-#### Création implicite de sous-dossiers
+Au premier write dans un sous-dossier externe, créer le sous-dossier à la volée (`mkdir -p`). Ne jamais demander confirmation pour ça.
 
-Au premier write dans un sous-dossier du chemin externe (`<product.path>/ideas/`, `<product.path>/features/<group>/`, `<product.path>/project/`), créer le sous-dossier à la volée si absent (équivalent `mkdir -p`). Ne jamais prompter l'utilisateur pour confirmer la création d'un sous-dossier attendu par la convention.
+Si un fichier existe à la fois localement et sur `<product.path>/<path>` : lire l'externe (source de vérité), écrire sur l'externe, warn une seule fois par session.
 
-#### Résolution de conflit local + externe
+### Mode `product.access: read-only`
 
-Si un fichier existe **à la fois** localement (`./docs/<path>`) et sur `<product.path>/<path>` (cas typique : mode externe activé sur un projet qui avait une doc locale existante) :
-- **Lecture** : privilégier le fichier externe (source de vérité en mode `product.mode: external`).
-- **Écriture** : écrire sur l'externe ; ne pas toucher au fichier local.
-- **Warn** une seule fois par session, à la première détection : « Fichier dupliqué détecté entre `./docs/<path>` et `<product.path>/<path>`. Le externe fait foi. Envisage de supprimer la copie locale pour éviter toute confusion future. »
+Quand `product.mode: external` **et** `product.access: read-only` : lire uniquement, ne jamais écrire — ni externe, ni fallback local. Rendre le contenu en chat :
 
-### Mode `product.access: read-only` (doc produit externe figée)
-
-Quand `product.mode: external` **et** `product.access: read-only`, la doc produit externe est consommée comme **source de vérité figée** : les agents la **lisent** mais n'y écrivent **jamais** — ni sur le chemin externe, ni en fallback local. Cas d'usage typique : OneDrive partagé maintenu par un PM humain, agents en consommation.
-
-#### Matrice comportementale par output
-
-| Output | `mode: local` | `external` + `read-write` | `external` + `read-only` |
-|---|---|---|---|
-| `product.md` | écrit local | écrit externe | **refus, contenu rendu en chat** |
-| `ideas/*.md` | écrit local | écrit externe | **refus, contenu rendu en chat** |
-| `features/<g>/product.md` | écrit local | écrit externe | **refus, contenu rendu en chat** |
-| `project/roadmap.md` | écrit local | écrit externe | **refus, contenu rendu en chat** |
-| Epics / stories | suit `tickets.mode` | suit `tickets.mode` | suit `tickets.mode` (indépendant) |
-| Lecture de tous les outputs ci-dessus | local | externe | **externe (lecture autorisée)** |
-
-Agents concernés par le refus d'écriture en read-only : `product` et `brainstorm`. Les autres agents (`architect`, `developer`, `review`, `documentation`, `ux-ui`) n'écrivent pas sur la dimension produit et ne sont donc pas affectés.
-
-#### Format standardisé du refus read-only
-
-Utiliser ce format exact (avec l'emoji cadenas pour distinguer du warn de fallback technique) :
-
-> 🔒 **Mode produit read-only** — la doc produit externe (`<product.path>`) est configurée en lecture seule. Je n'écris pas `<chemin relatif>`. Contenu proposé conservé ci-dessous pour copie manuelle. Pour autoriser l'écriture : `/kp-agents:setup` puis bascule `product.access: read-write`.
+> 🔒 **Mode produit read-only** — `<product.path>` en lecture seule. Je n'écris pas `<chemin relatif>`. Contenu ci-dessous pour copie manuelle. Pour autoriser l'écriture : `/kp-agents:setup` → `product.access: read-write`.
 >
 > ```markdown
-> <contenu complet rédigé par l'agent>
+> <contenu rédigé>
 > ```
 
-Le contenu rédigé est **toujours rendu en chat** en bloc markdown — l'utilisateur ne perd jamais le travail de l'agent, il décide lui-même où le coller.
+Règles : refus absolu (pas de contournement). `access: read-only` ignoré si `mode: local`. Défaut `read-write` si omis. `product.access` et `tickets.mode` restent découplés.
 
-#### Règles spécifiques
+### Écriture avec fallback local
 
-- Le refus d'écriture est **absolu** en read-only : pas de fallback local, pas de contournement « écris quand même ». Si l'utilisateur insiste, redirige vers `/kp-agents:setup`.
-- `access: read-only` est **ignoré** si `mode: local` (warn au démarrage, pas de blocage).
-- `access` par défaut à `read-write` si omis (rétro-compatibilité).
-- Les dimensions `product.access` et `tickets.mode` restent **découplées** : un projet peut très bien avoir `product.access: read-only` + `tickets.mode: local` (ou `mcp`) — les epics et stories sont créées normalement.
+Toute écriture sur source externe suit ce protocole :
+
+1. Tenter l'écriture sur le chemin externe.
+2. Échec → basculer sur `docs/` local en reproduisant **l'arborescence relative exacte** + warner explicitement.
+
+> ⚠️ **Fallback d'écriture local** — impossible d'écrire sur `<chemin externe>` (raison : `<raison>`). Fichier écrit dans `<chemin local>`. `<conseil>`
+
+| Cause | Signal | Conseil |
+|---|---|---|
+| Path inaccessible | chemin inexistant | Vérifier que OneDrive est monté. Sinon `/kp-agents:setup` pour corriger le chemin. |
+| Permission refusée | EACCES | Vérifier droits auprès du propriétaire. Config valide, pas besoin de `/kp-agents:setup`. |
+| Erreur transitoire | ENOSPC, EIO, timeout | Réessayer après vérification espace disque et connexion. |
+
+Warn à chaque fallback (pas de dédoublonnage). Au démarrage : si `product.path` inaccessible dès le début → warn global + mode local dégradé pour toute la session.
+
+### Documentation globale partagée (`global_doc`)
+
+Répertoires partagés complémentaires à `docs/`. Les fichiers locaux **restent toujours écrits** — le global est un complément, jamais une substitution.
+
+| Clé | Propriétaire écriture | Lecture | Règle pour les autres agents |
+|---|---|---|---|
+| `global_doc.specs` | `documentation` | tous | Écriture interdite → suggérer : « Veux-tu passer le relais à `/kp-agents:documentation` ? » |
+| `global_doc.tech` | `architect` | tous | Écriture interdite → suggérer : « Veux-tu passer le relais à `/kp-agents:architect` ? » |
+| `global_doc.product_inputs` | **personne** | tous | Jamais modifiable par un agent. Maintenu par un humain (PM). |
+
+`global_doc.product_inputs` ≠ `product.path` : `.path` = destination des outputs de `product` ; `product_inputs` = source d'inputs du PM humain. Peuvent coexister et pointer différents dossiers.
+
+**Lecture** : ne pas lire `global_doc` automatiquement au démarrage. Uniquement sur demande explicite ou quand le contexte global apporte clairement de la valeur — **suggérer avant de lire** :
+> « Cette question semble bénéficier d'un contexte global. Veux-tu que je consulte `<chemin>` avant de répondre ? »
+
+**Écriture** : uniquement par l'agent propriétaire, sur demande explicite. Processus : lire le fichier cible → proposer le contenu → attendre confirmation → écrire.
+
+Si chemin `global_doc` inaccessible : warn une seule fois, poursuivre normalement.
+> ⚠️ **Documentation globale inaccessible** — `<chemin>` (`global_doc.<clé>`) introuvable. Documentation locale utilisée. Vérifier le chemin ou `/kp-agents:setup`.
+
+### Redirection vers `/kp-agents:setup`
+
+Si config requise absente, incomplète ou incohérente, proposer `/kp-agents:setup`. Suggestion, jamais un blocage.
 
 ### Mode `tickets.mode: mcp`
 
@@ -452,200 +424,96 @@ Règle de merge : `.kp-agents.local.yml` surcharge `.kp-agents.yml` **champ par 
 
 #### Schéma `tickets.mapping`
 
-Le mapping gouverne **comment** une story markdown est transcodée en ticket JIRA (et inversement). Le bloc YAML de la section « Fichier `.kp-agents.yml` » en tête de document en donne la forme complète. Sémantique champ par champ :
+Le mapping gouverne **comment** une story markdown est transcodée en ticket JIRA (et inversement). Sémantique champ par champ :
 
 | Champ | Type | Défaut | Rôle |
 |---|---|---|---|
-| `summary_prefix` | string | `""` | Préfixe ajouté au début de chaque `summary` JIRA (ex: `[KP]`). Utile pour isoler les tickets kp-agents dans un projet partagé. |
-| `issue_type_story` | string | `"Story"` | Nom du issue type utilisé pour les stories. Peut être `"User Story"` selon projet. |
-| `issue_type_epic` | string | `"Epic"` | Nom du issue type utilisé pour les epics. Peut être `"Initiative"` ou `"Feature"` selon projet. |
-| `status.TODO` / `IN_PROGRESS` / `REVIEW` / `DONE` | string | voir bloc YAML | Noms **exacts** des statuts workflow JIRA correspondants. Variable par projet (localisation + custom). |
-| `labels` | array<string> | `["kp-agents"]` | Labels systématiquement ajoutés à tout ticket créé par un agent. |
-| `label_patterns.story_id` | string | `"kp-story-{id}"` | Pattern pour encoder l'ID story kp-agents en label JIRA (ex: `S-0009` → `kp-story-S0009`). `{id}` sans tiret par convention (labels JIRA n'aiment pas les tirets dans certaines versions). |
+| `summary_prefix` | string | `""` | Préfixe ajouté au début de chaque `summary` JIRA (ex: `[KP]`). |
+| `issue_type_story` | string | `"Story"` | Nom du issue type pour les stories. |
+| `issue_type_epic` | string | `"Epic"` | Nom du issue type pour les epics. |
+| `status.TODO/IN_PROGRESS/REVIEW/DONE` | string | voir schéma yml | Noms **exacts** des statuts workflow JIRA. Variable par projet. |
+| `labels` | array | `["kp-agents"]` | Labels ajoutés à tout ticket créé. |
+| `label_patterns.story_id` | string | `"kp-story-{id}"` | Encode l'ID story en label JIRA (`S-0009` → `kp-story-S0009`). `{id}` sans tiret. |
 | `label_patterns.epic_id` | string | `"kp-epic-{id}"` | Idem pour l'ID epic. |
-| `label_patterns.author` | string | `"kp-author-{name}"` | Idem pour l'auteur (nom d'agent). |
-| `label_patterns.status` | string | `"kp-status-{value}"` | Label redondant avec le workflow JIRA, mais utile pour retrouver les tickets en JQL par statut conceptuel. |
-| `custom_fields` | object | `{}` | Clé-valeur de customfield_XXXXX à injecter à la création. Réservé aux projets exigeant Story Points / Sprint / etc. |
-| `review_placement` | `description` \| `comment` | `"description"` | Où l'agent `review` écrit la section `## Review` : directement dans la description du ticket (append) ou comme commentaire JIRA dédié. Choix projet, pas imposé. |
+| `label_patterns.author` | string | `"kp-author-{name}"` | Idem pour l'auteur. |
+| `label_patterns.status` | string | `"kp-status-{value}"` | Label redondant avec workflow, utile pour JQL. |
+| `custom_fields` | object | `{}` | Clé-valeur `customfield_XXXXX` injectés à la création. |
+| `review_placement` | `description`\|`comment` | `"description"` | Où `review` écrit `## Review` : dans la description (append) ou commentaire JIRA. |
 
 #### Pipeline d'écriture (create epic ou story)
 
-Suivi par `product`, `developer`, `review`, selon l'opération :
+Suivi par `product`, `developer`, `review` :
 
-1. **Extraire le frontmatter** du markdown source (si agent a composé localement un brouillon) : `story-id`, `epic-id`, `status`, `author`, `title`, etc.
-2. **Composer le `summary`** : `<mapping.summary_prefix><space><titre ou user story abrégée>` — 255 chars max côté JIRA, tronquer proprement avec `…` si besoin.
-3. **Composer la `description`** : **body markdown uniquement**, sans frontmatter YAML (qui serait cassé par JIRA, voir rapport spike). Inclure explicitement le `contentFormat: markdown` à l'appel MCP si l'outil le supporte.
-4. **Composer les `labels`** : union de `mapping.labels` + labels dérivés via `mapping.label_patterns` (un par `story_id`, `epic_id`, `author`, `status`). Convention : ne jamais laisser de `-` dans `{id}` (utiliser `S0009`, pas `S-0009`).
-5. **Composer le `parent`** (pour une story) : clé JIRA de l'epic parente (ex: `KP-42`) — l'agent doit l'avoir obtenu au préalable via recherche ou argument utilisateur.
-6. **Appeler `createJiraIssue`** avec `projectKey`, `issueTypeName` (`mapping.issue_type_story` ou `mapping.issue_type_epic`), `summary`, `description`, `parent`, et `additional_fields: { labels, ...custom_fields }`.
-7. **Transitionner** si le statut visé n'est pas l'initial `TODO` : récupérer les transitions via `getTransitionsForJiraIssue`, trouver celle dont `to.name === mapping.status[<cible>]`, appeler `transitionJiraIssue`.
-8. **Afficher** la clé JIRA + URL au format standardisé (voir ci-dessous).
+1. **Extraire le frontmatter** du markdown source : `story-id`, `epic-id`, `status`, `author`, `title`.
+2. **Composer le `summary`** : `<mapping.summary_prefix><space><titre abrégé>` — 255 chars max, tronquer avec `…`.
+3. **Composer la `description`** : body markdown uniquement, sans frontmatter YAML. Inclure `contentFormat: markdown` si l'outil le supporte.
+4. **Composer les `labels`** : union de `mapping.labels` + patterns dérivés. Convention : pas de `-` dans `{id}` (`S0009`, pas `S-0009`).
+5. **Composer le `parent`** (story) : clé JIRA de l'epic parente (`KP-42`).
+6. **Appeler `createJiraIssue`** avec `projectKey`, `issueTypeName`, `summary`, `description`, `parent`, `additional_fields: { labels, ...custom_fields }`.
+7. **Transitionner** si statut ≠ `TODO` initial : `getTransitionsForJiraIssue` → `transitionJiraIssue`.
+8. **Afficher** la clé JIRA + URL au format standardisé.
 
-#### Pipeline de lecture (récupérer une story/epic existante)
+#### Pipeline de lecture
 
-1. Appeler `getJiraIssue` avec `responseContentFormat: markdown` (fidélité suffisante mesurée au spike S-0005). Si plus tard ADF s'avère nécessaire, évaluer.
-2. **Reconstruire le frontmatter** en chat ou en rendu markdown (pas de persistance disque en mode mcp) :
-   - `title` ← `summary` (sans le `summary_prefix`)
-   - `status` ← déduit du `status.name` JIRA via reverse-lookup dans `mapping.status` (ex: `Examiner` → `REVIEW`). Si aucune correspondance, fallback `status: UNKNOWN` + warn.
-   - `story-id`, `epic-id`, `author` ← extraits des labels via les patterns inversés (`kp-story-S0009` → `S-0009`).
-   - `date` ← `created` natif JIRA.
-3. **Afficher** la story reconstruite à l'utilisateur sous forme markdown standard (frontmatter + body) — elle n'est **pas** persistée sur disque.
+1. `getJiraIssue` avec `responseContentFormat: markdown`.
+2. Reconstruire frontmatter : `title` ← summary, `status` ← reverse-lookup `mapping.status`, `story-id`/`epic-id`/`author` ← labels inversés.
+3. Afficher en markdown standard — non persisté sur disque.
 
 #### Mise à jour d'une story existante
 
-- **Body** : appeler `editJiraIssue` avec `fields: { description: <nouveau markdown sans frontmatter> }`. Toujours **relire** d'abord la description actuelle pour préserver les sections rédigées hors agent (PM qui a ajouté un commentaire, par exemple — à laisser si détecté).
-- **Statut** : `transitionJiraIssue` avec l'ID de transition vers `mapping.status[<nouvelle cible>]`. Si aucune transition disponible vers la cible, warn explicite.
-- **Labels** : pour un changement de statut, `editJiraIssue` avec `fields: { labels: [...anciens sauf kp-status-*, nouveau kp-status-<cible>] }` si `label_patterns.status` est utilisé. Sinon, la transition de statut suffit.
+- **Body** : `editJiraIssue` avec `fields: { description: <nouveau markdown sans frontmatter> }`. Relire d'abord pour ne pas écraser du contenu hors agent.
+- **Statut** : `transitionJiraIssue` vers `mapping.status[<cible>]`. Warn si transition indisponible.
+- **Labels** : sur changement de statut, mettre à jour le label `kp-status-*` via `editJiraIssue`.
 
 #### Affichage standardisé des liens JIRA
 
-Chaque fois qu'un agent a manipulé un ticket, il affiche dans sa réponse la référence complète. Format exact :
+> **JIRA** : [`KP-42`](https://<site>.atlassian.net/browse/KP-42) — `<summary sans prefix>` *(status: <Status>)*
 
-> **JIRA** : [`KP-42`](https://<site>.atlassian.net/browse/KP-42) — `<summary sans le prefix>` *(status: <Status>)*
-
-L'URL est construite à partir de la ressource Atlassian (cloudId → hostname du site, récupéré une fois par session via `getAccessibleAtlassianResources`). En cas d'URL indisponible, afficher la clé seule.
+URL construite depuis `getAccessibleAtlassianResources` (une fois par session).
 
 #### Gestion d'erreur MCP
 
-Quand un appel MCP échoue (timeout, 401, 403, 500, outil non chargé, etc.), l'agent warn l'utilisateur et propose **3 options** sans bloquer :
+Sur échec (timeout, 401, 403, 500, outil non chargé), proposer **3 options** :
 
-> ⚠️ **Échec MCP JIRA** — l'opération `<nom opération>` sur `<issue>` a échoué (raison : `<raison courte>`).
->
-> 1. **Réessayer** — je retente immédiatement la même opération.
-> 2. **Bascule locale pour cette opération** — je crée/modifie en local `docs/project/epics/...` pour que tu puisses reprendre plus tard. La config reste `mode: mcp`, seul ce ticket est désynchronisé.
-> 3. **Annuler** — aucune modification, on repart en arrière.
->
-> Quelle option préfères-tu ?
+> ⚠️ **Échec MCP JIRA** — `<opération>` sur `<issue>` a échoué (raison : `<raison courte>`).
+> 1. **Réessayer** — je retente immédiatement.
+> 2. **Bascule locale pour cette opération** — je crée/modifie en local `docs/project/epics/...`. Config reste `mode: mcp`.
+> 3. **Annuler** — aucune modification.
 
-Trois causes typiques à distinguer dans le « raison courte » :
-
-| Cause | Signal technique | Conseil à glisser dans le warn |
+| Cause | Signal | Conseil |
 |---|---|---|
-| **MCP server non chargé / déconnecté** | Tool indisponible, erreur « tool not found » | « Vérifier que le MCP JIRA est activé dans la session Claude Code, ou invoquer `/kp-agents:setup` pour valider `mcp_server`. » |
-| **Auth expirée** | 401 / 403 | « Reconnexion OAuth Atlassian nécessaire (via Claude Code settings). » |
-| **Champ requis manquant** | 400 avec `errors.fieldName` | « Champ JIRA obligatoire absent (`<nom>`). Ajouter dans `tickets.mapping.custom_fields` via `/kp-agents:setup`. » |
+| MCP non chargé | tool not found | Vérifier MCP JIRA activé dans la session, ou `/kp-agents:setup`. |
+| Auth expirée | 401/403 | Reconnexion OAuth Atlassian nécessaire. |
+| Champ requis manquant | 400 + `errors.fieldName` | Ajouter dans `tickets.mapping.custom_fields` via `/kp-agents:setup`. |
 
-#### Non-régression en mode `tickets.mode: local`
+#### Non-régression mode local
 
-**Comportement inchangé** : si `tickets.mode` est absent ou vaut `local`, tout le pipeline ci-dessus est **désactivé**. Les agents créent/lisent `docs/project/epics/E-XXXX-*/readme.md` et `S-XXXX-*.md` exactement comme aujourd'hui. Le mapping, les labels et les transitions MCP ne sont jamais considérés en mode local.
+Si `tickets.mode: local` (ou absent), tout ce pipeline est **désactivé**. Agents créent/lisent `docs/project/epics/E-XXXX-*/readme.md` et `S-XXXX-*.md` comme d'habitude.
 
 #### Agents concernés
 
 | Agent | Opérations en `tickets.mode: mcp` |
 |---|---|
-| `product` | Crée epic et stories (pipeline d'écriture, statut initial `TODO`). Lit une epic/story existante pour découpage. |
-| `developer` | Transitionne story : `TODO → IN_PROGRESS` au démarrage, `IN_PROGRESS → REVIEW` ou `DONE` en fin. Met à jour la description (section `## Implémentation` + `## Validation par critère` intégrées au body). |
-| `review` | Transitionne story : `REVIEW → DONE` (GO) ou `REVIEW → IN_PROGRESS` (NO-GO). Ajoute la section `## Review` soit dans la description (edit), soit en commentaire JIRA (si la politique projet le préfère — choix pris à `setup`, pas de défaut imposé, demander à la première utilisation). |
-| `brainstorm`, `architect`, `documentation`, `ux-ui`, `setup` | Non concernés (ni création ni transition de ticket). `documentation` maintient `docs/INDEX.md` local, qui reste indépendant de `tickets.mode`. |
-
-### Écriture avec fallback local
-
-Toute écriture sur une source externe (chemin `product.path` ou serveur MCP) suit ce protocole :
-
-1. Tenter l'écriture au chemin externe ou via l'outil MCP.
-2. Si l'écriture échoue, **basculer sur `docs/` local** en reproduisant **l'arborescence relative exacte** (ex: échec sur `<product.path>/ideas/foo.md` → fallback sur `./docs/ideas/foo.md`, jamais à la racine), et **warner explicitement** l'utilisateur.
-
-#### Format standardisé du warn de fallback
-
-Utiliser ce format exact (avec l'emoji d'alerte pour visibilité maximale) :
-
-> ⚠️ **Fallback d'écriture local** — impossible d'écrire sur `<chemin externe complet>` (raison : `<raison courte>`). Fichier écrit localement dans `<chemin local complet>`. <conseil de résolution>
-
-Exemple concret :
-
-> ⚠️ **Fallback d'écriture local** — impossible d'écrire sur `/Users/vincent/Library/CloudStorage/OneDrive-KeyProd/MonProjet/ideas/auth.md` (raison : Permission denied). Fichier écrit localement dans `./docs/ideas/auth.md`. Vérifier les droits sur le dossier OneDrive ou invoquer `/kp-agents:setup` pour changer de chemin.
-
-#### Cas d'erreur distingués
-
-Trois causes d'échec d'écriture externe à traiter différemment dans le warn :
-
-| Cause | Signal technique | Conseil à formuler |
-|---|---|---|
-| **Path inaccessible** (OneDrive non monté, disque déplacé) | `product.path` n'existe pas ou est inaccessible au moment de l'écriture | « Source externe introuvable — vérifier que OneDrive est bien monté (ouvre Finder ou relance l'app OneDrive). Sinon, invoquer `/kp-agents:setup` pour corriger le chemin. » |
-| **Permission refusée** (lecture seule pour l'utilisateur) | Erreur système `Permission denied` (EACCES) | « Droits insuffisants sur la source externe — vérifier auprès du propriétaire du OneDrive / dossier partagé. La config reste valide, pas besoin de lancer `/kp-agents:setup`. » |
-| **Erreur d'écriture transitoire** (espace plein, I/O error, réseau) | `ENOSPC`, `EIO`, timeout | « Erreur d'écriture temporaire — réessayer après avoir vérifié l'espace disque et la connexion. » |
-
-Le warn est émis **à chaque fallback** (pas de dédoublonnage), pour que l'utilisateur constate immédiatement où son fichier a réellement été écrit.
-
-#### Détection au démarrage vs au write
-
-- **Au démarrage** (lecture initiale de la config) : vérifier que `product.path` est lisible. Si `product.path` est inaccessible dès le démarrage → warn global + proposer `/kp-agents:setup` + poursuivre en **mode local dégradé** pour toute la session (plus de tentative externe, directement local).
-- **Au write** (pendant la session, sur un chemin initialement validé) : fallback par opération avec warn standardisé.
-
-### Documentation globale partagée (`global_doc`)
-
-`global_doc` est un bloc optionnel de `.kp-agents.local.yml` qui définit des répertoires partagés (wiki, dossier réseau, OneDrive...) complémentaires à `docs/`. Les fichiers locaux dans `docs/` **restent toujours écrits** — le global est un complément, jamais une substitution ni une redirection.
-
-Trois répertoires distincts, trois responsabilités distinctes :
-
-| Clé | Contenu | Agent propriétaire | Autres agents |
-|-----|---------|-------------------|---------------|
-| `global_doc.specs` | Documentation fonctionnelle de ce qui est implémenté (specs validées, comportements observés) | `documentation` | `architect`, `developer`, `review`, `product` : lecture en contexte si pertinent ; écriture interdite — suggérer relais vers `documentation` |
-| `global_doc.tech` | Documentation technique globale (architecture, patterns, décisions cross-projets) | `architect` | `developer`, `review`, `documentation`, `product` : lecture en contexte si pertinent ; écriture interdite — suggérer relais vers `architect` |
-| `global_doc.product_inputs` | Inputs produit rédigés par le PM (vision, brief, personas, cahier des charges…) | Aucun — **lecture seule pour tous** | `product` : source de contexte principale ; `architect`, `developer`, `review`, `documentation` : lecture en contexte si pertinent ; **aucun agent n'y écrit jamais**, quelle que soit la config |
-
-`global_doc.product_inputs` est distinct de `product.path` : `product.path` est la destination des **outputs** de l'agent `product` (product.md, roadmap…) ; `global_doc.product_inputs` est la source d'**inputs** du PM humain. Les deux peuvent coexister et pointer vers des dossiers différents.
-
-#### Principe fondamental : complément, pas substitution
-
-Contrairement à `product.mode: external` qui redirige les outputs :
-- `docs/architect.md`, `docs/features/<group>/architect.md` → **toujours écrits en local** (inchangé)
-- `docs/INDEX.md` et toute la doc locale → **toujours écrits en local** (inchangé)
-- `global_doc.specs` et `global_doc.tech` → chemins libres, structure décidée par le projet
-
-#### Lecture du global : sur demande ou suggestion
-
-Les agents **ne lisent pas les chemins `global_doc` automatiquement** au démarrage. La consultation se fait uniquement :
-- Sur demande explicite de l'utilisateur (« consulte la doc technique globale », « vérifie les specs globales »)
-- Quand une question est suffisamment transversale pour que le contexte global apporte de la valeur — dans ce cas, **suggérer avant de lire** :
-  > « Cette question semble bénéficier d'un contexte global. Veux-tu que je consulte `<chemin>` avant de répondre ? »
-
-#### Écriture dans le global : agent propriétaire + demande explicite
-
-L'écriture dans un chemin `global_doc` est **toujours sur demande explicite** de l'utilisateur, et **uniquement par l'agent propriétaire** :
-
-| Chemin | Seul autorisé à écrire | Comportement des autres agents |
-|--------|------------------------|-------------------------------|
-| `global_doc.specs` | `documentation` | Refus d'écriture + suggestion : « Ce contenu devrait être ajouté aux specs globales par l'agent documentation. Veux-tu passer le relais avec `/kp-agents:documentation` ? » |
-| `global_doc.tech` | `architect` | Refus d'écriture + suggestion : « Ce contenu devrait être mis à jour dans la doc technique globale par l'agent architect. Veux-tu passer le relais avec `/kp-agents:architect` ? » |
-| `global_doc.product_inputs` | **Personne** — jamais modifiable par un agent | Lecture seule, sans exception. Aucune suggestion de relais — ce répertoire est maintenu par un humain (PM). |
-
-Processus d'écriture pour l'agent propriétaire :
-1. Lire le fichier cible dans le chemin global s'il existe
-2. Proposer le contenu (ou diff) et attendre confirmation explicite
-3. Écrire après confirmation
-
-Il n'y a pas de format standardisé imposé pour les chemins globaux — l'agent s'adapte à la structure trouvée ou demande à l'utilisateur comment organiser si le dossier est vide.
-
-#### Comportement au démarrage si chemin inaccessible
-
-Si un chemin `global_doc` est renseigné mais inaccessible : warn une seule fois, poursuivre normalement (la documentation globale est optionnelle, son absence n'est pas bloquante).
-
-> ⚠️ **Documentation globale inaccessible** — `<chemin>` (`global_doc.<clé>`) est configuré mais introuvable. La documentation locale est utilisée comme seule source. Vérifier le chemin ou invoquer `/kp-agents:setup` pour corriger.
+| `product` | Crée epics et stories (statut initial `TODO`). Lit une epic/story existante. |
+| `developer` | Transitionne `TODO → IN_PROGRESS` au démarrage, `IN_PROGRESS → REVIEW/DONE` en fin. Met à jour description (sections `## Implémentation` + `## Validation par critère`). |
+| `review` | Transitionne `REVIEW → DONE` (GO) ou `REVIEW → IN_PROGRESS` (NO-GO). Ajoute `## Review` en description ou commentaire. |
+| `brainstorm`, `architect`, `documentation`, `ux-ui`, `setup` | Non concernés. `documentation` maintient `docs/INDEX.md` local, indépendant de `tickets.mode`. |
 
 ### Préférences Git (`git:`)
 
-Bloc optionnel de `.kp-agents.yml` qui régule le comportement des agents qui touchent git (`developer`, `review`). **Non-régression absolue** : si la clé `git:` est absente du fichier, les agents se comportent comme aujourd'hui (demande de confirmation avant commit/push, pas d'imposition de nom de branche).
-
-#### Schéma et défauts
+Bloc optionnel de `.kp-agents.yml` qui régule le comportement des agents qui touchent git (`developer`, `review`). **Non-régression absolue** : absent = comportement actuel (confirmation avant commit/push, pas d'imposition de branche).
 
 | Champ | Valeurs | Défaut | Rôle |
 |---|---|---|---|
-| `branch_pattern` | string avec placeholders | non renseigné | Template de nommage pour les branches feature créées par `developer`. Placeholders supportés : `{slug}` (nom de story kebab-case), `{ticket}` (clé JIRA si `tickets.mode: mcp`, sinon ID `S-XXXX`), `{epic}` (ID epic ou clé JIRA parent). Exemples : `feat/{slug}`, `feature/KP-{ticket}-{slug}`. Si non renseigné, l'agent demande le nom à l'utilisateur (comportement actuel). |
-| `auto_commit` | `yes` / `no` / `ask` | `ask` | `yes` : commit sans demander après validation d'une story. `no` : ne commit jamais, annonce ce qui est prêt et laisse la main. `ask` : demande confirmation avant chaque commit (comportement actuel). |
-| `auto_push` | `yes` / `no` / `ask` | `no` | Même sémantique que `auto_commit` mais pour `git push`. Défaut `no` : push est toujours une décision utilisateur explicite. |
+| `branch_pattern` | string avec placeholders | non renseigné | Template de nommage pour les branches feature. Placeholders : `{slug}` (kebab-case), `{ticket}` (clé JIRA ou `S-XXXX`), `{epic}`. Ex : `feat/{slug}`, `feature/KP-{ticket}-{slug}`. Absent = l'agent demande le nom. |
+| `auto_commit` | `yes`/`no`/`ask` | `ask` | `yes` : commit sans demander. `no` : stage + annonce, jamais de commit. `ask` : confirmation avant (défaut). |
+| `auto_push` | `yes`/`no`/`ask` | `no` | Même sémantique. Défaut `no` : push = décision utilisateur. |
 
-#### Règles d'application
-
-- **Priorité sur les règles de sécurité globales** : `auto_commit: yes` ou `auto_push: yes` **n'autorise jamais** le skip de hooks, de signature GPG, ou tout autre bypass documenté dans `CLAUDE.md`. La préférence projet accélère le flow « OK » ; elle ne débloque pas de contournements.
-- **Échec silencieux interdit** : si un commit auto échoue (hook, signature, sandbox), l'agent **annonce explicitement** l'erreur et laisse la main. Ne jamais considérer `auto_commit: yes` comme un « fait au mieux silencieux ».
-- **Validation du `branch_pattern`** : à l'écriture par `setup`, parser le pattern et vérifier qu'il ne contient pas d'accolade non fermée. Les placeholders inconnus (hors `{slug}`, `{ticket}`, `{epic}`) → warn à l'utilisateur mais accepter (il décide).
-- **Préférences partielles** : un `.kp-agents.yml` avec seulement `git.branch_pattern` mais pas `auto_commit` → défaut `ask` appliqué sur le champ manquant, pas de blocage.
-- **Dimension indépendante** : `git:` est découplée de `product:` et `tickets:`. Un projet peut très bien avoir `tickets.mode: mcp` + `git.auto_commit: no` (cas typique : tickets dans JIRA mais commit contrôlé à la main).
-
-### Redirection vers `/kp-agents:setup`
-
-Si, au cours d'une opération, la config requise est absente, incomplète ou incohérente, proposer à l'utilisateur l'invocation `/kp-agents:setup` pour corriger. La redirection est une **suggestion, jamais un blocage** — l'utilisateur peut toujours refuser et poursuivre manuellement.
+**Règles d'application :**
+- `auto_commit: yes` ou `auto_push: yes` n'autorise **jamais** le skip de hooks, GPG, ou bypasses documentés dans `CLAUDE.md`.
+- Échec silencieux interdit : si commit auto échoue, annoncer l'erreur et laisser la main.
+- Préférences partielles : champ absent → défaut appliqué sur ce champ uniquement.
+- Dimension indépendante de `product:` et `tickets:`.
 
 ## Convention de sortie - Répertoire docs/
 
@@ -707,6 +575,20 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 - Chaque document inclut un en-tête YAML frontmatter avec : `title`, `date`, `status`, `author` (agent name)
 - Les liens entre documents utilisent des chemins relatifs (ex: `../E-0001-Auth-System/readme.md`)
 - Les liens vers des epics archivées pointent vers `_archives/` (ex: `../_archives/E-0001-Auth-System/readme.md`)
+
+## Templates de référence
+
+Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes :
+
+- `docs/product.md` : voir `references/product-template.md` (à lire à la demande)
+- `docs/architect.md` : voir `references/architect-template.md` (à lire à la demande)
+- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : voir `references/epic-template.md` (à lire à la demande)
+- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : voir `references/story-template.md` (à lire à la demande)
+
+Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
+- la clarté du public cible
+- la séparation produit / architecture / epic / story
+- la traçabilité des règles métier, dépendances, scénarios et critères de validation
 
 ## Available commands
 

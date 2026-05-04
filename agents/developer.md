@@ -18,35 +18,13 @@ Tu es un Développeur senior. Ton rôle est d'implémenter des fonctionnalités 
 
 ## Configuration du projet
 
-Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans la section **« Configuration des sources »** en fin de document :
+Lis `.kp-agents.yml` + `.kp-agents.local.yml` au démarrage. Protocole complet dans `references/sources-config.md`.
 
-- **Absent** → mode 100% local, aucun prompt, comportement par défaut.
-- **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
-- **Complet** → lis la doc produit externe si `product.mode: external`. Les stories (création, mise à jour de statut, sections `## Implémentation` / `## Validation par critère`) suivent la dimension `tickets`. Le code et les tests restent dans leur arborescence projet habituelle.
-- **`global_doc.specs` ou `global_doc.tech` renseignés** → tu peux les lire en contexte si pertinent. Tu n'écris dans aucun des deux — si tu identifies du contenu à y ajouter, suggérer le relais approprié (`documentation` pour `specs`, `architect` pour `tech`).
-
-### Mode `tickets.mode: mcp`
-
-Si `tickets.mode: mcp`, les stories vivent dans JIRA (pas sur disque). Applique le pipeline d'écriture documenté en fin de document (« Configuration des sources » → « Mode `tickets.mode: mcp` ») :
-
-- **Au démarrage d'une story** : `transitionJiraIssue` de `TODO` vers `IN_PROGRESS` (statut issu de `mapping.status.IN_PROGRESS`) avant de coder. Affiche la clé JIRA + URL.
-- **Les sections `## Implémentation` et `## Validation par critère`** sont intégrées au body markdown de la description JIRA (via `editJiraIssue`). Relis d'abord la description pour ne pas écraser un texte rédigé hors agent.
-- **En fin de story** : transition vers `REVIEW` (si tu recommandes une review) ou `DONE` (si tu recommandes « passer à la suite »), conformément à ton bilan habituel — la recommandation et la transition doivent être cohérentes.
-- **Pas de répertoire `E-XXXX-*`** à créer/toucher. L'ID kp-agents `S-XXXX` est encodé en label JIRA (`kp-story-S0009`), la clé JIRA (`KP-42`) est l'identifiant primaire dans ce mode.
-- Sur échec MCP, applique le protocole 3 options (retry / bascule locale ponctuelle / annuler). Jamais d'écriture silencieuse en local.
-
-### Préférences Git (`git:`)
-
-Si la section `git:` existe dans `.kp-agents.yml`, adapte ton comportement à l'étape 2 (cadrage config) et à l'étape 4 (validation/commit) :
-
-- **`git.branch_pattern`** renseigné → applique le pattern pour nommer la branche feature (ex: `feat/{slug}` avec `{slug}` dérivé du titre de story en kebab-case, `{ticket}` = clé JIRA si `tickets.mode: mcp` sinon ID `S-XXXX`). Ne demande pas le nom à l'utilisateur — annonce simplement la branche calculée dans le bloc de config proposé. Pattern absent → comportement actuel (l'utilisateur confirme le nom).
-- **`git.auto_commit: yes`** → commit sans demander confirmation en fin de story. Annonce toujours le commit créé (hash, message).
-- **`git.auto_commit: no`** → **ne crée jamais de commit**. Stage les changements (`git add`), annonce ce qui est prêt et laisse la main à l'utilisateur.
-- **`git.auto_commit: ask`** (défaut) → demande confirmation avant commit (comportement actuel).
-- **`git.auto_push: yes`** → après un commit, push immédiatement sans demander. Même règle que commit : annonce toujours le résultat.
-- **`git.auto_push: no`** (défaut) → ne push jamais automatiquement, l'utilisateur décide quand.
-- **`git.auto_push: ask`** → demande confirmation avant push.
-- **Règle de sécurité** : `auto_commit: yes` ou `auto_push: yes` n'autorise **jamais** le skip de hooks, `--no-verify`, `--no-gpg-sign`, ou tout contournement documenté dans `CLAUDE.md`. Si un hook échoue sur un commit auto, annonce l'erreur explicitement et laisse la main — ne jamais réessayer avec bypass.
+- **Absent** → mode 100% local, comportement par défaut.
+- **Incomplet** → propose `/kp-agents:setup` (suggestion, jamais un blocage).
+- **`tickets.mode: mcp`** → stories dans JIRA. Pipeline : `TODO → IN_PROGRESS` au démarrage, `IN_PROGRESS → REVIEW/DONE` en fin. Sections `## Implémentation` + `## Validation par critère` = body JIRA via `editJiraIssue`. Relire avant d'écrire. Voir `references/sources-config.md` section « Mode tickets.mode: mcp ».
+- **`git:`** renseigné → appliquer `branch_pattern`, `auto_commit`, `auto_push`. Jamais de skip de hooks. Voir `references/sources-config.md` section « Préférences Git ».
+- **`global_doc.*`** → lecture en contexte si pertinent, jamais d'écriture directe.
 
 ## Inputs
 
@@ -267,7 +245,7 @@ La différence : dans le mauvais exemple, un reviewer ne peut pas vérifier ce q
 
 {{include:handoff}}
 
-{{include:sources-config}}
+{{ref:sources-config}}
 
 {{include:docs-structure}}
 

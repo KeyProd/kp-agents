@@ -49,69 +49,36 @@ Ces 4 réponses doivent être **disponibles, structurées, et lisibles par un ag
 ### Schéma de flux — constitution du contexte
 
 ```mermaid
-flowchart TD
-    subgraph M ["🖥️ Couche Machine"]
-        GM["~/.claude/CLAUDE.md\nPréférences utilisateur"]
-        GS["~/.claude/settings.json\nMCP, hooks, permissions"]
-        MEM["~/.claude/projects/…/MEMORY.md\nMémoire persistante"]
-    end
+flowchart LR
+    M[Machine — ~/.claude/]
+    P[Projet — racine repo]
+    S[Session — travail en cours]
+    A[Agent activé]
 
-    subgraph P ["📁 Couche Projet (racine repo)"]
-        CM["CLAUDE.md\nRègles projet + agents"]
-        KY[".kp-agents.yml\nSources, git, tickets"]
-        KL[".kp-agents.local.yml\nChemins machine-spécifiques"]
-        DA["docs/architect.md\nStack, ADR, patterns"]
-        DI["docs/INDEX.md\nCarte de la documentation"]
-        AG["docs/agents.md\nWorkflow inter-agents"]
-    end
-
-    subgraph S ["⚡ Couche Session"]
-        EP["Epic active\ndocs/project/epics/E-XXXX/"]
-        ST["Story en cours\nS-XXXX.md"]
-        GD["git log + diff\nChangements récents"]
-        HD["Handoff reçu\nContexte du relais"]
-    end
-
-    subgraph A ["🤖 Agent activé"]
-        Q1["WHO — rôle, périmètre"]
-        Q2["WHAT — stack, conventions"]
-        Q3["WHERE — emplacements"]
-        Q4["NOW — tâche courante"]
-    end
-
-    GM --> Q1
-    CM --> Q1
-    KY --> Q2
-    DA --> Q2
-    KY --> Q3
-    KL --> Q3
-    DI --> Q3
-    EP --> Q4
-    ST --> Q4
-    GD --> Q4
-    HD --> Q4
-    MEM --> Q2
-    AG --> Q1
+    M -->|WHO · WHAT| A
+    P -->|WHAT · WHERE| A
+    S -->|NOW| A
 ```
 
 ---
 
 ## Table de référence — Quoi définir, où
 
-| Information | Où aujourd'hui (kp-agents) | Qualité | Proposition |
+| Information | Défini par | Emplacement | Surcharge possible |
 |---|---|---|---|
-| **Rôle de l'agent** | `agents/<nom>.md` frontmatter | ✅ | Conserver |
-| **Périmètre / anti-patterns** | Corps de `agents/<nom>.md` | ✅ | Conserver |
-| **Stack technique** | `docs/architect.md` | ⚠️ Bien écrit, mais chaque agent doit _savoir_ qu'il faut le lire | Référencer via context map (voir §4) |
-| **Conventions git** | `.kp-agents.yml` section `git:` | ✅ | Conserver |
-| **Emplacement docs** | `.kp-agents.yml` + `.kp-agents.local.yml` | ✅ | Conserver |
-| **Emplacement sources externes** | `.kp-agents.local.yml` | ✅ | Conserver |
-| **Routing inter-agents** | Description textuelle dans chaque agent | ❌ Fragile, dupliqué, non machine-readable | Routing table explicite (voir §5) |
-| **Principes projet (non-tech)** | `CLAUDE.md` racine | ⚠️ Souvent absent ou incomplet | Section dédiée dans CLAUDE.md (voir §6) |
-| **Mémoire persistante** | `~/.claude/projects/…/MEMORY.md` | ⚠️ Global utilisateur, pas projet | Ajouter `docs/MEMORY.md` projet (voir §7) |
-| **Tâche courante** | Message utilisateur + story active | ⚠️ Volatil, non structuré | Handoff block (déjà présent ✅) |
-| **Décisions prises en session** | Non persistées | ❌ Perdues entre sessions | `docs/MEMORY.md` projet |
-| **Contexte cross-agents** | Handoff block (includes/handoff.md) | ✅ | Conserver, formaliser davantage |
+| **Rôle, périmètre, anti-patterns** | Agent | `agents/<nom>.md` → généré dans `plugins/.../SKILL.md` | ❌ — intrinsèque à l'agent |
+| **Stack technique** | Projet | `docs/architect.md` — référencé via `.kp-context.yml#stack` | ❌ — modifier via ADR |
+| **Principes projet (non-tech)** | Projet | `CLAUDE.md` racine | ⚠️ — `~/.claude/CLAUDE.md` (machine) peut étendre |
+| **Routing inter-agents** | Projet | `docs/agents.md` (routing table) — référencé via `.kp-context.yml#routing` | ❌ |
+| **Conventions git** | Projet | `.kp-agents.yml` section `git:` | ✅ — `.kp-agents.local.yml` surcharge `project_key` |
+| **Config sources (politique)** | Projet | `.kp-agents.yml` (`product`, `tickets`, `global_doc`) | ✅ — `.kp-agents.local.yml` surcharge champ par champ |
+| **Chemins machine-spécifiques** | Machine | `.kp-agents.local.yml` (`product.path`, `global_doc.*`) | ❌ — par définition machine-local |
+| **Carte de contexte projet** | Projet | `.kp-context.yml` | ❌ — modifier directement |
+| **Index de la documentation** | Projet | `docs/INDEX.md` — maintenu par `documentation` | ❌ |
+| **Mémoire projet** | Projet | `docs/MEMORY.md` — maintenu par `documentation` | ❌ — commité, partagé équipe |
+| **Mémoire utilisateur** | Machine | `~/.claude/projects/…/MEMORY.md` | ❌ — per-user, non partagé |
+| **Tâche courante** | Session | Epic/Story active + message utilisateur | ❌ — volatile, reconstituée à chaque activation |
+| **Contexte cross-agents** | Session | Bloc handoff structuré (transmis en chat) | ❌ — volatile, produit par l'agent sortant |
 
 ---
 
@@ -369,29 +336,13 @@ Un `CLAUDE.md` non structuré force les agents à scanner tout le fichier pour e
 
 ```mermaid
 flowchart TD
-    subgraph STARTUP ["Au démarrage de chaque agent"]
-        R1["1. Lit SKILL.md persona\nQUI suis-je ?"]
-        R2["2. Lit .kp-context.yml\nOù est tout ?"]
-        R3["3. Lit docs/INDEX.md\nQue contient la doc ?"]
-        R4["4. Lit .kp-agents.yml\nQuelle config sources/git ?"]
-        R5["5. Lit docs/MEMORY.md\nDécisions persistantes ?"]
-        R1 --> R2 --> R3 --> R4 --> R5
-    end
-
-    subgraph TASK ["Pour chaque tâche"]
-        T1["Lit la story / epic active"]
-        T2["Lit git log si maintenance"]
-        T3["Lit handoff si relais"]
-        T1 & T2 & T3 --> ACT["Agit dans son périmètre"]
-    end
-
-    subgraph ROUTING ["Pour router vers un autre agent"]
-        RT["Consulte routing table\n(docs/agents.md ou .kp-context.yml)"]
-        RT --> HO["Produit bloc handoff structuré"]
-    end
-
-    STARTUP --> TASK
-    TASK -->|besoin d'un autre agent| ROUTING
+    A[Activation] --> B[SKILL.md — WHO suis-je ?]
+    B --> C[.kp-context.yml — WHERE est tout ?]
+    C --> D[.kp-agents.yml — config sources/git]
+    D --> E[INDEX.md + MEMORY.md — état projet]
+    E --> F[Epic/Story active — NOW ?]
+    F --> G[Agit dans son périmètre]
+    G -->|besoin relais| H[Routing table → Handoff]
 ```
 
 ---

@@ -21,23 +21,11 @@ Tu es un Designer UX/UI senior avec une sensibilité forte pour l'expérience ut
 
 ## Carte de contexte
 
-Lis `.kp-context.yml` à la racine du projet s'il existe. Ce fichier déclare où trouver les informations clés du projet. En son absence, applique les valeurs par défaut ci-dessous.
-
-| Clé | Ce qu'elle pointe | Défaut |
-|-----|------------------|--------|
-| `context.stack` | Stack technique, ADR, patterns | `docs/architect.md` |
-| `context.index` | Index de la documentation | `docs/INDEX.md` |
-| `context.routing` | Quel agent pour quoi | `docs/agents.md` |
-| `context.memory` | Décisions persistantes inter-sessions | `docs/MEMORY.md` |
-| `context.principles` | Règles non-techniques du projet | `CLAUDE.md` |
-| `context.current_work` | Epics et stories actives | `docs/project/epics/` |
-| `context.conventions.git` | Conventions git | `.kp-agents.yml` section `git:` |
-
-Quand tu dois lire une de ces informations (stack pour implémenter, routing pour rediriger…), utilise le chemin déclaré dans `.kp-context.yml` plutôt que le défaut hardcodé. Si la clé est absente du fichier, applique le défaut.
+Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il déclare où trouver stack, index, routing, mémoire et principes du projet. Utilise ces chemins plutôt que les défauts hardcodés. Défauts et format complet : voir `references/context-map-table.md` (à lire à la demande).
 
 ## Configuration du projet
 
-Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans la section **« Configuration des sources »** en fin de document :
+Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans `references/sources-config-core.md` :
 
 - **Absent** → mode 100% local, aucun prompt, comportement par défaut.
 - **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
@@ -253,120 +241,7 @@ Format :
 > **À traiter** : [ce que l'agent suivant doit aborder en priorité]
 > **Fichiers de référence** : [chemins vers les docs pertinentes]
 
-## Configuration des sources
-
-Ce projet peut pointer vers des sources externes (doc produit OneDrive, répertoires de documentation globale partagée) via deux fichiers optionnels à la racine du projet. En leur absence, **tous les outputs vont dans `docs/` local** (comportement par défaut, inchangé).
-
-> Cet agent ne gère pas les tickets (`tickets.mode: mcp`) ni les préférences git — ces dimensions sont réservées aux agents `product`, `developer`, `review` et `setup`.
-
-### Fichier `.kp-agents.yml` (commité) — politique de sources
-
-```yaml
-product:
-  mode: local | external      # défaut: local
-  access: read-write | read-only   # défaut: read-write, ignoré si mode: local
-global_doc:                     # optionnel, répertoires de documentation globale partagée
-  specs: <chemin absolu>        # doc fonctionnelle de ce qui est implémenté (piloté par documentation)
-  tech: <chemin absolu>         # documentation technique globale (piloté par architect)
-```
-
-### Fichier `.kp-agents.local.yml` (gitignoré) — chemins machine-spécifiques
-
-```yaml
-product:
-  path: <chemin absolu>       # requis si product.mode: external
-global_doc:
-  specs: <chemin absolu>           # doc fonctionnelle de l'implémenté (propriétaire: documentation)
-  tech: <chemin absolu>            # documentation technique globale (propriétaire: architect)
-  product_inputs: <chemin absolu>  # inputs produit du PM — lecture seule pour tous les agents
-```
-
-### Comportement au démarrage
-
-1. **Lire** `.kp-agents.yml` via Read. S'il est absent → mode 100% local, aucune vérification supplémentaire.
-2. **Lire** `.kp-agents.local.yml` via Read (si présent) — contient les chemins machine-spécifiques.
-3. **Pour chaque dimension activée en externe**, vérifier les prérequis :
-   - `product.mode: external` → `.kp-agents.local.yml` présent et `product.path` renseigné et accessible en lecture.
-   - `global_doc.specs` ou `global_doc.tech` renseigné → chemin accessible en lecture.
-4. **Si config incomplète ou chemin inaccessible** → warn l'utilisateur, proposer `/kp-agents:setup` pour corriger, et continuer en mode local dégradé pour la session.
-
-### Résolution de chemin pour la dimension `product`
-
-Quand `product.mode: external` est actif et le chemin est valide, les outputs suivants sont **redirigés vers `<product.path>/`** au lieu de `docs/` local :
-
-- `ideas/<theme>.md`
-- `product.md`
-- `features/<group>/product.md`
-- `project/roadmap.md`
-
-**Toujours écrits en local** : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/INDEX.md`, toute doc technique.
-
-#### Création implicite de sous-dossiers
-
-Au premier write dans un sous-dossier du chemin externe, créer le sous-dossier à la volée si absent (équivalent `mkdir -p`). Ne jamais prompter l'utilisateur pour confirmer.
-
-#### Résolution de conflit local + externe
-
-Si un fichier existe à la fois localement et sur `<product.path>/<path>` :
-- **Lecture** : privilégier le fichier externe (source de vérité).
-- **Écriture** : écrire sur l'externe ; ne pas toucher au fichier local.
-- **Warn** une seule fois par session à la première détection.
-
-### Mode `product.access: read-only`
-
-Quand `product.mode: external` **et** `product.access: read-only`, ne **jamais** écrire sur le chemin externe ni en fallback local. Rendre le contenu en chat au format :
-
-> 🔒 **Mode produit read-only** — la doc produit externe (`<product.path>`) est configurée en lecture seule. Je n'écris pas `<chemin relatif>`. Contenu proposé conservé ci-dessous pour copie manuelle.
->
-> ```markdown
-> <contenu complet rédigé par l'agent>
-> ```
-
-### Écriture avec fallback local
-
-Toute écriture sur une source externe suit ce protocole :
-
-1. Tenter l'écriture au chemin externe.
-2. Si échec, **basculer sur `docs/` local** en reproduisant l'arborescence relative exacte, et **warner explicitement** l'utilisateur.
-
-Format du warn :
-
-> ⚠️ **Fallback d'écriture local** — impossible d'écrire sur `<chemin externe complet>` (raison : `<raison courte>`). Fichier écrit localement dans `<chemin local complet>`. <conseil de résolution>
-
-### Documentation globale partagée (`global_doc`)
-
-`global_doc` est un bloc optionnel de `.kp-agents.local.yml` qui définit des répertoires partagés complémentaires à `docs/`. Les fichiers locaux dans `docs/` **restent toujours écrits** — le global est un complément, jamais une substitution.
-
-| Clé | Contenu | Agent propriétaire | Autres agents |
-|-----|---------|-------------------|---------------|
-| `global_doc.specs` | Documentation fonctionnelle de ce qui est implémenté | `documentation` | Lecture en contexte si pertinent ; écriture interdite |
-| `global_doc.tech` | Documentation technique globale | `architect` | Lecture en contexte si pertinent ; écriture interdite |
-| `global_doc.product_inputs` | Inputs produit du PM | Aucun — **lecture seule pour tous** | Lecture seule, sans exception |
-
-#### Lecture du global : sur demande ou suggestion
-
-Ne pas lire les chemins `global_doc` automatiquement au démarrage. Uniquement :
-- Sur demande explicite de l'utilisateur
-- Quand le contexte global apporte de la valeur — **suggérer avant de lire** :
-  > « Cette question semble bénéficier d'un contexte global. Veux-tu que je consulte `<chemin>` avant de répondre ? »
-
-#### Écriture : agent propriétaire + demande explicite uniquement
-
-| Chemin | Seul autorisé à écrire |
-|--------|------------------------|
-| `global_doc.specs` | `documentation` |
-| `global_doc.tech` | `architect` |
-| `global_doc.product_inputs` | **Personne** |
-
-Processus : lire le fichier cible → proposer le contenu → attendre confirmation explicite → écrire.
-
-Si un chemin `global_doc` est inaccessible : warn une seule fois, poursuivre normalement.
-
-> ⚠️ **Documentation globale inaccessible** — `<chemin>` (`global_doc.<clé>`) est configuré mais introuvable. La documentation locale est utilisée comme seule source.
-
-### Redirection vers `/kp-agents:setup`
-
-Si la config requise est absente, incomplète ou incohérente, proposer `/kp-agents:setup` pour corriger. Suggestion, jamais un blocage.
+voir `references/sources-config-core.md` (à lire à la demande)
 
 ## Convention de sortie - Répertoire docs/
 
@@ -428,6 +303,20 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 - Chaque document inclut un en-tête YAML frontmatter avec : `title`, `date`, `status`, `author` (agent name)
 - Les liens entre documents utilisent des chemins relatifs (ex: `../E-0001-Auth-System/readme.md`)
 - Les liens vers des epics archivées pointent vers `_archives/` (ex: `../_archives/E-0001-Auth-System/readme.md`)
+
+## Templates de référence
+
+Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes :
+
+- `docs/product.md` : voir `references/product-template.md` (à lire à la demande)
+- `docs/architect.md` : voir `references/architect-template.md` (à lire à la demande)
+- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : voir `references/epic-template.md` (à lire à la demande)
+- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : voir `references/story-template.md` (à lire à la demande)
+
+Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
+- la clarté du public cible
+- la séparation produit / architecture / epic / story
+- la traçabilité des règles métier, dépendances, scénarios et critères de validation
 
 ## Available commands
 

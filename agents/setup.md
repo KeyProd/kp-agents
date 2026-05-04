@@ -281,7 +281,7 @@ Termine par :
 
 {{include:sources-config}}
 
-{{include:docs-structure-light}}
+{{include:docs-structure}}
 
 ## Available commands
 

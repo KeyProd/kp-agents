@@ -137,49 +137,13 @@ Pour chaque projet, propose une **identité visuelle distinctive** :
 - **Composants signature** : 2-3 éléments UI qui différencient visuellement le produit (forme des boutons, style des cartes, micro-animations, iconographie custom...)
 - **Ce qu'on évite explicitement** : cite les patterns génériques dont on se démarque et pourquoi
 
-### 5. Spécifications pour le Developer
+### 5. Spécifications pour le Developer (mode feature)
 
-Quand le design est validé, produis des specs exploitables couvrant : tokens CSS custom properties, hiérarchie des composants, états par composant, breakpoints, animations.
+Quand le design est validé, produis des specs exploitables (tokens CSS, composants, états, breakpoints, animations) et le lien story↔specs visuelles.
 
-**Mini-template de specs** (à adapter au projet) :
-
-```css
-/* Design tokens */
-:root {
-  --color-primary: #2E5CFF;
-  --color-accent: #FF9F1C;
-  --color-bg: #FFFFFF;
-  --color-text: #1A1A1A;
-
-  --space-1: 4px;  --space-2: 8px;  --space-3: 16px;  --space-4: 24px;  --space-6: 48px;
-  --radius-sm: 4px; --radius-md: 8px;
-
-  --font-heading: "Inter Tight", sans-serif;
-  --font-body: "Inter", sans-serif;
-}
-```
-
-```markdown
-### Composant `Button`
-- **États** : default, hover, active, focus-visible, disabled, loading
-- **Variantes** : primary, secondary, ghost, danger
-- **Taille min tactile** : 44×44 px (WCAG)
-- **Transition** : `background 150ms ease-out` au hover ; aucune sur focus-visible (accessibilité)
-
-### Breakpoints
-| Nom    | min-width | Usage                          |
-|--------|-----------|--------------------------------|
-| sm     | 0         | mobile portrait (défaut)       |
-| md     | 768px     | tablette                       |
-| lg     | 1024px    | desktop                        |
-| xl     | 1440px    | desktop large                  |
-```
-
-Adapte la liste aux composants réellement présents ; ne produis pas un template vide.
+**Format détaillé et templates** : `references/uxui-dev-specs.md` (à lire à la demande lors de la production des specs).
 
 ## Output
-
-### Fichiers générés
 
 Crée ou mets à jour dans `docs/features/<feature-group>/` :
 - `ux.md` — personas, parcours utilisateur, wireframes, décisions UX
@@ -187,20 +151,6 @@ Crée ou mets à jour dans `docs/features/<feature-group>/` :
 
 Si c'est la première intervention sur le projet, crée aussi :
 - `docs/design-system.md` — identité visuelle globale, tokens partagés, composants communs
-
-### Lien avec les stories
-
-Si des stories existent, ajoute dans chaque story concernée une section `## UX/UI` :
-```markdown
-## UX/UI
-
-**Persona principale** : [Nom]
-**Parcours** : [résumé du flow en 1 ligne]
-**Points d'attention** :
-- [point 1]
-- [point 2]
-**Specs visuelles** : voir [docs/features/<group>/ui.md](lien relatif)
-```
 
 ## Gotchas
 
@@ -233,6 +183,8 @@ Format :
 > **Questions résolues** : [points déjà clarifiés avec l'utilisateur]
 > **À traiter** : [ce que l'agent suivant doit aborder en priorité]
 > **Fichiers de référence** : [chemins vers les docs pertinentes]
+
+voir `references/uxui-dev-specs.md` (à lire à la demande)
 
 voir `references/sources-config-core.md` (à lire à la demande)
 

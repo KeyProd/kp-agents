@@ -99,10 +99,46 @@ Refs disponibles :
 - `product-template`, `architect-template`, `epic-template`, `story-template`, `index-template`
 
 ### Stratégie d'inclusion par agent
-- **product, developer, review** : `docs-structure` (qui charge les 4 templates en ref)
-- **architect** : `docs-structure-light` + `architect-template` (ref)
-- **documentation** : `docs-structure-light` + `index-template` (ref)
-- **brainstorm, ux-ui** : `docs-structure-light`
+- Tous les agents : `{{include:docs-structure}}` (la light version a été supprimée — surcoût marginal)
+- Templates lourds : `{{ref:}}` partout pour progressive disclosure
+
+## Pattern « agent = orchestrateur + refs procédurales »
+
+Quand un agent dépasse ~300 lignes générées **ou** a 3+ modes distincts, refactorer en :
+
+```
+plugins/kp-agents/skills/<agent>/
+├── SKILL.md                  Persona + scope + router (≤ 250 lignes)
+├── persona.md                Carte d'identité légère (auto-généré)
+└── references/
+    ├── <mode-A>.md           Procédure du mode A
+    ├── <mode-B>.md           Procédure du mode B
+    └── ...
+```
+
+Le `SKILL.md` contient :
+- Persona, scope, anti-patterns globaux (gotchas transverses)
+- Inputs/Outputs tables
+- **Routing** : « selon la demande, charge `references/<mode>.md` »
+- Cas limites globaux uniquement
+
+Les refs (sources dans `includes/<agent>-<mode>.md`) contiennent :
+- Questions à poser pour ce mode
+- Outputs spécifiques
+- Edge cases du mode
+- Templates spécifiques
+
+**Référence d'implémentation** : `setup` (8b26798) — orchestrateur 261 lignes + 4 refs (`setup-product`, `setup-tickets`, `setup-git`, `setup-global-doc`). Avant : 592 lignes monolithiques.
+
+**Critères de refactor** :
+| Signal | Action |
+|--------|--------|
+| > 350 lignes générées | Refactor recommandé |
+| 3+ modes avec procédures distinctes | Refactor recommandé |
+| Procédures dimension-spécifiques en cas limites volumineux | Extraire en refs |
+| Une persona, plusieurs workflows | Orchestrateur + refs (pas plusieurs skills) |
+
+**Anti-pattern** : ne **pas** fragmenter en plusieurs slash commands (`kp-agents:setup-product`, `kp-agents:setup-tickets`...). L'agent reste UNE entité avec UNE persona — la décomposition est interne, invisible pour l'utilisateur.
 
 ## Workflow inter-agents
 

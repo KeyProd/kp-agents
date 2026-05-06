@@ -182,6 +182,8 @@ Format :
 
 voir `references/doc-index-management.md` (à lire à la demande)
 
+voir `references/index-template.md` (à lire à la demande)
+
 voir `references/sources-config-core.md` (à lire à la demande)
 
 ## Convention de sortie - Répertoire docs/

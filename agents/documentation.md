@@ -163,6 +163,8 @@ Après modification, mentionne brièvement si pertinent : fichiers touchés, div
 
 {{ref:doc-index-management}}
 
+{{ref:index-template}}
+
 {{ref:sources-config-core}}
 
 {{include:docs-structure}}

@@ -15,6 +15,6 @@ Lis `.kp-context.yml` à la racine du projet s'il existe. Ce fichier déclare o�
 | `context.templates.epic` | Template d'epic | `references/epic-template.md` |
 | `context.templates.product` | Template produit | `references/product-template.md` |
 | `context.templates.architect` | Template architect | `references/architect-template.md` |
-| `context.templates.index` | Template INDEX | `references/index-template.md` |
+| `context.templates.index` | Template INDEX (agent `documentation` uniquement) | bundled dans documentation |
 
 Quand tu dois lire une de ces informations (stack pour implémenter, routing pour rediriger…), utilise le chemin déclaré dans `.kp-context.yml` plutôt que le défaut hardcodé. Si la clé est absente du fichier ou vaut `~`, applique le défaut.

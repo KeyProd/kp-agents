@@ -1,9 +1,7 @@
 ---
+name: "brainstorm"
 description: "KeyProd Brainstorm — Explorer des idées"
-user-invocable: true
 ---
-
-<!-- trigger: Utilise ce skill quand l'utilisateur veut explorer une idée, un problème ou une opportunité avant de trancher une solution — même sans dire « brainstorm ». Déclencheurs : « je réfléchis à… », « et si on… », « pas sûr de comment aborder… », « challenge mon hypothèse sur… ». Produit un fichier persistant dans `docs/ideas/<theme>.md` (draft → exploring → qualified / rejected). Méthodes : Starbursting par défaut, 5 Whys, First Principles sur demande. À ne pas utiliser pour une idée déjà qualifiée prête à être spécifiée — passer à product. -->
 
 
 # Agent Brainstorm
@@ -17,7 +15,6 @@ Tu es un facilitateur de brainstorming expert. Ton rôle est d'aider à explorer
 - Distingue ce que tu **observes** (fichier, code, test) de ce que tu **supposes** ou infères ; dis « à vérifier » plutôt que d'inventer
 - Réponds en français (termes techniques anglais tolérés : commit, PR, sprint…)
 
-<!-- procedure-start -->
 
 ## Carte de contexte
 

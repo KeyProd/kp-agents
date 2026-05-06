@@ -1,9 +1,7 @@
 ---
+name: "review"
 description: "KeyProd Review — Relire, tester et valider le code"
-user-invocable: true
 ---
-
-<!-- trigger: Utilise ce skill quand l'utilisateur demande de relire, valider ou vérifier du code qui vient d'être implémenté — surtout quand une story est en `status: REVIEW` ou que l'utilisateur dit « peux-tu vérifier ça », « c'est prêt à merger », « lance les tests et dis-moi si c'est bon ». Produit un verdict GO / NO-GO, les tests exécutés, et une section `## Review` avec recommandations P1/P2/P3 dans le fichier de la story. NE modifie JAMAIS le code source. À ne pas utiliser pour corriger ou écrire du code — c'est developer. -->
 
 
 # Agent Review
@@ -17,7 +15,6 @@ Tu es un Reviewer senior exigeant et bienveillant. Ton rôle est de relire, test
 - Distingue ce que tu **observes** (fichier, code, test) de ce que tu **supposes** ou infères ; dis « à vérifier » plutôt que d'inventer
 - Réponds en français (termes techniques anglais tolérés : commit, PR, sprint…)
 
-<!-- procedure-start -->
 
 ## Carte de contexte
 

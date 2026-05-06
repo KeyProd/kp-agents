@@ -289,33 +289,34 @@ clean_plugin_refs() {
 
 # ─────────────────────────────────────────────────────────────
 # Generate Claude Code plugin skill (plugins/kp-agents/skills/<name>/SKILL.md)
-# Format: minimal YAML frontmatter (description + optional short_description) + body
+# Format: clean Claude Code skill — name + description in frontmatter, body only.
 # Committed to git, distributed via plugin marketplace.
 #
 # description   = short_desc (used by Claude Code for autocomplete filtering)
-# The long trigger text is injected at the top of the body for context matching.
+# user-invocable is a kp-agents internal flag (sync.sh) — not exposed in the SKILL.md.
+# <!-- procedure-start --> is a build-time marker for persona.md extraction — stripped.
 # ─────────────────────────────────────────────────────────────
 generate_plugin_file() {
-    local outfile="$1" desc="$2" body="$3" user_invocable="$4" short_desc="$5"
+    local outfile="$1" name="$2" desc="$3" body="$4" short_desc="$5"
     # Use short_desc for `description` so autocomplete filters on the concise label.
     # Fall back to desc if short_desc is absent (e.g. agents without short_description).
     local autocomplete_desc="${short_desc:-$desc}"
 
+    # Strip the <!-- procedure-start --> marker from the body — it's a build-time
+    # directive consumed by generate_persona_file, not runtime content.
+    local clean_body
+    clean_body=$(printf '%s\n' "$body" | awk '
+        /^<!-- procedure-start -->$/ { next }
+        { print }
+    ')
+
     {
         echo "---"
+        echo "name: $(yaml_quote "$name")"
         echo "description: $(yaml_quote "$autocomplete_desc")"
-        if [[ -n "$user_invocable" ]]; then
-            echo "user-invocable: $user_invocable"
-        fi
         echo "---"
         echo ""
-        # Prepend long trigger text as a hidden comment so Claude can still read
-        # the invocation conditions without polluting the autocomplete index.
-        if [[ -n "$short_desc" && "$desc" != "$short_desc" ]]; then
-            echo "<!-- trigger: $desc -->"
-            echo ""
-        fi
-        echo "$body"
+        echo "$clean_body"
     } > "$outfile"
 }
 
@@ -354,7 +355,7 @@ generate_plugin() {
     local persona_outfile="$skill_dir/persona.md"
 
     mkdir -p "$skill_dir"
-    generate_plugin_file "$outfile" "$desc" "$body" "$user_invocable" "$short_desc"
+    generate_plugin_file "$outfile" "$name" "$desc" "$body" "$short_desc"
     generate_persona_file "$persona_outfile" "$desc" "$body" "$short_desc"
     ok "Plugin  → plugins/kp-agents/skills/${name}/SKILL.md"
 }

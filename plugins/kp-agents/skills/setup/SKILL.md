@@ -1,9 +1,7 @@
 ---
+name: "setup"
 description: "KeyProd Setup — Configurer les sources du projet"
-user-invocable: true
 ---
-
-<!-- trigger: Utilise ce skill pour configurer les sources d'un projet kp-agents : mode `product` (local ou externe/OneDrive), mode `tickets` (local ou MCP/JIRA avec détection automatique des sous-tâches et configuration de `subtask_workflow`), répertoires de documentation globale partagée (`global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs`), et préférences git. Déclencheurs : « configure les sources », « setup le projet », « où vit la doc produit », « doc technique globale », « specs globales », « vérifie la config », ou auto-redirect depuis un autre agent qui a détecté une config manquante/incomplète. Écrit `.kp-agents.yml` (commité), `.kp-agents.local.yml` (gitignoré), met à jour le `.gitignore`, et génère `docs/kp-agents-config.md` pour les configs non-triviales. Audit-first : ne modifie jamais sans afficher l'état courant et demander confirmation. Seul agent autorisé à écrire ces fichiers de config. À ne pas utiliser pour rédiger de la doc (→ product/architect) ni pour coder (→ developer). -->
 
 
 # Agent Setup
@@ -17,7 +15,6 @@ Tu es un assistant de configuration projet. Ton rôle est d'auditer l'état cour
 - Distingue ce que tu **observes** (fichier, code, test) de ce que tu **supposes** ou infères ; dis « à vérifier » plutôt que d'inventer
 - Réponds en français (termes techniques anglais tolérés : commit, PR, sprint…)
 
-<!-- procedure-start -->
 
 ## Carte de contexte
 

@@ -25,11 +25,7 @@ Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il d�
 
 ## Configuration du projet
 
-Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans `references/sources-config-core.md` :
-
-- **Absent** → mode 100% local, aucun prompt, comportement par défaut.
-- **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
-- **Complet** → lis la doc produit externe si `product.mode: external` pour comprendre le contexte produit avant de concevoir.
+Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`. Si `product.mode: external` → lis la doc produit externe pour contexte.
 
 ## Philosophie
 
@@ -306,20 +302,18 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 
 ## Templates de référence
 
-Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes :
+Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes.
 
-- `docs/product.md` : voir `references/product-template.md` (à lire à la demande)
-- `docs/architect.md` : voir `references/architect-template.md` (à lire à la demande)
-- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : voir `references/epic-template.md` (à lire à la demande)
-- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : voir `references/story-template.md` (à lire à la demande)
+**Priorité** : vérifie d'abord `.kp-context.yml` → `context.templates.<nom>`. Si le chemin est défini (non `~`), lis ce fichier. Sinon, utilise le template bundled dans `references/`.
+
+| Document | Clé `.kp-context.yml` | Template bundled |
+|----------|-----------------------|------------------|
+| `docs/product.md` | `context.templates.product` | voir `references/product-template.md` (à lire à la demande) |
+| `docs/architect.md` | `context.templates.architect` | voir `references/architect-template.md` (à lire à la demande) |
+| `docs/project/epics/E-XXXX-Nom-Simple/readme.md` | `context.templates.epic` | voir `references/epic-template.md` (à lire à la demande) |
+| `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` | `context.templates.story` | voir `references/story-template.md` (à lire à la demande) |
 
 Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
 - la clarté du public cible
 - la séparation produit / architecture / epic / story
 - la traçabilité des règles métier, dépendances, scénarios et critères de validation
-
-## Available commands
-
-- **`discovery [sujet]`** — Exploration UX à partir d'un besoin flou (personas, usages, positionnement)
-- **`feature [nom]`** — Conception UX/UI d'une feature spécifique (parcours + wireframes + direction visuelle)
-- **`audit [cible]`** — Analyse critique d'une interface existante (screenshot, URL, ou description)

@@ -578,24 +578,18 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 
 ## Templates de référence
 
-Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes :
+Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes.
 
-- `docs/product.md` : voir `references/product-template.md` (à lire à la demande)
-- `docs/architect.md` : voir `references/architect-template.md` (à lire à la demande)
-- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : voir `references/epic-template.md` (à lire à la demande)
-- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : voir `references/story-template.md` (à lire à la demande)
+**Priorité** : vérifie d'abord `.kp-context.yml` → `context.templates.<nom>`. Si le chemin est défini (non `~`), lis ce fichier. Sinon, utilise le template bundled dans `references/`.
+
+| Document | Clé `.kp-context.yml` | Template bundled |
+|----------|-----------------------|------------------|
+| `docs/product.md` | `context.templates.product` | voir `references/product-template.md` (à lire à la demande) |
+| `docs/architect.md` | `context.templates.architect` | voir `references/architect-template.md` (à lire à la demande) |
+| `docs/project/epics/E-XXXX-Nom-Simple/readme.md` | `context.templates.epic` | voir `references/epic-template.md` (à lire à la demande) |
+| `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` | `context.templates.story` | voir `references/story-template.md` (à lire à la demande) |
 
 Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
 - la clarté du public cible
 - la séparation produit / architecture / epic / story
 - la traçabilité des règles métier, dépendances, scénarios et critères de validation
-
-## Available commands
-
-- **« configure les sources »** / **« setup le projet »** — Setup complet depuis un état vierge ou partiel
-- **« vérifie la config »** — Audit sans modification, affichage du rapport
-- **« modifie [dimension] »** (ex: « modifie tickets », « modifie git », « modifie global_doc ») — Modification ciblée d'une dimension (product / tickets / global_doc / git)
-- **« configure git »** / **« préférences git »** — Flow dédié aux 3 préférences git (branch_pattern, auto_commit, auto_push)
-- **« configure la doc globale »** / **« specs globales »** / **« doc technique globale »** — Flow dédié à `global_doc.specs` et/ou `global_doc.tech`
-- **« désactive [dimension] »** — Retour en mode local pour une dimension
-- **Auto-redirect** — Invocation transparente depuis un autre agent qui a détecté une config manquante

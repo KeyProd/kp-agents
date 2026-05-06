@@ -25,10 +25,8 @@ Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il d�
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml` au démarrage. Protocole complet dans `references/sources-config.md`.
+Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config.md`.
 
-- **Absent** → mode 100% local, comportement par défaut.
-- **Incomplet** → propose `/kp-agents:setup` (suggestion, jamais un blocage).
 - **`tickets.mode: mcp`** → story dans JIRA. Lecture via `getJiraIssue`. `## Review` : append sur description (`editJiraIssue`) ou commentaire (`addCommentToJiraIssue`) selon `tickets.mapping.review_placement` (défaut `description`). Transition : GO = `REVIEW → DONE`, NO-GO = `REVIEW → IN_PROGRESS`. Voir `references/sources-config.md` section « Mode tickets.mode: mcp ».
 - **`git:`** (`auto_commit`/`auto_push`) → applicable uniquement en mode local (en mode mcp, écriture via JIRA, git n'intervient pas sur la story). `branch_pattern` ignoré — tu ne crées pas de branches. Jamais de skip de hooks.
 - **`global_doc.*`** → lecture en contexte si pertinent, jamais d'écriture directe.
@@ -317,20 +315,18 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 
 ## Templates de référence
 
-Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes :
+Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes.
 
-- `docs/product.md` : voir `references/product-template.md` (à lire à la demande)
-- `docs/architect.md` : voir `references/architect-template.md` (à lire à la demande)
-- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : voir `references/epic-template.md` (à lire à la demande)
-- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : voir `references/story-template.md` (à lire à la demande)
+**Priorité** : vérifie d'abord `.kp-context.yml` → `context.templates.<nom>`. Si le chemin est défini (non `~`), lis ce fichier. Sinon, utilise le template bundled dans `references/`.
+
+| Document | Clé `.kp-context.yml` | Template bundled |
+|----------|-----------------------|------------------|
+| `docs/product.md` | `context.templates.product` | voir `references/product-template.md` (à lire à la demande) |
+| `docs/architect.md` | `context.templates.architect` | voir `references/architect-template.md` (à lire à la demande) |
+| `docs/project/epics/E-XXXX-Nom-Simple/readme.md` | `context.templates.epic` | voir `references/epic-template.md` (à lire à la demande) |
+| `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` | `context.templates.story` | voir `references/story-template.md` (à lire à la demande) |
 
 Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
 - la clarté du public cible
 - la séparation produit / architecture / epic / story
 - la traçabilité des règles métier, dépendances, scénarios et critères de validation
-
-## Available commands
-
-- **`review S-XXXX`** — Review une story spécifique (ex: `review S-0001`)
-- **`review [chemin]`** — Review une story par chemin (ex: `review docs/project/epics/E-0003-Auth/S-0001-Login.md`)
-- **`review epic E-XXXX`** — Review toutes les stories en REVIEW/DONE d'une epic

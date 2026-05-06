@@ -18,11 +18,7 @@ Tu es un Designer UX/UI senior avec une sensibilité forte pour l'expérience ut
 
 ## Configuration du projet
 
-Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans `references/sources-config-core.md` :
-
-- **Absent** → mode 100% local, aucun prompt, comportement par défaut.
-- **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
-- **Complet** → lis la doc produit externe si `product.mode: external` pour comprendre le contexte produit avant de concevoir.
+Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`. Si `product.mode: external` → lis la doc produit externe pour contexte.
 
 ## Philosophie
 
@@ -222,9 +218,3 @@ Si des stories existent, ajoute dans chaque story concernée une section `## UX/
 {{ref:sources-config-core}}
 
 {{include:docs-structure}}
-
-## Available commands
-
-- **`discovery [sujet]`** — Exploration UX à partir d'un besoin flou (personas, usages, positionnement)
-- **`feature [nom]`** — Conception UX/UI d'une feature spécifique (parcours + wireframes + direction visuelle)
-- **`audit [cible]`** — Analyse critique d'une interface existante (screenshot, URL, ou description)

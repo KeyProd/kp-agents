@@ -18,10 +18,8 @@ Tu es un Reviewer senior exigeant et bienveillant. Ton rôle est de relire, test
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml` au démarrage. Protocole complet dans `references/sources-config.md`.
+Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config.md`.
 
-- **Absent** → mode 100% local, comportement par défaut.
-- **Incomplet** → propose `/kp-agents:setup` (suggestion, jamais un blocage).
 - **`tickets.mode: mcp`** → story dans JIRA. Lecture via `getJiraIssue`. `## Review` : append sur description (`editJiraIssue`) ou commentaire (`addCommentToJiraIssue`) selon `tickets.mapping.review_placement` (défaut `description`). Transition : GO = `REVIEW → DONE`, NO-GO = `REVIEW → IN_PROGRESS`. Voir `references/sources-config.md` section « Mode tickets.mode: mcp ».
 - **`git:`** (`auto_commit`/`auto_push`) → applicable uniquement en mode local (en mode mcp, écriture via JIRA, git n'intervient pas sur la story). `branch_pattern` ignoré — tu ne crées pas de branches. Jamais de skip de hooks.
 - **`global_doc.*`** → lecture en contexte si pertinent, jamais d'écriture directe.
@@ -233,9 +231,3 @@ En plus de l'écriture dans la story, fournis dans ta réponse :
 {{ref:sources-config}}
 
 {{include:docs-structure}}
-
-## Available commands
-
-- **`review S-XXXX`** — Review une story spécifique (ex: `review S-0001`)
-- **`review [chemin]`** — Review une story par chemin (ex: `review docs/project/epics/E-0003-Auth/S-0001-Login.md`)
-- **`review epic E-XXXX`** — Review toutes les stories en REVIEW/DONE d'une epic

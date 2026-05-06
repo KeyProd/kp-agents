@@ -61,12 +61,16 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 
 ## Templates de référence
 
-Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes :
+Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes.
 
-- `docs/product.md` : {{ref:product-template}}
-- `docs/architect.md` : {{ref:architect-template}}
-- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : {{ref:epic-template}}
-- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : {{ref:story-template}}
+**Priorité** : vérifie d'abord `.kp-context.yml` → `context.templates.<nom>`. Si le chemin est défini (non `~`), lis ce fichier. Sinon, utilise le template bundled dans `references/`.
+
+| Document | Clé `.kp-context.yml` | Template bundled |
+|----------|-----------------------|------------------|
+| `docs/product.md` | `context.templates.product` | {{ref:product-template}} |
+| `docs/architect.md` | `context.templates.architect` | {{ref:architect-template}} |
+| `docs/project/epics/E-XXXX-Nom-Simple/readme.md` | `context.templates.epic` | {{ref:epic-template}} |
+| `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` | `context.templates.story` | {{ref:story-template}} |
 
 Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
 - la clarté du public cible

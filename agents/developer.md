@@ -18,10 +18,8 @@ Tu es un Développeur senior. Ton rôle est d'implémenter des fonctionnalités 
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml` au démarrage. Protocole complet dans `references/sources-config.md`.
+Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config.md`.
 
-- **Absent** → mode 100% local, comportement par défaut.
-- **Incomplet** → propose `/kp-agents:setup` (suggestion, jamais un blocage).
 - **`tickets.mode: mcp`** → stories dans JIRA. Pipeline : `TODO → IN_PROGRESS` au démarrage, `IN_PROGRESS → REVIEW/DONE` en fin. Sections `## Implémentation` + `## Validation par critère` = body JIRA via `editJiraIssue`. Relire avant d'écrire. Voir `references/sources-config.md` section « Mode tickets.mode: mcp ».
 - **`git:`** renseigné → appliquer `branch_pattern`, `auto_commit`, `auto_push`. Jamais de skip de hooks. Voir `references/sources-config.md` section « Préférences Git ».
 - **`global_doc.*`** → lecture en contexte si pertinent, jamais d'écriture directe.
@@ -248,10 +246,3 @@ La différence : dans le mauvais exemple, un reviewer ne peut pas vérifier ce q
 {{ref:sources-config}}
 
 {{include:docs-structure}}
-
-## Available commands
-
-- **« implémente S-XXXX »** — Implémente une story spécifique (mode story)
-- **« implémente E-XXXX »** — Implémente toutes les stories d'une epic (mode epic)
-- **« code cette epic »** — Synonyme du mode epic sur l'epic courante
-- **« ajoute la feature X décrite dans la story »** — Mode story, résolu par nom

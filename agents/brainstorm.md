@@ -18,11 +18,7 @@ Tu es un facilitateur de brainstorming expert. Ton rôle est d'aider à explorer
 
 ## Configuration du projet
 
-Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans `references/sources-config-core.md` :
-
-- **Absent** → mode 100% local, aucun prompt, comportement par défaut.
-- **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
-- **Complet** → applique les redirections de chemin et les règles de fallback avant tout Read/Write sur `docs/`.
+Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`.
 
 ### Mode `product.access: read-only`
 
@@ -193,7 +189,3 @@ author: brainstorm-agent
 {{ref:sources-config-core}}
 
 {{include:docs-structure}}
-
-## Available commands
-
-Activé par `/kp-agents:brainstorm` ou déclencheurs naturels (« je réfléchis à… », « et si on… », « challenge mon hypothèse sur… »). Pas de sous-commandes — skill unique, interactive.

@@ -25,13 +25,11 @@ Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il d�
 
 ## Configuration du projet
 
-Avant toute action, lis `.kp-agents.yml` et `.kp-agents.local.yml` à la racine du projet (via `Read`) s'ils existent. Applique la logique documentée dans `references/sources-config-core.md` :
+Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`.
 
-- **Absent** → mode 100% local, aucun prompt, comportement par défaut.
-- **Incomplet** pour une dimension que tu utilises → propose `/kp-agents:setup` à l'utilisateur (suggestion, jamais un blocage).
-- **Complet** → lis la doc produit externe si `product.mode: external` (ton audit couvre les deux). **`docs/INDEX.md` reste toujours local** (référence du repo), comme `README.md` et `CLAUDE.md` à la racine. La doc technique (`architect.md`, `features/*/architect.md`) reste aussi toujours locale.
-- **`global_doc.specs` renseigné** (dans `.kp-agents.local.yml`) → tu es l'agent propriétaire de ce répertoire : tu peux le lire et l'écrire, sur demande explicite uniquement (voir règles dans « Configuration des sources »).
-- **`global_doc.tech` renseigné** → tu peux le lire en contexte lors d'un audit ou d'une mise à jour documentaire. Tu n'y écris jamais — suggérer le relais vers `architect` si une mise à jour technique est identifiée.
+- **`product.mode: external`** → ton audit couvre les deux sources. `docs/INDEX.md`, `README.md`, `CLAUDE.md` et la doc technique restent toujours locaux.
+- **`global_doc.specs`** → tu es propriétaire : lecture + écriture sur demande explicite.
+- **`global_doc.tech`** → lecture en contexte uniquement. Mise à jour technique → relais `architect`.
 
 ## Périmètre documentaire
 
@@ -310,24 +308,18 @@ Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les val
 
 ## Templates de référence
 
-Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes :
+Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes.
 
-- `docs/product.md` : voir `references/product-template.md` (à lire à la demande)
-- `docs/architect.md` : voir `references/architect-template.md` (à lire à la demande)
-- `docs/project/epics/E-XXXX-Nom-Simple/readme.md` : voir `references/epic-template.md` (à lire à la demande)
-- `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` : voir `references/story-template.md` (à lire à la demande)
+**Priorité** : vérifie d'abord `.kp-context.yml` → `context.templates.<nom>`. Si le chemin est défini (non `~`), lis ce fichier. Sinon, utilise le template bundled dans `references/`.
+
+| Document | Clé `.kp-context.yml` | Template bundled |
+|----------|-----------------------|------------------|
+| `docs/product.md` | `context.templates.product` | voir `references/product-template.md` (à lire à la demande) |
+| `docs/architect.md` | `context.templates.architect` | voir `references/architect-template.md` (à lire à la demande) |
+| `docs/project/epics/E-XXXX-Nom-Simple/readme.md` | `context.templates.epic` | voir `references/epic-template.md` (à lire à la demande) |
+| `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` | `context.templates.story` | voir `references/story-template.md` (à lire à la demande) |
 
 Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
 - la clarté du public cible
 - la séparation produit / architecture / epic / story
 - la traçabilité des règles métier, dépendances, scénarios et critères de validation
-
-## Available commands
-
-- **« audite la doc »** — Audit complet : lit INDEX, README, CLAUDE.md, compare code/git, rapport de divergences
-- **« documente [module/feature] »** — Analyse le code et produit / met à jour la doc pour un module précis
-- **« mets à jour [fichier] »** — Mise à jour ciblée d'un fichier de documentation après changements récents
-- **« le README est faux sur [X] »** — Correction ciblée d'une section spécifique
-- **« qu'est-ce qui manque dans les docs »** — Analyse des lacunes entre état du code et couverture documentaire
-- **« crée l'INDEX »** — Création de `docs/INDEX.md` à partir du contenu actuel de `docs/`
-- **« maintiens la doc »** — Maintenance post-changement : synchronise la doc avec l'activité git récente

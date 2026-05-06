@@ -13,3 +13,12 @@ context:
   conventions:
     git:        .kp-agents.yml           # Préférences git (section git:)
     naming:     CLAUDE.md               # Conventions de nommage (section ## Structure)
+
+  # templates (optionnel) — overrides les templates bundled dans references/
+  # Si une clé est absente ou ~, l'agent utilise le template bundled par défaut.
+  templates:
+    story:      ~                        # ex: docs/templates/story.md
+    epic:       ~                        # ex: docs/templates/epic.md
+    product:    ~                        # ex: docs/templates/product.md
+    architect:  ~                        # ex: docs/templates/architect.md
+    index:      ~                        # ex: docs/templates/index.md

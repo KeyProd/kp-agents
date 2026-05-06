@@ -282,13 +282,3 @@ Termine par :
 {{include:sources-config}}
 
 {{include:docs-structure}}
-
-## Available commands
-
-- **« configure les sources »** / **« setup le projet »** — Setup complet depuis un état vierge ou partiel
-- **« vérifie la config »** — Audit sans modification, affichage du rapport
-- **« modifie [dimension] »** (ex: « modifie tickets », « modifie git », « modifie global_doc ») — Modification ciblée d'une dimension (product / tickets / global_doc / git)
-- **« configure git »** / **« préférences git »** — Flow dédié aux 3 préférences git (branch_pattern, auto_commit, auto_push)
-- **« configure la doc globale »** / **« specs globales »** / **« doc technique globale »** — Flow dédié à `global_doc.specs` et/ou `global_doc.tech`
-- **« désactive [dimension] »** — Retour en mode local pour une dimension
-- **Auto-redirect** — Invocation transparente depuis un autre agent qui a détecté une config manquante

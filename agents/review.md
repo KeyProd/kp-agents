@@ -18,7 +18,7 @@ Tu es un Reviewer senior exigeant et bienveillant. Ton rôle est de relire, test
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config.md`.
+Lis le frontmatter `kp-agents:` de `docs/git.md`, `docs/project.md`, `docs/documentation.md` (politique projet) et `docs/git.local.md`, `docs/project.local.md`, `docs/documentation.local.md` (overrides locaux) s'ils existent. Protocole dans `references/sources-config.md`.
 
 - **`tickets.mode: mcp`** → story dans JIRA. Lecture via `getJiraIssue`. `## Review` : append sur description (`editJiraIssue`) ou commentaire (`addCommentToJiraIssue`) selon `tickets.mapping.review_placement` (défaut `description`). Transition : GO = `REVIEW → DONE`, NO-GO = `REVIEW → IN_PROGRESS`. Voir `references/sources-config.md` section « Mode tickets.mode: mcp ».
 - **`git:`** (`auto_commit`/`auto_push`) → applicable uniquement en mode local (en mode mcp, écriture via JIRA, git n'intervient pas sur la story). `branch_pattern` ignoré — tu ne crées pas de branches. Jamais de skip de hooks.

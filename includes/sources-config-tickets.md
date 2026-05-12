@@ -1,18 +1,22 @@
 ### Mode `tickets.mode: mcp`
 
+Configuration lue dans le frontmatter `kp-agents:` de `docs/project.md` (commité) avec overrides éventuels dans `docs/project.local.md` (gitignored).
+
 Quand `tickets.mode: mcp` est actif, les epics et stories sont créées / lues / mises à jour via les outils MCP du serveur `mcp_server` dans le projet `project_key`. Aucun fichier `E-XXXX-*/readme.md` ni `S-XXXX-*.md` n'est créé localement pour ces tickets. L'utilisateur doit avoir configuré le serveur MCP correspondant dans ses `settings.json` Claude Code — l'agent ne configure pas le MCP lui-même.
 
-#### Override local via `.kp-agents.local.yml`
+#### Override local via `docs/project.local.md`
 
-Un développeur peut surcharger `tickets.project_key` (et uniquement ce champ en pratique) dans son `.kp-agents.local.yml` pour envoyer les tickets dans **son** projet de test sans toucher la config partagée :
+Un développeur peut surcharger `tickets.project_key` (et uniquement ce champ en pratique) dans son `docs/project.local.md` pour envoyer les tickets dans **son** projet de test sans toucher la config partagée :
 
-```yaml
-# .kp-agents.local.yml
-tickets:
-  project_key: TODO    # override du KP partagé
+```markdown
+---
+kp-agents:
+  tickets:
+    project_key: "TODO"   # override du KP partagé
+---
 ```
 
-Règle de merge : `.kp-agents.local.yml` surcharge `.kp-agents.yml` **champ par champ** (deep merge par dimension). Les champs absents du local héritent du partagé. Ne jamais override `mode` ou `mapping` en local sauf cas très ciblé — ça casserait la cohérence d'équipe.
+Règle de merge : `docs/project.local.md` surcharge `docs/project.md` **champ par champ** (deep merge par dimension). Les champs absents du local héritent du partagé. Ne jamais override `mode` ou `mapping` en local sauf cas très ciblé — ça casserait la cohérence d'équipe.
 
 #### Schéma `tickets.mapping`
 
@@ -23,7 +27,7 @@ Le mapping gouverne **comment** une story markdown est transcodée en ticket JIR
 | `summary_prefix` | string | `""` | Préfixe ajouté au début de chaque `summary` JIRA (ex: `[KP]`). |
 | `issue_type_story` | string | `"Story"` | Nom du issue type pour les stories. |
 | `issue_type_epic` | string | `"Epic"` | Nom du issue type pour les epics. |
-| `status.TODO/IN_PROGRESS/REVIEW/DONE` | string | voir schéma yml | Noms **exacts** des statuts workflow JIRA. Variable par projet. |
+| `status.TODO/IN_PROGRESS/REVIEW/DONE` | string | voir template | Noms **exacts** des statuts workflow JIRA. Variable par projet. |
 | `labels` | array | `["kp-agents"]` | Labels ajoutés à tout ticket créé. |
 | `label_patterns.story_id` | string | `"kp-story-{id}"` | Encode l'ID story en label JIRA (`S-0009` → `kp-story-S0009`). `{id}` sans tiret. |
 | `label_patterns.epic_id` | string | `"kp-epic-{id}"` | Idem pour l'ID epic. |
@@ -89,4 +93,4 @@ Si `tickets.mode: local` (ou absent), tout ce pipeline est **désactivé**. Agen
 | `product` | Crée epics et stories (statut initial `TODO`). Lit une epic/story existante. |
 | `developer` | Transitionne `TODO → IN_PROGRESS` au démarrage, `IN_PROGRESS → REVIEW/DONE` en fin. Met à jour description (sections `## Implémentation` + `## Validation par critère`). |
 | `review` | Transitionne `REVIEW → DONE` (GO) ou `REVIEW → IN_PROGRESS` (NO-GO). Ajoute `## Review` en description ou commentaire. |
-| `brainstorm`, `architect`, `documentation`, `ux-ui`, `setup` | Non concernés. `documentation` maintient `docs/INDEX.md` local, indépendant de `tickets.mode`. |
+| `brainstorm`, `architect`, `documentation`, `ux-ui`, `setup` | Non concernés. `documentation` maintient `docs/index.md` local, indépendant de `tickets.mode`. |

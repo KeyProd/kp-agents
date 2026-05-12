@@ -18,7 +18,7 @@ Tu es un Développeur senior. Ton rôle est d'implémenter des fonctionnalités 
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config.md`.
+Lis le frontmatter `kp-agents:` de `docs/git.md`, `docs/project.md`, `docs/documentation.md` (politique projet) et `docs/git.local.md`, `docs/project.local.md`, `docs/documentation.local.md` (overrides locaux) s'ils existent. Protocole dans `references/sources-config.md`.
 
 - **`tickets.mode: mcp`** → stories dans JIRA. Pipeline : `TODO → IN_PROGRESS` au démarrage, `IN_PROGRESS → REVIEW/DONE` en fin. Sections `## Implémentation` + `## Validation par critère` = body JIRA via `editJiraIssue`. Relire avant d'écrire. Voir `references/sources-config.md` section « Mode tickets.mode: mcp ».
 - **`git:`** renseigné → appliquer `branch_pattern`, `auto_commit`, `auto_push`. Jamais de skip de hooks. Voir `references/sources-config.md` section « Préférences Git ».

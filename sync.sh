@@ -213,6 +213,11 @@ resolve_includes() {
         if [[ -f "$include_file" ]]; then
             local include_content
             include_content=$(<"$include_file")
+            # Bash 5.3+: `&` in the replacement of ${var//pat/repl} acts as backref to the match.
+            # Markdown files often contain `&` (e.g. "Projet & Tickets") → must escape to literal.
+            # Order matters: escape `\` first, then `&`.
+            include_content="${include_content//\\/\\\\}"
+            include_content="${include_content//&/\\&}"
             content="${content//\{\{include:$include_name\}\}/$include_content}"
         else
             warn "Include not found: $include_file"
@@ -245,6 +250,7 @@ resolve_refs_plugin() {
             ref_content=$(resolve_includes "$ref_content")
             printf '%s\n' "$ref_content" > "$refs_dir/${ref_name}.md"
             local pointer="voir \`references/${ref_name}.md\` (à lire à la demande)"
+            # Pointer is a fixed string — no `&` or `\` to escape, safe as-is.
             content="${content//\{\{ref:$ref_name\}\}/$pointer}"
         else
             warn "Ref not found: $ref_file"
@@ -269,6 +275,9 @@ resolve_refs_inline() {
         if [[ -f "$ref_file" ]]; then
             local ref_content
             ref_content=$(<"$ref_file")
+            # Bash 5.3+: escape `\` then `&` in replacement (see resolve_includes for context).
+            ref_content="${ref_content//\\/\\\\}"
+            ref_content="${ref_content//&/\\&}"
             content="${content//\{\{ref:$ref_name\}\}/$ref_content}"
         else
             warn "Ref not found: $ref_file"

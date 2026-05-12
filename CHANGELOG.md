@@ -8,6 +8,54 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v2.0.0] — 2026-05-12 (BREAKING — convention `docs/` self-documenting)
+
+⚠️ **BREAKING CHANGE** — La configuration projet quitte le YAML (`.kp-agents.yml`, `.kp-agents.local.yml`) et migre vers du **markdown self-documenting** dans `docs/`. L'objectif : un projet kp-agents devient **lisible et exploitable par n'importe quel agent IA** (kp-agents, superpower, codex, cursor, ou autre), pas seulement les agents kp.
+
+### Ajouté
+
+- **Convention `docs/` self-documenting** — 8 fichiers structurants à la racine de `docs/` :
+  - `guidelines.md` (commité, statique) — convention de la documentation pour tout agent IA
+  - `git.md` / `git.local.md` — politique git du projet / préférences personnelles du dev
+  - `project.md` / `project.local.md` — suivi projet, tickets, mapping JIRA / overrides personnels
+  - `documentation.md` / `documentation.local.md` — sources de doc externes / chemins absolus machine-spécifiques
+  - `index.md` (renommé depuis `INDEX.md`) — index navigable, maintenu par l'agent `documentation`
+- **Frontmatter YAML namespacé `kp-agents:`** — chaque fichier `*.md` structurant porte sa configuration machine-lisible dans un frontmatter standard markdown (entre `---` en tête). Parsing déterministe pour tout agent IA, prose humaine dans le body.
+- **Sections gérées dans `CLAUDE.md`** — l'agent `setup` injecte et maintient 4 sections canoniques (`## Documentation`, `## Projet & Tickets`, `## Git`, `## Apps`) qui pointent vers les fichiers `docs/` structurants. Matching strict + fuzzy (avec confirmation si titre renommé).
+- **Détection monorepo** — `apps/`, `packages/`, `pnpm-workspace.yaml`, `lerna.json`, `nx.json`, `turbo.json`, `Cargo.toml [workspace]`, `package.json :: workspaces`. Bootstrap de `apps/<name>/docs/index.md` par app + section `## Apps` dans CLAUDE.md racine + entrée dans `docs/index.md`.
+- **Migration automatique v1.x → v2.0.0** — au prochain `/kp-agents:setup`, si `.kp-agents.yml` ou `.kp-agents.local.yml` détecté, setup propose la conversion intégrale vers les MD canoniques (avec confirmation à chaque étape, atomicité totale).
+- **Refonte de l'agent `setup`** en orchestrateur 5 dimensions : `guidelines`, `git`, `tickets`, `documentation` (fusion product + global_doc), `monorepo`, plus la maintenance `claudemd` en fin de flow.
+- **8 templates de fichiers structurants** (`includes/template-*.md`) — chargés à la demande lors du bootstrap d'un fichier vide. Cohérence garantie entre projets.
+
+### Modifié
+
+- **Auto-bump majeur** : v1.x → v2.0.0 (breaking change sur le format de configuration).
+- **Renaming `INDEX.md` → `index.md`** dans toute la convention. Le rename est non-destructif : si un projet a un `INDEX.md` existant, `setup` propose la migration sans écraser silencieusement.
+- **`git.auto_commit` et `git.auto_push` déplacés** du YAML commité (v1.x) vers `docs/git.local.md` gitignored (v2.0.0). C'est intentionnel : ce sont des préférences **personnelles du dev**, pas une politique projet imposée à toute l'équipe.
+- **Les 7 autres agents** (`architect`, `brainstorm`, `developer`, `documentation`, `product`, `review`, `ux-ui`) lisent désormais leur config depuis les frontmatter MD au lieu des YAML.
+- **Include `docs-structure`** : nouvelle hiérarchie documentée, plus de section "Documents structurants" + section "Apps" (monorepo) + section "Configuration machine-lisible (frontmatter)".
+- **Include `doc-index-management`** : `index.md` lowercase + nouvelles sections "Documents structurants `docs/`" et "Apps (monorepo)".
+- **Includes `sources-config-base`, `sources-config-git`, `sources-config-tickets`** : lecture frontmatter MD au lieu de YAML. Migration `git.auto_*` documentée.
+
+### Supprimé
+
+- `includes/setup-product.md` et `includes/setup-global-doc.md` — fusionnés dans `includes/setup-documentation.md`.
+- Plus de lecture de `.kp-agents.yml` / `.kp-agents.local.yml` par les agents en runtime. Setup ne les lit qu'au moment de la migration.
+- `docs/kp-agents-config.md` (généré en v1.x) — supprimé après migration, ses informations sont absorbées par les nouveaux MD canoniques.
+
+### Corrigé
+
+- **`sync.sh` — escape de `&` et `\` dans les remplacements `${var//pat/repl}`** : bash 5.3+ traite désormais `&` dans le replacement comme un backref (le pattern matché), ce qui causait des boucles infinies lors de la résolution des `{{include:}}` / `{{ref:}}` si le contenu remplacé contenait `&` (ex: titre "Projet & Tickets"). Ordre d'escape : `\` d'abord, puis `&`. Sans ce fix, le contenu inliné réintroduisait le pattern et la boucle while ne terminait jamais.
+
+### Notes
+
+- **Guide de migration pour les utilisateurs v1.x** : la migration est automatique. Lance `/kp-agents:setup` dans ton projet, setup détecte les `.kp-agents.yml` / `.kp-agents.local.yml`, propose le plan de migration, et bascule tout vers `docs/*.md` après confirmation. Les anciens fichiers sont conservés jusqu'à confirmation explicite de suppression.
+- **Compatibilité externe** — la convention `docs/guidelines.md` documente la structure de façon agnostique. Tout agent IA (superpower, codex, cursor) lisant `CLAUDE.md` y trouvera les pointeurs vers `docs/index.md` et `docs/guidelines.md`, et pourra travailler le projet selon les mêmes conventions sans connaître kp-agents.
+- **Pourquoi pas de fichiers YAML séparés** : on évite la duplication YAML + MD. Le MD avec frontmatter est markdown standard (Jekyll, Hugo, Astro, MDX, Obsidian, Anthropic skills…) — parseable déterministiquement par tout LLM, lisible par humain, pas de drift possible entre deux sources.
+- **Aucun changement de comportement** runtime sur les autres agents — ils lisent au même endroit logique, juste depuis un fichier différent.
+
+---
+
 ## [kp-agents-v1.1.0] — 2026-04-22 (epic E-0004 terminée)
 
 Externalisation des sources de documentation produit (OneDrive) et des tickets (JIRA via MCP), avec un 8ème agent `setup` dédié à la configuration projet. **Rétro-compatibilité 100%** : un projet sans `.kp-agents.yml` se comporte exactement comme avant.

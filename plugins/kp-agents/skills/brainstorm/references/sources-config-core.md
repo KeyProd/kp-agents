@@ -1,50 +1,57 @@
 ## Configuration des sources
 
-Deux fichiers optionnels à la racine configurent les sources externes. Absents = tout va dans `docs/` local (comportement par défaut, inchangé).
+La configuration des sources externes vit dans des **fichiers markdown** dans `docs/` à la racine du projet. Chaque fichier porte un **frontmatter YAML** sous la clé top-level `kp-agents:` qui contient la config machine-lisible. Absent ou clé absente = comportement par défaut (mode 100% local).
 
-### Fichier `.kp-agents.yml` (commité) — politique de sources
+### Fichiers de configuration
 
-```yaml
-product:
-  mode: local | external      # défaut: local
-  access: read-write | read-only   # défaut: read-write, ignoré si mode: local
-global_doc:                   # optionnel — répertoires de documentation partagée
-  specs: <chemin absolu>      # doc fonctionnelle implémentée (propriétaire: documentation)
-  tech: <chemin absolu>       # doc technique globale (propriétaire: architect)
-```
-
-### Fichier `.kp-agents.local.yml` (gitignoré) — chemins machine-spécifiques
-
-```yaml
-product:
-  path: <chemin absolu>            # requis si product.mode: external
-global_doc:
-  specs: <chemin absolu>           # propriétaire: documentation
-  tech: <chemin absolu>            # propriétaire: architect
-  product_inputs: <chemin absolu>  # inputs PM — lecture seule pour tous les agents
-```
-
-Les chemins `global_doc` sont **toujours dans `.kp-agents.local.yml`** (jamais dans `.kp-agents.yml`) — emplacements machine-spécifiques. Présence d'une clé = chemin actif. Absence = pas de doc globale pour cette dimension.
+| Fichier | Commit | Clés `kp-agents:` portées |
+|---|---|---|
+| `docs/git.md` | ✅ | `branch_pattern` |
+| `docs/git.local.md` | ❌ gitignored | `auto_commit`, `auto_push` |
+| `docs/project.md` | ✅ | `tickets.mode`, `tickets.mcp_server`, `tickets.project_key`, `tickets.mapping.*` |
+| `docs/project.local.md` | ❌ gitignored | overrides `tickets.*` |
+| `docs/documentation.md` | ✅ | `product.mode`, `product.access` |
+| `docs/documentation.local.md` | ❌ gitignored | `product.path`, `global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs` |
 
 ### Comportement au démarrage
 
-1. Lire `.kp-agents.yml` via Read. Absent → mode 100% local, stop.
-2. Lire `.kp-agents.local.yml` via Read si présent.
-3. Pour chaque dimension activée en externe, vérifier les prérequis :
-   - `product.mode: external` → `product.path` renseigné et accessible.
-   - `global_doc.specs` ou `global_doc.tech` → chemin accessible.
-4. Config incomplète ou chemin inaccessible → warn + proposer `/kp-agents:setup` + continuer en mode local dégradé.
+1. Lire le frontmatter `kp-agents:` des fichiers `docs/*.md` listés ci-dessus si ils existent.
+2. Pour chaque dimension activée en externe, vérifier les prérequis :
+   - `product.mode: external` (dans `documentation.md`) → `product.path` (dans `documentation.local.md`) renseigné et accessible.
+   - `global_doc.specs` ou `global_doc.tech` (dans `documentation.local.md`) → chemin accessible.
+   - `tickets.mode: mcp` (dans `project.md`) → `mcp_server` et `project_key` renseignés.
+3. Config incomplète ou chemin inaccessible → warn + proposer `/kp-agents:setup` + continuer en mode local dégradé.
+
+### Comment parser le frontmatter
+
+Le frontmatter YAML est entre deux lignes `---` en tête de fichier. Exemple `docs/git.md` :
+
+```markdown
+---
+kp-agents:
+  branch_pattern: "feat/{slug}"
+---
+
+# Conventions Git du projet
+...
+```
+
+Pour lire `branch_pattern`, lis le fichier `docs/git.md` et extrais la clé `kp-agents.branch_pattern` du frontmatter. **Ne jamais parser la prose du body** pour récupérer une config machine.
+
+### Migration depuis `.kp-agents.yml` (v1.x)
+
+Les anciens fichiers `.kp-agents.yml` et `.kp-agents.local.yml` ne sont **plus lus** depuis la v2.0.0. Si tu détectes leur présence à la racine du projet, signale-le à l'utilisateur et propose `/kp-agents:setup` pour migrer automatiquement le contenu vers les nouveaux MD canoniques.
 
 ### Résolution de chemin pour la dimension `product`
 
-Quand `product.mode: external` et chemin valide, les outputs suivants sont **redirigés vers `<product.path>/`** :
+Quand `product.mode: external` (dans `docs/documentation.md`) **et** `product.path` (dans `docs/documentation.local.md`) valide, les outputs suivants sont **redirigés vers `<product.path>/`** :
 
 - `ideas/<theme>.md`
 - `product.md`
 - `features/<group>/product.md`
 - `project/roadmap.md`
 
-**Toujours écrits en local** : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/INDEX.md`, toute doc technique. Les epics/stories suivent la dimension `tickets`.
+**Toujours écrits en local** : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/index.md`, toute doc technique. Les epics/stories suivent la dimension `tickets`.
 
 Au premier write dans un sous-dossier externe, créer le sous-dossier à la volée (`mkdir -p`). Ne jamais demander confirmation pour ça.
 
@@ -81,7 +88,7 @@ Warn à chaque fallback (pas de dédoublonnage). Au démarrage : si `product.pat
 
 ### Documentation globale partagée (`global_doc`)
 
-Répertoires partagés complémentaires à `docs/`. Les fichiers locaux **restent toujours écrits** — le global est un complément, jamais une substitution.
+Répertoires partagés complémentaires à `docs/` — clés dans le frontmatter de `docs/documentation.local.md`. Les fichiers locaux **restent toujours écrits** — le global est un complément, jamais une substitution.
 
 | Clé | Propriétaire écriture | Lecture | Règle pour les autres agents |
 |---|---|---|---|

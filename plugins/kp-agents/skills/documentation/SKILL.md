@@ -22,9 +22,9 @@ Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il d�
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`.
+Lis le frontmatter `kp-agents:` de `docs/documentation.md` + `docs/documentation.local.md` (et `docs/project.md` pour le contexte tickets). Protocole dans `references/sources-config-core.md`.
 
-- **`product.mode: external`** → ton audit couvre les deux sources. `docs/INDEX.md`, `README.md`, `CLAUDE.md` et la doc technique restent toujours locaux.
+- **`product.mode: external`** → ton audit couvre les deux sources. `docs/index.md`, `README.md`, `CLAUDE.md` et la doc technique restent toujours locaux.
 - **`global_doc.specs`** → tu es propriétaire : lecture + écriture sur demande explicite.
 - **`global_doc.tech`** → lecture en contexte uniquement. Mise à jour technique → relais `architect`.
 
@@ -43,7 +43,7 @@ Lors de chaque audit ou maintenance, considère **systématiquement** ces source
 | Input | Source | Quand |
 |-------|--------|-------|
 | Demande utilisateur | Chat (audit, update, analyse, maintenance) | Toujours — détermine le mode |
-| `docs/INDEX.md` | Projet | Toujours — premier fichier à lire |
+| `docs/index.md` | Projet | Toujours — premier fichier à lire |
 | `README.md` (racine) | Projet | Toujours |
 | `CLAUDE.md` (racine) | Projet | Toujours (si existe) |
 | Fichiers dans `docs/` | Projet | Toujours |
@@ -57,7 +57,7 @@ Lors de chaque audit ou maintenance, considère **systématiquement** ces source
 | Output | Destination | Quand |
 |--------|-------------|-------|
 | Documentation créée / mise à jour | `docs/`, `README.md`, `CLAUDE.md`, READMEs composants | Après validation |
-| `docs/INDEX.md` | `docs/INDEX.md` | Après toute création / modification / suppression de doc |
+| `docs/index.md` | `docs/index.md` | Après toute création / modification / suppression de doc |
 | Specs globales | `<global_doc.specs>/` | Uniquement sur demande explicite |
 | Rapport de divergences | Chat | Mode audit — avant toute modification |
 | Résumé des changements | Chat | Après modification — fichiers touchés, divergences corrigées, inconnues |
@@ -67,16 +67,16 @@ Lors de chaque audit ou maintenance, considère **systématiquement** ces source
 
 ```
 Input:   "audite la doc"
-Reads:   docs/INDEX.md, README.md, CLAUDE.md, docs/**/*.md, git log
+Reads:   docs/index.md, README.md, CLAUDE.md, docs/**/*.md, git log
 Output:  Rapport de divergences en chat (existant vs observé par section)
-         + docs/INDEX.md mis à jour
+         + docs/index.md mis à jour
 ```
 
 ```
 Input:   "documente le module auth"
-Reads:   src/auth/, docs/INDEX.md, docs/features/auth/ (si existe)
+Reads:   src/auth/, docs/index.md, docs/features/auth/ (si existe)
 Output:  docs/features/auth/architect.md (créé ou mis à jour)
-         + docs/INDEX.md mis à jour
+         + docs/index.md mis à jour
 ```
 
 ## Processus unifié
@@ -86,7 +86,7 @@ Le même flow couvre les 3 entrées (audit large / documentation d'un module / m
 ### 1. Cadrage & lecture orientée
 
 Selon la demande utilisateur, ajuste la portée :
-- **Audit large** (« audite la doc ») → lis `INDEX.md`, `README.md`, `CLAUDE.md`, parcours `docs/**/*.md`, et `git log --oneline -20` + `git diff` pour les changements récents.
+- **Audit large** (« audite la doc ») → lis `docs/index.md`, `README.md`, `CLAUDE.md`, parcours `docs/**/*.md`, et `git log --oneline -20` + `git diff` pour les changements récents.
 - **Documentation d'un module** (« documente X ») → lis le code (`src/X/`), la doc existante associée, l'index pour situer.
 - **Maintenance ciblée** (« le README est faux sur Y », post-changement) → lis le fichier ciblé + le code de référence + git diff sur les fichiers liés.
 
@@ -98,7 +98,7 @@ Identifie systématiquement :
 ### 2. Audit comparatif
 
 - Compare la doc existante à l'état réel (code, structure, conventions).
-- Si `docs/INDEX.md` existe → compare-le à `docs/` réel pour détecter manquants ou obsolètes.
+- Si `docs/index.md` existe → compare-le à `docs/` réel pour détecter manquants ou obsolètes.
 - Vérifie que `README.md` et `CLAUDE.md` reflètent les changements récents (flags CLI, structure, conventions) — souvent les premiers touchés par une évolution.
 - Repère ce qui est correct, obsolète, ambigu, manquant ou contradictoire.
 - Si une information n'est ni dans le code ni dans la doc → marque-la **inconnue**, ne l'invente pas.
@@ -131,7 +131,7 @@ Quand une mise à jour est nécessaire, propose tout ou partie de :
 - Mise à jour ciblée et lisible — préserve la structure existante sauf amélioration explicitement justifiée.
 - Si plusieurs documents se contredisent → corrige la source de vérité et harmonise les dérivés.
 - Correction ciblée > réécriture massive.
-- Après modification : mets à jour `docs/INDEX.md` (voir `references/doc-index-management.md`).
+- Après modification : mets à jour `docs/index.md` (voir `references/doc-index-management.md`).
 
 ## Schémas et diagrammes
 
@@ -151,18 +151,18 @@ Après modification, mentionne brièvement si pertinent : fichiers touchés, div
 ## Gotchas
 
 - Ne jamais écrire directement dans `plugins/kp-agents/skills/` ni `dist/` — ces dossiers sont **regénérés** à chaque `./sync.sh`. La source de vérité est `agents/`.
-- `docs/INDEX.md` appartient **exclusivement** à l'agent `documentation` — les autres agents le consultent mais ne le modifient jamais.
+- `docs/index.md` appartient **exclusivement** à l'agent `documentation` — les autres agents le consultent mais ne le modifient jamais.
 - Numérotation : les stories **repartent à `S-0001` dans chaque epic** (locale), les epics sont globales (`E-0001`, `E-0002`…). Ne jamais numéroter les stories globalement.
 - Les epics archivées sont sous `docs/project/epics/_archives/` — **lecture seule** pour contexte historique. Ne jamais y créer ni modifier de story.
 
 - **`global_doc.specs` est ton répertoire** — tu en es le seul propriétaire en écriture. Ne l'écris que sur demande explicite, toujours après avoir lu le fichier cible et proposé le diff.
 - **`global_doc.tech` est réservé à `architect`** — tu le lis en contexte, tu ne l'écris jamais. Si une mise à jour technique est identifiée, suggérer le relais : « Ce point concerne la doc technique globale — veux-tu passer le relais à `/kp-agents:architect` ? »
-- `README.md` et `CLAUDE.md` (racine) font **systématiquement** partie du périmètre documentaire et de l'INDEX — jamais conditionnel, jamais oublié lors d'un audit.
-- `docs/INDEX.md` est **ton** fichier — les autres agents le consultent mais ne l'écrivent pas. Tu es seul garant de son exactitude.
+- `README.md` et `CLAUDE.md` (racine) font **systématiquement** partie du périmètre documentaire et de l'index — jamais conditionnel, jamais oublié lors d'un audit.
+- `docs/index.md` est **ton** fichier — les autres agents le consultent mais ne l'écrivent pas. Tu es seul garant de son exactitude.
 - Mermaid : pas de guillemets dans les labels d'arêtes, pas de texte multi-lignes dans les noeuds.
 - Tu ne crées ni ne supprimes de stories / epics — relais vers `product` si un changement de spec est nécessaire.
 - Avant d'affirmer qu'une doc est obsolète, **compare au code** (source de vérité). Ne suppose jamais l'obsolescence sans preuve.
-- Un audit n'est pas terminé tant que l'INDEX n'a pas été vérifié et mis à jour.
+- Un audit n'est pas terminé tant que l'index n'a pas été vérifié et mis à jour.
 - Correction ciblée > réécriture massive : ne reprends pas tout un document si une section suffit.
 - Quand tu documentes un comportement, précise s'il est **observé**, **supposé** ou **à confirmer** — cite les fichiers lus.
 
@@ -186,66 +186,91 @@ voir `references/index-template.md` (à lire à la demande)
 
 voir `references/sources-config-core.md` (à lire à la demande)
 
-## Convention de sortie - Répertoire docs/
+## Convention de sortie - Répertoire `docs/`
 
-Tous les documents générés DOIVENT être placés dans le répertoire `docs/` du projet courant, en respectant cette structure :
+Tous les documents générés DOIVENT être placés dans le répertoire `docs/` du projet courant. La convention complète (lisible par tout agent IA, y compris externes) est écrite dans `docs/guidelines.md` — **lis ce fichier en premier** s'il existe.
+
+### Arborescence
 
 ```
 docs/
-├── INDEX.md                            # Index de la documentation (maintenu par l'agent Documentation)
+├── index.md                            # Index navigable (maintenu par documentation)
+├── guidelines.md                       # Convention complète pour tout agent
+├── git.md                              # Conventions git projet (commité)
+├── git.local.md                        # Préférences git dev (gitignored)
+├── project.md                          # Suivi projet, tickets, workflow (commité)
+├── project.local.md                    # Overrides locaux (gitignored)
+├── documentation.md                    # Politique sources de doc (commité)
+├── documentation.local.md              # Chemins locaux machine-spécifiques (gitignored)
 ├── product.md                          # Vision produit globale
 ├── architect.md                        # Architecture technique globale
 ├── ideas/                              # Un fichier par idée/thème (agent brainstorm)
-│   ├── auth-passwordless.md
-│   ├── real-time-collab.md
-│   └── ...
-├── features/
-│   └── <feature-group>/
-│       ├── product.md                  # Spec produit du groupe de features
-│       └── architect.md                # Design technique du groupe de features
+├── features/<feature-group>/
+│   ├── product.md                      # Spec produit du groupe
+│   └── architect.md                    # Design technique du groupe
 └── project/
-    ├── roadmap.md                      # Roadmap produit (phases, jalons, priorités)
+    ├── roadmap.md                      # Roadmap (phases, jalons)
     └── epics/
-        ├── E-XXXX-Nom-Simple/          # Un répertoire par epic
+        ├── E-XXXX-Nom-Simple/
         │   ├── readme.md               # Détail de l'epic
         │   ├── S-XXXX-Nom-Simple.md    # Story (TODO)
-        │   ├── S-XXXY-Autre-Story.md   # Story (IN PROGRESS)
         │   └── ...
         └── _archives/                  # Epics terminées ou abandonnées
-            └── E-XXXX-Nom-Simple/      # Même structure, déplacée telle quelle
 ```
 
-### Nommage :
+### Configuration machine-lisible (frontmatter YAML)
+
+Les 6 fichiers `git.md`, `git.local.md`, `project.md`, `project.local.md`, `documentation.md`, `documentation.local.md` portent leur configuration dans un **frontmatter YAML** (entre `---` en tête), sous la clé top-level `kp-agents:`. Le body reste de la prose humaine.
+
+**Lecture obligatoire au démarrage** : si un agent a besoin de la config, il lit le frontmatter du fichier concerné — pas du langage naturel dans la prose.
+
+Schéma résumé :
+
+| Fichier | Clés frontmatter `kp-agents:` |
+|---|---|
+| `git.md` | `branch_pattern` |
+| `git.local.md` | `auto_commit`, `auto_push` |
+| `project.md` | `tickets.mode`, `tickets.mcp_server`, `tickets.project_key`, `tickets.mapping.*` |
+| `project.local.md` | overrides de `tickets.*` (deep merge) |
+| `documentation.md` | `product.mode`, `product.access` |
+| `documentation.local.md` | `product.path`, `global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs` |
+
+### Nommage
+
 - Epics : `E-XXXX-Nom-Simple/` (répertoire, PascalCase séparé par tirets, numéro sur 4 chiffres)
-- Stories : `S-XXXX-Nom-Simple.md` (fichier dans le répertoire de l'epic parente)
-- Numérotation des epics : séquentielle globale (E-0001, E-0002...)
-- Numérotation des stories : **repart de S-0001 pour chaque epic** (locale à l'epic, pas globale)
+- Stories : `S-XXXX-Nom-Simple.md` (fichier dans le répertoire de l'epic)
+- Numérotation epics : séquentielle globale (E-0001, E-0002...)
+- Numérotation stories : **repart de S-0001 pour chaque epic** (locale à l'epic)
 
-### Statuts des stories :
-Les stories utilisent un champ `status` dans leur frontmatter YAML, avec les valeurs :
-- `TODO` — à faire
-- `IN PROGRESS` — en cours de développement
-- `REVIEW` — en attente de revue
-- `DONE` — terminée et validée
+### Statuts des stories
 
-### Archivage des epics :
-- Quand toutes les stories d'une epic sont `DONE` (ou que l'epic est abandonnée), le répertoire de l'epic est déplacé dans `docs/project/epics/_archives/`
-- La structure interne du répertoire est conservée telle quelle
-- Le `status` dans le frontmatter du `readme.md` de l'epic est mis à jour (`done` ou `cancelled`)
-- Les agents ne doivent JAMAIS créer de nouvelles stories dans `_archives/`
-- Les agents peuvent lire `_archives/` pour du contexte historique
+Frontmatter YAML de chaque story, champ `status` :
+- `TODO`, `IN PROGRESS`, `REVIEW`, `DONE`
 
-### Index de la documentation :
-- Si `docs/INDEX.md` existe, **consulte-le en priorité** pour naviguer efficacement dans la documentation existante avant de parcourir l'arborescence manuellement
-- L'index est maintenu exclusivement par l'agent Documentation — ne le modifie pas toi-même
-- Si tu constates que l'index est absent ou obsolète, signale-le et recommande un passage vers l'agent Documentation
+### Archivage
 
-### Règles :
+- Toutes les stories d'une epic en `DONE` (ou epic abandonnée) → déplacer le répertoire dans `docs/project/epics/_archives/`
+- Mettre à jour `status` dans le frontmatter du `readme.md` de l'epic (`done` ou `cancelled`)
+- Jamais de nouvelle story dans `_archives/`
+- Lecture autorisée pour contexte historique
+
+### Index
+
+- Si `docs/index.md` existe → **consulte-le en priorité** pour naviguer
+- Index maintenu **exclusivement** par l'agent `documentation` — ne le modifie pas toi-même
+- Si index absent ou obsolète → signale-le et recommande `/kp-agents:documentation`
+
+### Monorepo
+
+Si le projet contient des apps (`apps/<name>/`, `packages/<name>/`) — détecté via `apps/`, `packages/`, `pnpm-workspace.yaml`, `lerna.json`, `nx.json`, `turbo.json`, `Cargo.toml [workspace]` —, chaque app peut avoir son propre `apps/<name>/docs/index.md`. Les fichiers transversaux (`guidelines.md`, `git.md`, `project.md`, `documentation.md`) **restent uniquement à la racine** du repo. Le `docs/index.md` racine liste les apps avec un lien vers leur index.
+
+### Règles
+
 - Crée les répertoires manquants si nécessaire (`mkdir -p`)
 - Lors d'une mise à jour, lis le fichier existant avant d'écrire pour ne pas perdre de contenu
 - Chaque document inclut un en-tête YAML frontmatter avec : `title`, `date`, `status`, `author` (agent name)
 - Les liens entre documents utilisent des chemins relatifs (ex: `../E-0001-Auth-System/readme.md`)
-- Les liens vers des epics archivées pointent vers `_archives/` (ex: `../_archives/E-0001-Auth-System/readme.md`)
+- Les liens vers des epics archivées pointent vers `_archives/`
 
 ## Templates de référence
 

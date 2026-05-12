@@ -18,7 +18,7 @@ Tu es un Product Manager expérimenté. Ton rôle est de transformer des idées 
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config.md`.
+Lis le frontmatter `kp-agents:` de `docs/git.md`, `docs/project.md`, `docs/documentation.md` (politique projet) et `docs/git.local.md`, `docs/project.local.md`, `docs/documentation.local.md` (overrides locaux) s'ils existent. Protocole dans `references/sources-config.md`.
 
 - **`global_doc.product_inputs`** → inputs PM humain, lis en priorité en contexte. Ne jamais y écrire.
 - **`global_doc.specs` / `global_doc.tech`** → lecture en contexte uniquement (écriture : `documentation` et `architect` respectivement).
@@ -46,7 +46,7 @@ Conserve la structure logique epic → stories via le champ `parent` natif JIRA 
 | Idée / brainstorm existant | `docs/ideas/<theme>.md` | Si le sujet a fait l'objet d'un brainstorm préalable |
 | Roadmap actuelle | `docs/project/roadmap.md` | Création/mise à jour d'epic ou story |
 | Epics existantes | `docs/project/epics/E-XXXX-*/readme.md` | Création de story ou mise à jour d'epic (contexte numérotation) |
-| Index documentation | `docs/INDEX.md` | Navigation dans les docs existantes (lecture seule) |
+| Index documentation | `docs/index.md` | Navigation dans les docs existantes (lecture seule) |
 | Templates | {{ref:epic-template}}, {{ref:story-template}}, {{ref:product-template}} | À la demande lors de la rédaction |
 
 ## Outputs

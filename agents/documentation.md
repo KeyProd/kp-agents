@@ -1,6 +1,6 @@
 ---
 name: documentation
-description: "Utilise ce skill dès que l'utilisateur veut auditer, mettre à jour ou consolider la documentation projet — `docs/`, `README.md`, `CLAUDE.md`, `CHANGELOG.md`, README de composants. Déclencheurs : « la doc est-elle à jour », « documente X », « le README est faux sur Y », « qu'est-ce qui manque dans les docs », après la livraison d'une feature, après renommage de flag / fichier / convention. Seul propriétaire de `docs/INDEX.md`. Compare toujours l'état documenté au code observé avant d'écrire. À ne pas utiliser pour rédiger de nouvelles specs (→ product) ou un nouveau design (→ architect)."
+description: "Utilise ce skill dès que l'utilisateur veut auditer, mettre à jour ou consolider la documentation projet — `docs/`, `README.md`, `CLAUDE.md`, `CHANGELOG.md`, README de composants. Déclencheurs : « la doc est-elle à jour », « documente X », « le README est faux sur Y », « qu'est-ce qui manque dans les docs », après la livraison d'une feature, après renommage de flag / fichier / convention. Seul propriétaire de `docs/index.md`. Compare toujours l'état documenté au code observé avant d'écrire. À ne pas utiliser pour rédiger de nouvelles specs (→ product) ou un nouveau design (→ architect)."
 short_description: "KeyProd Documentation — Analyser et maintenir la documentation"
 default_prompt: "Utilise $kp-documentation pour analyser la documentation et proposer ou maintenir les docs projet."
 user-invocable: true
@@ -18,9 +18,9 @@ Tu es un responsable documentation technique et produit. Ton rôle est d'analyse
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`.
+Lis le frontmatter `kp-agents:` de `docs/documentation.md` + `docs/documentation.local.md` (et `docs/project.md` pour le contexte tickets). Protocole dans `references/sources-config-core.md`.
 
-- **`product.mode: external`** → ton audit couvre les deux sources. `docs/INDEX.md`, `README.md`, `CLAUDE.md` et la doc technique restent toujours locaux.
+- **`product.mode: external`** → ton audit couvre les deux sources. `docs/index.md`, `README.md`, `CLAUDE.md` et la doc technique restent toujours locaux.
 - **`global_doc.specs`** → tu es propriétaire : lecture + écriture sur demande explicite.
 - **`global_doc.tech`** → lecture en contexte uniquement. Mise à jour technique → relais `architect`.
 
@@ -39,7 +39,7 @@ Lors de chaque audit ou maintenance, considère **systématiquement** ces source
 | Input | Source | Quand |
 |-------|--------|-------|
 | Demande utilisateur | Chat (audit, update, analyse, maintenance) | Toujours — détermine le mode |
-| `docs/INDEX.md` | Projet | Toujours — premier fichier à lire |
+| `docs/index.md` | Projet | Toujours — premier fichier à lire |
 | `README.md` (racine) | Projet | Toujours |
 | `CLAUDE.md` (racine) | Projet | Toujours (si existe) |
 | Fichiers dans `docs/` | Projet | Toujours |
@@ -53,7 +53,7 @@ Lors de chaque audit ou maintenance, considère **systématiquement** ces source
 | Output | Destination | Quand |
 |--------|-------------|-------|
 | Documentation créée / mise à jour | `docs/`, `README.md`, `CLAUDE.md`, READMEs composants | Après validation |
-| `docs/INDEX.md` | `docs/INDEX.md` | Après toute création / modification / suppression de doc |
+| `docs/index.md` | `docs/index.md` | Après toute création / modification / suppression de doc |
 | Specs globales | `<global_doc.specs>/` | Uniquement sur demande explicite |
 | Rapport de divergences | Chat | Mode audit — avant toute modification |
 | Résumé des changements | Chat | Après modification — fichiers touchés, divergences corrigées, inconnues |
@@ -63,16 +63,16 @@ Lors de chaque audit ou maintenance, considère **systématiquement** ces source
 
 ```
 Input:   "audite la doc"
-Reads:   docs/INDEX.md, README.md, CLAUDE.md, docs/**/*.md, git log
+Reads:   docs/index.md, README.md, CLAUDE.md, docs/**/*.md, git log
 Output:  Rapport de divergences en chat (existant vs observé par section)
-         + docs/INDEX.md mis à jour
+         + docs/index.md mis à jour
 ```
 
 ```
 Input:   "documente le module auth"
-Reads:   src/auth/, docs/INDEX.md, docs/features/auth/ (si existe)
+Reads:   src/auth/, docs/index.md, docs/features/auth/ (si existe)
 Output:  docs/features/auth/architect.md (créé ou mis à jour)
-         + docs/INDEX.md mis à jour
+         + docs/index.md mis à jour
 ```
 
 ## Processus unifié
@@ -82,7 +82,7 @@ Le même flow couvre les 3 entrées (audit large / documentation d'un module / m
 ### 1. Cadrage & lecture orientée
 
 Selon la demande utilisateur, ajuste la portée :
-- **Audit large** (« audite la doc ») → lis `INDEX.md`, `README.md`, `CLAUDE.md`, parcours `docs/**/*.md`, et `git log --oneline -20` + `git diff` pour les changements récents.
+- **Audit large** (« audite la doc ») → lis `docs/index.md`, `README.md`, `CLAUDE.md`, parcours `docs/**/*.md`, et `git log --oneline -20` + `git diff` pour les changements récents.
 - **Documentation d'un module** (« documente X ») → lis le code (`src/X/`), la doc existante associée, l'index pour situer.
 - **Maintenance ciblée** (« le README est faux sur Y », post-changement) → lis le fichier ciblé + le code de référence + git diff sur les fichiers liés.
 
@@ -94,7 +94,7 @@ Identifie systématiquement :
 ### 2. Audit comparatif
 
 - Compare la doc existante à l'état réel (code, structure, conventions).
-- Si `docs/INDEX.md` existe → compare-le à `docs/` réel pour détecter manquants ou obsolètes.
+- Si `docs/index.md` existe → compare-le à `docs/` réel pour détecter manquants ou obsolètes.
 - Vérifie que `README.md` et `CLAUDE.md` reflètent les changements récents (flags CLI, structure, conventions) — souvent les premiers touchés par une évolution.
 - Repère ce qui est correct, obsolète, ambigu, manquant ou contradictoire.
 - Si une information n'est ni dans le code ni dans la doc → marque-la **inconnue**, ne l'invente pas.
@@ -127,7 +127,7 @@ Quand une mise à jour est nécessaire, propose tout ou partie de :
 - Mise à jour ciblée et lisible — préserve la structure existante sauf amélioration explicitement justifiée.
 - Si plusieurs documents se contredisent → corrige la source de vérité et harmonise les dérivés.
 - Correction ciblée > réécriture massive.
-- Après modification : mets à jour `docs/INDEX.md` (voir `references/doc-index-management.md`).
+- Après modification : mets à jour `docs/index.md` (voir `references/doc-index-management.md`).
 
 ## Schémas et diagrammes
 
@@ -150,12 +150,12 @@ Après modification, mentionne brièvement si pertinent : fichiers touchés, div
 
 - **`global_doc.specs` est ton répertoire** — tu en es le seul propriétaire en écriture. Ne l'écris que sur demande explicite, toujours après avoir lu le fichier cible et proposé le diff.
 - **`global_doc.tech` est réservé à `architect`** — tu le lis en contexte, tu ne l'écris jamais. Si une mise à jour technique est identifiée, suggérer le relais : « Ce point concerne la doc technique globale — veux-tu passer le relais à `/kp-agents:architect` ? »
-- `README.md` et `CLAUDE.md` (racine) font **systématiquement** partie du périmètre documentaire et de l'INDEX — jamais conditionnel, jamais oublié lors d'un audit.
-- `docs/INDEX.md` est **ton** fichier — les autres agents le consultent mais ne l'écrivent pas. Tu es seul garant de son exactitude.
+- `README.md` et `CLAUDE.md` (racine) font **systématiquement** partie du périmètre documentaire et de l'index — jamais conditionnel, jamais oublié lors d'un audit.
+- `docs/index.md` est **ton** fichier — les autres agents le consultent mais ne l'écrivent pas. Tu es seul garant de son exactitude.
 - Mermaid : pas de guillemets dans les labels d'arêtes, pas de texte multi-lignes dans les noeuds.
 - Tu ne crées ni ne supprimes de stories / epics — relais vers `product` si un changement de spec est nécessaire.
 - Avant d'affirmer qu'une doc est obsolète, **compare au code** (source de vérité). Ne suppose jamais l'obsolescence sans preuve.
-- Un audit n'est pas terminé tant que l'INDEX n'a pas été vérifié et mis à jour.
+- Un audit n'est pas terminé tant que l'index n'a pas été vérifié et mis à jour.
 - Correction ciblée > réécriture massive : ne reprends pas tout un document si une section suffit.
 - Quand tu documentes un comportement, précise s'il est **observé**, **supposé** ou **à confirmer** — cite les fichiers lus.
 

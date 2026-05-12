@@ -1,6 +1,9 @@
 ## Configuration de la dimension `tickets`
 
-Cette dimension définit où vivent les epics et stories (local en `docs/project/epics/` ou JIRA via MCP).
+Cette dimension définit où vivent les epics et stories (local en `docs/project/epics/` ou JIRA via MCP). Elle écrit dans **deux fichiers** :
+
+- `docs/project.md` (commité) — politique projet (mode, mcp_server, project_key, mapping)
+- `docs/project.local.md` (gitignored, optionnel) — overrides personnels (typiquement `project_key`)
 
 ### Questions à poser
 
@@ -26,7 +29,7 @@ Plutôt que de poser toutes les questions d'un bloc :
 
 4. **Customisations optionnelles** : demander si l'utilisateur veut un préfixe summary, des labels additionnels, des custom fields. Ne creuser que si oui.
 
-5. **Si pas de mapping écrit** → les agents utilisent les défauts documentés dans `references/sources-config.md`. Pas d'erreur bloquante.
+5. **Si pas de mapping écrit** → les agents utilisent les défauts documentés dans `references/sources-config-tickets.md`. Pas d'erreur bloquante.
 
 ### Flow `subtask_workflow`
 
@@ -87,11 +90,44 @@ subtask_workflow:
 parent_managed_by_jira: true|false      # même niveau que subtask_workflow
 ```
 
+### Écriture dans `docs/project.md` (frontmatter)
+
+```markdown
+---
+kp-agents:
+  tickets:
+    mode: local | mcp
+    mcp_server: "<nom>"           # si mode: mcp
+    project_key: "<KEY>"          # si mode: mcp
+    mapping:                      # si mode: mcp, écrire uniquement les clés non-défaut
+      ...
+---
+```
+
+YAML clairsemé : n'écris **que** les clés divergeant des défauts. Les agents appliquent les défauts pour les clés absentes.
+
+Si le fichier existe avec un body humain (workflow d'équipe, cadence sprints…) : **préserver le body**, ne modifier que le frontmatter. Sinon, bootstrap depuis ``references/template-project.md``.
+
+### Écriture dans `docs/project.local.md` (override personnel, optionnel)
+
+Uniquement si le développeur veut un override (typiquement un `project_key` de test). Sinon, ne pas créer le fichier.
+
+```markdown
+---
+kp-agents:
+  tickets:
+    project_key: "TODO"
+---
+```
+
+Si bootstrap nécessaire, partir de ``references/template-project-local.md``.
+
 ### Cas limites
 
 - **`tickets.mapping` partiel** → écrire uniquement les clés customisées (YAML clairsemé). Les clés absentes héritent des défauts. Éviter de re-écrire les défauts verbatim — bruit visuel dans un fichier partagé en équipe.
-- **Override local de `tickets.project_key`** → si l'utilisateur veut utiliser un projet JIRA personnel pour ses tests, écrire uniquement `tickets.project_key: <autre>` dans `.kp-agents.local.yml`. Les autres champs (`mcp_server`, `mapping`) héritent du partagé. Ne jamais dupliquer tout le bloc `tickets` en local.
+- **Override local de `tickets.project_key`** → si l'utilisateur veut utiliser un projet JIRA personnel pour ses tests, écrire uniquement `tickets.project_key: <autre>` dans `docs/project.local.md`. Les autres champs (`mcp_server`, `mapping`) héritent du partagé. Ne jamais dupliquer tout le bloc `tickets` en local.
 - **`subtask_workflow` sans `parent_managed_by_jira`** → si pas de réponse, ne pas écrire le champ (≡ `false`). Prévenir que ce comportement peut conflicte avec un rollup JIRA automatique.
 - **`subtask_workflow` partiel** → écrire uniquement les clés fournies. Si seul `developer` configuré sans `review`, les agents `review` opèrent en mode dégradé (ticket parent uniquement).
-- **Sous-tâches détectées mais pilotage parent choisi** → ne pas écrire `subtask_workflow`. Consigner dans `docs/kp-agents-config.md` que le projet a des sous-tâches mais que les agents pilotent uniquement le ticket parent.
+- **Sous-tâches détectées mais pilotage parent choisi** → ne pas écrire `subtask_workflow`. Consigner dans le body de `docs/project.md` (section "Sous-tâches") que le projet a des sous-tâches mais que les agents pilotent uniquement le ticket parent.
 - **Validation MCP impossible** (MCP server non chargé au moment du setup) → consigner les défauts tels quels, warner que la validation effective aura lieu à la première opération ticket.
+- **Fichier `docs/project.md` édité manuellement** → diff sur frontmatter, demander confirmation, **préserver le body**.

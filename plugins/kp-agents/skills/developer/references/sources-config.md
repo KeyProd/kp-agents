@@ -1,50 +1,57 @@
 ## Configuration des sources
 
-Deux fichiers optionnels à la racine configurent les sources externes. Absents = tout va dans `docs/` local (comportement par défaut, inchangé).
+La configuration des sources externes vit dans des **fichiers markdown** dans `docs/` à la racine du projet. Chaque fichier porte un **frontmatter YAML** sous la clé top-level `kp-agents:` qui contient la config machine-lisible. Absent ou clé absente = comportement par défaut (mode 100% local).
 
-### Fichier `.kp-agents.yml` (commité) — politique de sources
+### Fichiers de configuration
 
-```yaml
-product:
-  mode: local | external      # défaut: local
-  access: read-write | read-only   # défaut: read-write, ignoré si mode: local
-global_doc:                   # optionnel — répertoires de documentation partagée
-  specs: <chemin absolu>      # doc fonctionnelle implémentée (propriétaire: documentation)
-  tech: <chemin absolu>       # doc technique globale (propriétaire: architect)
-```
-
-### Fichier `.kp-agents.local.yml` (gitignoré) — chemins machine-spécifiques
-
-```yaml
-product:
-  path: <chemin absolu>            # requis si product.mode: external
-global_doc:
-  specs: <chemin absolu>           # propriétaire: documentation
-  tech: <chemin absolu>            # propriétaire: architect
-  product_inputs: <chemin absolu>  # inputs PM — lecture seule pour tous les agents
-```
-
-Les chemins `global_doc` sont **toujours dans `.kp-agents.local.yml`** (jamais dans `.kp-agents.yml`) — emplacements machine-spécifiques. Présence d'une clé = chemin actif. Absence = pas de doc globale pour cette dimension.
+| Fichier | Commit | Clés `kp-agents:` portées |
+|---|---|---|
+| `docs/git.md` | ✅ | `branch_pattern` |
+| `docs/git.local.md` | ❌ gitignored | `auto_commit`, `auto_push` |
+| `docs/project.md` | ✅ | `tickets.mode`, `tickets.mcp_server`, `tickets.project_key`, `tickets.mapping.*` |
+| `docs/project.local.md` | ❌ gitignored | overrides `tickets.*` |
+| `docs/documentation.md` | ✅ | `product.mode`, `product.access` |
+| `docs/documentation.local.md` | ❌ gitignored | `product.path`, `global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs` |
 
 ### Comportement au démarrage
 
-1. Lire `.kp-agents.yml` via Read. Absent → mode 100% local, stop.
-2. Lire `.kp-agents.local.yml` via Read si présent.
-3. Pour chaque dimension activée en externe, vérifier les prérequis :
-   - `product.mode: external` → `product.path` renseigné et accessible.
-   - `global_doc.specs` ou `global_doc.tech` → chemin accessible.
-4. Config incomplète ou chemin inaccessible → warn + proposer `/kp-agents:setup` + continuer en mode local dégradé.
+1. Lire le frontmatter `kp-agents:` des fichiers `docs/*.md` listés ci-dessus si ils existent.
+2. Pour chaque dimension activée en externe, vérifier les prérequis :
+   - `product.mode: external` (dans `documentation.md`) → `product.path` (dans `documentation.local.md`) renseigné et accessible.
+   - `global_doc.specs` ou `global_doc.tech` (dans `documentation.local.md`) → chemin accessible.
+   - `tickets.mode: mcp` (dans `project.md`) → `mcp_server` et `project_key` renseignés.
+3. Config incomplète ou chemin inaccessible → warn + proposer `/kp-agents:setup` + continuer en mode local dégradé.
+
+### Comment parser le frontmatter
+
+Le frontmatter YAML est entre deux lignes `---` en tête de fichier. Exemple `docs/git.md` :
+
+```markdown
+---
+kp-agents:
+  branch_pattern: "feat/{slug}"
+---
+
+# Conventions Git du projet
+...
+```
+
+Pour lire `branch_pattern`, lis le fichier `docs/git.md` et extrais la clé `kp-agents.branch_pattern` du frontmatter. **Ne jamais parser la prose du body** pour récupérer une config machine.
+
+### Migration depuis `.kp-agents.yml` (v1.x)
+
+Les anciens fichiers `.kp-agents.yml` et `.kp-agents.local.yml` ne sont **plus lus** depuis la v2.0.0. Si tu détectes leur présence à la racine du projet, signale-le à l'utilisateur et propose `/kp-agents:setup` pour migrer automatiquement le contenu vers les nouveaux MD canoniques.
 
 ### Résolution de chemin pour la dimension `product`
 
-Quand `product.mode: external` et chemin valide, les outputs suivants sont **redirigés vers `<product.path>/`** :
+Quand `product.mode: external` (dans `docs/documentation.md`) **et** `product.path` (dans `docs/documentation.local.md`) valide, les outputs suivants sont **redirigés vers `<product.path>/`** :
 
 - `ideas/<theme>.md`
 - `product.md`
 - `features/<group>/product.md`
 - `project/roadmap.md`
 
-**Toujours écrits en local** : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/INDEX.md`, toute doc technique. Les epics/stories suivent la dimension `tickets`.
+**Toujours écrits en local** : `docs/architect.md`, `docs/features/<group>/architect.md`, `docs/index.md`, toute doc technique. Les epics/stories suivent la dimension `tickets`.
 
 Au premier write dans un sous-dossier externe, créer le sous-dossier à la volée (`mkdir -p`). Ne jamais demander confirmation pour ça.
 
@@ -81,7 +88,7 @@ Warn à chaque fallback (pas de dédoublonnage). Au démarrage : si `product.pat
 
 ### Documentation globale partagée (`global_doc`)
 
-Répertoires partagés complémentaires à `docs/`. Les fichiers locaux **restent toujours écrits** — le global est un complément, jamais une substitution.
+Répertoires partagés complémentaires à `docs/` — clés dans le frontmatter de `docs/documentation.local.md`. Les fichiers locaux **restent toujours écrits** — le global est un complément, jamais une substitution.
 
 | Clé | Propriétaire écriture | Lecture | Règle pour les autres agents |
 |---|---|---|---|
@@ -105,19 +112,23 @@ Si config requise absente, incomplète ou incohérente, proposer `/kp-agents:set
 
 ### Mode `tickets.mode: mcp`
 
+Configuration lue dans le frontmatter `kp-agents:` de `docs/project.md` (commité) avec overrides éventuels dans `docs/project.local.md` (gitignored).
+
 Quand `tickets.mode: mcp` est actif, les epics et stories sont créées / lues / mises à jour via les outils MCP du serveur `mcp_server` dans le projet `project_key`. Aucun fichier `E-XXXX-*/readme.md` ni `S-XXXX-*.md` n'est créé localement pour ces tickets. L'utilisateur doit avoir configuré le serveur MCP correspondant dans ses `settings.json` Claude Code — l'agent ne configure pas le MCP lui-même.
 
-#### Override local via `.kp-agents.local.yml`
+#### Override local via `docs/project.local.md`
 
-Un développeur peut surcharger `tickets.project_key` (et uniquement ce champ en pratique) dans son `.kp-agents.local.yml` pour envoyer les tickets dans **son** projet de test sans toucher la config partagée :
+Un développeur peut surcharger `tickets.project_key` (et uniquement ce champ en pratique) dans son `docs/project.local.md` pour envoyer les tickets dans **son** projet de test sans toucher la config partagée :
 
-```yaml
-# .kp-agents.local.yml
-tickets:
-  project_key: TODO    # override du KP partagé
+```markdown
+---
+kp-agents:
+  tickets:
+    project_key: "TODO"   # override du KP partagé
+---
 ```
 
-Règle de merge : `.kp-agents.local.yml` surcharge `.kp-agents.yml` **champ par champ** (deep merge par dimension). Les champs absents du local héritent du partagé. Ne jamais override `mode` ou `mapping` en local sauf cas très ciblé — ça casserait la cohérence d'équipe.
+Règle de merge : `docs/project.local.md` surcharge `docs/project.md` **champ par champ** (deep merge par dimension). Les champs absents du local héritent du partagé. Ne jamais override `mode` ou `mapping` en local sauf cas très ciblé — ça casserait la cohérence d'équipe.
 
 #### Schéma `tickets.mapping`
 
@@ -128,7 +139,7 @@ Le mapping gouverne **comment** une story markdown est transcodée en ticket JIR
 | `summary_prefix` | string | `""` | Préfixe ajouté au début de chaque `summary` JIRA (ex: `[KP]`). |
 | `issue_type_story` | string | `"Story"` | Nom du issue type pour les stories. |
 | `issue_type_epic` | string | `"Epic"` | Nom du issue type pour les epics. |
-| `status.TODO/IN_PROGRESS/REVIEW/DONE` | string | voir schéma yml | Noms **exacts** des statuts workflow JIRA. Variable par projet. |
+| `status.TODO/IN_PROGRESS/REVIEW/DONE` | string | voir template | Noms **exacts** des statuts workflow JIRA. Variable par projet. |
 | `labels` | array | `["kp-agents"]` | Labels ajoutés à tout ticket créé. |
 | `label_patterns.story_id` | string | `"kp-story-{id}"` | Encode l'ID story en label JIRA (`S-0009` → `kp-story-S0009`). `{id}` sans tiret. |
 | `label_patterns.epic_id` | string | `"kp-epic-{id}"` | Idem pour l'ID epic. |
@@ -194,20 +205,29 @@ Si `tickets.mode: local` (ou absent), tout ce pipeline est **désactivé**. Agen
 | `product` | Crée epics et stories (statut initial `TODO`). Lit une epic/story existante. |
 | `developer` | Transitionne `TODO → IN_PROGRESS` au démarrage, `IN_PROGRESS → REVIEW/DONE` en fin. Met à jour description (sections `## Implémentation` + `## Validation par critère`). |
 | `review` | Transitionne `REVIEW → DONE` (GO) ou `REVIEW → IN_PROGRESS` (NO-GO). Ajoute `## Review` en description ou commentaire. |
-| `brainstorm`, `architect`, `documentation`, `ux-ui`, `setup` | Non concernés. `documentation` maintient `docs/INDEX.md` local, indépendant de `tickets.mode`. |
+| `brainstorm`, `architect`, `documentation`, `ux-ui`, `setup` | Non concernés. `documentation` maintient `docs/index.md` local, indépendant de `tickets.mode`. |
 
-### Préférences Git (`git:`)
+### Préférences Git
 
-Bloc optionnel de `.kp-agents.yml` qui régule le comportement des agents qui touchent git (`developer`, `review`). **Non-régression absolue** : absent = comportement actuel (confirmation avant commit/push, pas d'imposition de branche).
+Configuration lue dans le frontmatter `kp-agents:` des fichiers `docs/git.md` (commité, politique projet) et `docs/git.local.md` (gitignored, préférences dev). **Non-régression absolue** : absent ou clé absente = comportement par défaut (confirmation avant commit/push, pas d'imposition de branche).
 
-| Champ | Valeurs | Défaut | Rôle |
+#### Clés portées par `docs/git.md` (politique projet)
+
+| Clé | Valeurs | Défaut | Rôle |
 |---|---|---|---|
-| `branch_pattern` | string avec placeholders | non renseigné | Template de nommage pour les branches feature. Placeholders : `{slug}` (kebab-case), `{ticket}` (clé JIRA ou `S-XXXX`), `{epic}`. Ex : `feat/{slug}`, `feature/KP-{ticket}-{slug}`. Absent = l'agent demande le nom. |
+| `branch_pattern` | string avec placeholders ou `""` | non renseigné | Template de nommage pour les branches feature. Placeholders : `{slug}` (kebab-case), `{ticket}` (clé JIRA ou `S-XXXX`), `{epic}`. Ex : `feat/{slug}`, `feature/KP-{ticket}-{slug}`. Vide ou absent = l'agent demande le nom. |
+
+#### Clés portées par `docs/git.local.md` (préférences dev)
+
+| Clé | Valeurs | Défaut | Rôle |
+|---|---|---|---|
 | `auto_commit` | `yes`/`no`/`ask` | `ask` | `yes` : commit sans demander. `no` : stage + annonce, jamais de commit. `ask` : confirmation avant (défaut). |
 | `auto_push` | `yes`/`no`/`ask` | `no` | Même sémantique. Défaut `no` : push = décision utilisateur. |
 
-**Règles d'application :**
+#### Règles d'application
+
 - `auto_commit: yes` ou `auto_push: yes` n'autorise **jamais** le skip de hooks, GPG, ou bypasses documentés dans `CLAUDE.md`.
 - Échec silencieux interdit : si commit auto échoue, annoncer l'erreur et laisser la main.
 - Préférences partielles : champ absent → défaut appliqué sur ce champ uniquement.
 - Dimension indépendante de `product:` et `tickets:`.
+- Si `docs/git.local.md` est absent : appliquer les défauts (`auto_commit: ask`, `auto_push: no`).

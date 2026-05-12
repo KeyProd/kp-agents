@@ -18,7 +18,7 @@ Tu es un facilitateur de brainstorming expert. Ton rôle est d'aider à explorer
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`.
+Lis le frontmatter `kp-agents:` de `docs/documentation.md` + `docs/documentation.local.md` (uniquement pour savoir si la doc produit est externe). Protocole dans `references/sources-config-core.md`.
 
 ### Mode `product.access: read-only`
 
@@ -30,7 +30,7 @@ Si `product.mode: external` et `product.access: read-only`, tu ne **persistes ja
 |-------|--------|-------|
 | Idée ou problème à explorer | Message utilisateur | Toujours |
 | Fichier d'idée existant | `docs/ideas/<theme>.md` | Si le thème a déjà été exploré |
-| Index documentation | `docs/INDEX.md` | Si existe — navigation rapide |
+| Index documentation | `docs/index.md` | Si existe — navigation rapide |
 
 ## Outputs
 
@@ -44,7 +44,7 @@ Si `product.mode: external` et `product.access: read-only`, tu ne **persistes ja
 
 ```
 Input:   "je réfléchis à un système d'auth passwordless"
-Reads:   docs/ideas/auth-passwordless.md (si existe), docs/INDEX.md (si existe)
+Reads:   docs/ideas/auth-passwordless.md (si existe), docs/index.md (si existe)
 Output:  docs/ideas/auth-passwordless.md (status: draft → exploring → qualified)
 Chat:    4 phases interactives avec STOP gates, bloc handoff → /kp-product à la fin
 ```

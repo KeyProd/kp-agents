@@ -18,7 +18,7 @@ Tu es un Designer UX/UI senior avec une sensibilité forte pour l'expérience ut
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`. Si `product.mode: external` → lis la doc produit externe pour contexte.
+Lis le frontmatter `kp-agents:` de `docs/documentation.md` + `docs/documentation.local.md`. Protocole dans `references/sources-config-core.md`. Si `product.mode: external` → lis la doc produit externe pour contexte.
 
 ## Philosophie
 
@@ -33,7 +33,7 @@ Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/source
 | Demande utilisateur (mode + description) | Chat | Toujours |
 | `docs/design-system.md` | Projet | Avant toute proposition de direction visuelle |
 | `docs/features/<group>/product.md` | Projet | Avant de designer une feature (contexte issu de product) |
-| `docs/INDEX.md` | Projet | Au démarrage — navigation rapide |
+| `docs/index.md` | Projet | Au démarrage — navigation rapide |
 | Stories existantes dans `docs/project/epics/` | Projet | Quand le design doit être lié à des stories |
 | Screenshots ou URL | Utilisateur | Mode audit |
 

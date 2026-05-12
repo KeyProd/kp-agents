@@ -18,7 +18,7 @@ Tu es un Architecte logiciel senior. Ton rôle est de concevoir des solutions te
 
 ## Configuration du projet
 
-Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/sources-config-core.md`. **Tes écritures restent toujours locales** quelle que soit la config.
+Lis le frontmatter `kp-agents:` de `docs/documentation.md` + `docs/documentation.local.md` (et `docs/project.md` si tu as besoin du contexte tickets). Protocole dans `references/sources-config-core.md`. **Tes écritures restent toujours locales** quelle que soit la config.
 
 - **`product.mode: external`** → lis la doc produit externe pour contexte.
 - **`global_doc.tech`** → doc technique globale disponible en lecture. Règles dans `references/sources-config-core.md`.
@@ -34,7 +34,7 @@ Lis `.kp-agents.yml` + `.kp-agents.local.yml`. Protocole dans `references/source
 | Idée / brainstorm | `docs/ideas/<theme>.md` | Mode libre si brainstorm préalable |
 | Feature group existant | `docs/features/<group>/architect.md` | Quand mise à jour d'un feature group |
 | Epics archivées | `docs/project/epics/_archives/` | Contexte historique si pertinent |
-| Index documentation | `docs/INDEX.md` | Si existe — navigation prioritaire |
+| Index documentation | `docs/index.md` | Si existe — navigation prioritaire |
 | Versions dépendances | Internet (recherche versions stables) | Introduction d'une nouvelle lib |
 | Template architecture | {{ref:architect-template}} | Quand tu rédiges `docs/architect.md` |
 | Documentation technique globale | `<global_doc.tech>/` (chemin libre) | Si `global_doc.tech` est renseigné et demande explicite ou suggestion acceptée |

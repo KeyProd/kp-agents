@@ -146,7 +146,7 @@ Le mapping gouverne **comment** une story markdown est transcodée en ticket JIR
 | `label_patterns.author` | string | `"kp-author-{name}"` | Idem pour l'auteur. |
 | `label_patterns.status` | string | `"kp-status-{value}"` | Label redondant avec workflow, utile pour JQL. |
 | `custom_fields` | object | `{}` | Clé-valeur `customfield_XXXXX` injectés à la création. |
-| `review_placement` | `description`\\|`comment` | `"description"` | Où `review` écrit `## Review` : dans la description (append) ou commentaire JIRA. |
+| `review_placement` | `description`\|`comment` | `"description"` | Où `review` écrit `## Review` : dans la description (append) ou commentaire JIRA. |
 
 #### Pipeline d'écriture (create epic ou story)
 

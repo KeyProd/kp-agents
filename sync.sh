@@ -203,6 +203,18 @@ extract_body() {
 }
 
 # ─────────────────────────────────────────────────────────────
+# Replace a literal token in `content` by `value` (no regex, no backref).
+# Delegated to python3 because bash's ${var//pat/repl} interprets `&` and `\\`
+# in the replacement on bash 5.3+ but NOT on bash 3.2 (macOS system bash) —
+# which corrupted markdown table escapes like `\|` into `\\|`. Python's
+# str.replace is purely literal and version-stable.
+# Usage: result=$(python_replace "$content" "$token" "$value")
+# ─────────────────────────────────────────────────────────────
+python_replace() {
+    python3 -c 'import sys; sys.stdout.write(sys.argv[1].replace(sys.argv[2], sys.argv[3]))' "$1" "$2" "$3"
+}
+
+# ─────────────────────────────────────────────────────────────
 # Resolve {{include:filename}} directives
 # ─────────────────────────────────────────────────────────────
 resolve_includes() {
@@ -215,19 +227,14 @@ resolve_includes() {
         if [[ -f "$include_file" ]]; then
             local include_content
             include_content=$(<"$include_file")
-            # Bash 5.3+: `&` in the replacement of ${var//pat/repl} acts as backref to the match.
-            # Markdown files often contain `&` (e.g. "Projet & Tickets") → must escape to literal.
-            # Order matters: escape `\` first, then `&`.
-            include_content="${include_content//\\/\\\\}"
-            include_content="${include_content//&/\\&}"
-            content="${content//\{\{include:$include_name\}\}/$include_content}"
+            content=$(python_replace "$content" "{{include:${include_name}}}" "$include_content")
         else
             warn "Include not found: $include_file"
-            content="${content//\{\{include:$include_name\}\}/}"
+            content=$(python_replace "$content" "{{include:${include_name}}}" "")
         fi
     done
 
-    echo "$content"
+    printf '%s' "$content"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -252,15 +259,14 @@ resolve_refs_plugin() {
             ref_content=$(resolve_includes "$ref_content")
             printf '%s\n' "$ref_content" > "$refs_dir/${ref_name}.md"
             local pointer="voir \`references/${ref_name}.md\` (à lire à la demande)"
-            # Pointer is a fixed string — no `&` or `\` to escape, safe as-is.
-            content="${content//\{\{ref:$ref_name\}\}/$pointer}"
+            content=$(python_replace "$content" "{{ref:${ref_name}}}" "$pointer")
         else
             warn "Ref not found: $ref_file"
-            content="${content//\{\{ref:$ref_name\}\}/}"
+            content=$(python_replace "$content" "{{ref:${ref_name}}}" "")
         fi
     done
 
-    echo "$content"
+    printf '%s' "$content"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -277,17 +283,16 @@ resolve_refs_inline() {
         if [[ -f "$ref_file" ]]; then
             local ref_content
             ref_content=$(<"$ref_file")
-            # Bash 5.3+: escape `\` then `&` in replacement (see resolve_includes for context).
-            ref_content="${ref_content//\\/\\\\}"
-            ref_content="${ref_content//&/\\&}"
-            content="${content//\{\{ref:$ref_name\}\}/$ref_content}"
+            # Resolve sub-includes inside the ref before inlining (composition support)
+            ref_content=$(resolve_includes "$ref_content")
+            content=$(python_replace "$content" "{{ref:${ref_name}}}" "$ref_content")
         else
             warn "Ref not found: $ref_file"
-            content="${content//\{\{ref:$ref_name\}\}/}"
+            content=$(python_replace "$content" "{{ref:${ref_name}}}" "")
         fi
     done
 
-    echo "$content"
+    printf '%s' "$content"
 }
 
 # ─────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ Quand tu recommandes le passage vers un autre agent, produis systématiquement u
 
 Format :
 
-> **Handoff → /kp-[agent]**
+> **Handoff → /kp-agents:kp-[agent]**
 > **Depuis** : [ton rôle]-agent
 > **Contexte** : [sujet, epic ou feature concernée]
 > **Acquis** : [décisions prises, informations validées, hypothèses confirmées]

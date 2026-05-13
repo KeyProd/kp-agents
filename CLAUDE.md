@@ -36,18 +36,18 @@ docs/              ← Documentation projet (vision, architecture, epics, storie
 
 ## Ajouter ou modifier un agent
 
-1. Créer ou modifier le fichier dans `agents/<nom>.md`
+1. Créer ou modifier le fichier dans `agents/kp-<nom>.md` — le préfixe `kp-` est **obligatoire** dans le nom de fichier ET dans le frontmatter `name:` (convention v2.0.0, assure l'unicité du skill sur les 3 cibles)
 2. Respecter le frontmatter obligatoire :
    ```yaml
    ---
-   name: <nom>
+   name: kp-<nom>
    description: "<description longue>"
    short_description: "<description courte>"
    default_prompt: "<prompt par défaut>"
    ---
    ```
 3. Lancer `./sync.sh` (ou `./sync.sh --dist-only` pour générer sans installer Cursor/Codex)
-4. Le script génère le SKILL.md dans `plugins/kp-agents/skills/<nom>/` et les artefacts Cursor/Codex préfixés `kp-`
+4. Le script génère le SKILL.md dans `plugins/kp-agents/skills/kp-<nom>/` et les artefacts Cursor (`kp-<nom>.mdc`) / Codex (`kp-<nom>/SKILL.md`). Aucun double-préfixage : `sync.sh` utilise directement le `name:` du frontmatter, qui doit déjà inclure `kp-`.
 5. Publier la mise à jour Claude :
    - `sync.sh` **bumpe automatiquement la version patch** si le contenu des skills a changé (cf. `_contentHash` + `_lastAutoVersion` dans `plugin.json` — géré par le script, ne pas modifier à la main)
    - Pour un bump mineur ou majeur (ajout/retrait d'agent, rupture), utiliser `./sync.sh --minor` ou `./sync.sh --major`
@@ -87,7 +87,7 @@ Pour le contenu transverse *léger* qui doit être présent immédiatement à l'
 - `docs-structure` — Convention de structure documentaire (complète, inclut les 4 {{ref}} de templates)
 - `docs-structure-light` — Arborescence + règles, sans templates
 - `handoff` — Convention de relais inter-agents
-- `gotchas-transverses` — Gotchas communs aux 8 agents
+- `gotchas-transverses` — Gotchas communs aux 9 agents
 - `sources-config` — Schéma `.kp-agents.yml`, règles de résolution de chemin, pipelines MCP pour tickets, préférences git (v1.1.0)
 
 ### `{{ref:nom}}` — reference file (progressive disclosure, agentskills.io)
@@ -146,37 +146,41 @@ Invocations via le plugin Claude Code : `/kp-agents:<nom>`.
 
 ```mermaid
 flowchart LR
-    S["/kp-agents:setup"] -->|config prête| P["/kp-agents:product"]
-    B["/kp-agents:brainstorm"] -->|idée qualifiée| P
-    P -->|epics et stories| A["/kp-agents:architect"]
-    P -->|besoin UX| UX["/kp-agents:ux-ui"]
-    A -->|design technique| D["/kp-agents:developer"]
+    S["/kp-agents:kp-setup"] -->|config prête| P["/kp-agents:kp-product"]
+    B["/kp-agents:kp-brainstorm"] -->|idée qualifiée| P
+    P -->|epics et stories| A["/kp-agents:kp-architect"]
+    P -->|besoin UX| UX["/kp-agents:kp-ux-ui"]
+    A -->|design technique| D["/kp-agents:kp-developer"]
     UX -->|specs visuelles| D
-    D -->|implémentation| R["/kp-agents:review"]
+    D -->|implémentation| R["/kp-agents:kp-review"]
     R -->|NO-GO| D
-    R -->|GO + écarts| DOC["/kp-agents:documentation"]
+    R -->|GO + écarts| DOC["/kp-agents:kp-documentation"]
     D -->|écarts détectés| DOC
     P -. config manquante .-> S
     A -. config manquante .-> S
     D -. config manquante .-> S
 ```
 
-**Pipeline standard** : brainstorm → product → architect → developer → review
-**Agents transversaux** : ux-ui (entre product et developer), documentation (après review ou developer), setup (auto-redirect depuis tout agent détectant une config manquante)
+**Pipeline standard** : kp-brainstorm → kp-product → kp-architect → kp-developer → kp-review
+**Agents transversaux** : kp-ux-ui (entre kp-product et kp-developer), kp-documentation (après kp-review ou kp-developer), kp-setup (auto-redirect depuis tout agent détectant une config manquante)
+**Agents standalone** : kp-daily (hors pipeline — synthèse quotidienne sessions Claude / Outlook / Teams)
 **Relais** : chaque agent produit un bloc de handoff structuré pour transmettre le contexte au suivant
 
 ## Agents disponibles
 
+Convention de nommage (v2.0.0) : tous les agents portent le préfixe `kp-` dès le frontmatter `name:`. Ce préfixe garantit l'unicité du skill côté Cursor / Codex et lève toute collision avec d'autres plugins. Côté Claude Code, le namespace de plugin (`kp-agents:`) reste préfixé devant le nom du skill → `/kp-agents:kp-brainstorm`.
+
 | Agent | Fichier | Invocation Claude | Rôle |
 |-------|---------|-------------------|------|
-| brainstorm | `agents/brainstorm.md` | `/kp-agents:brainstorm` | Explorer des idées, challenger des hypothèses |
-| product | `agents/product.md` | `/kp-agents:product` | Structurer en roadmap, epics et stories |
-| architect | `agents/architect.md` | `/kp-agents:architect` | Concevoir l'architecture technique |
-| developer | `agents/developer.md` | `/kp-agents:developer` | Implémenter les stories et epics |
-| review | `agents/review.md` | `/kp-agents:review` | Relire, tester, valider le code |
-| documentation | `agents/documentation.md` | `/kp-agents:documentation` | Analyser et maintenir la documentation |
-| ux-ui | `agents/ux-ui.md` | `/kp-agents:ux-ui` | Designer UX/UI et identité visuelle |
-| setup | `agents/setup.md` | `/kp-agents:setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| kp-brainstorm | `agents/kp-brainstorm.md` | `/kp-agents:kp-brainstorm` | Explorer des idées, challenger des hypothèses |
+| kp-product | `agents/kp-product.md` | `/kp-agents:kp-product` | Structurer en roadmap, epics et stories |
+| kp-architect | `agents/kp-architect.md` | `/kp-agents:kp-architect` | Concevoir l'architecture technique |
+| kp-developer | `agents/kp-developer.md` | `/kp-agents:kp-developer` | Implémenter les stories et epics |
+| kp-review | `agents/kp-review.md` | `/kp-agents:kp-review` | Relire, tester, valider le code |
+| kp-documentation | `agents/kp-documentation.md` | `/kp-agents:kp-documentation` | Analyser et maintenir la documentation |
+| kp-ux-ui | `agents/kp-ux-ui.md` | `/kp-agents:kp-ux-ui` | Designer UX/UI et identité visuelle |
+| kp-setup | `agents/kp-setup.md` | `/kp-agents:kp-setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| kp-daily | `agents/kp-daily.md` | `/kp-agents:kp-daily` | Générer un daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
 
-Pour Cursor : `@kp-<nom>` via le sélecteur de règles.
-Pour Codex : skill auto-détectée `kp-<nom>`.
+Pour Cursor : `@kp-<nom>` via le sélecteur de règles (`@kp-brainstorm`, `@kp-daily`…).
+Pour Codex : skill auto-détectée `kp-<nom>` (`kp-brainstorm`, `kp-daily`…).

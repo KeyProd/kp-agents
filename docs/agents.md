@@ -43,14 +43,14 @@ Table de référence machine-readable. Signaux = mots-clés ou contexte déclenc
 
 ```mermaid
 flowchart LR
-    S["/kp-agents:setup"]
-    B["/kp-agents:brainstorm"]
-    P["/kp-agents:product"]
-    A["/kp-agents:architect"]
-    D["/kp-agents:developer"]
-    R["/kp-agents:review"]
-    UX["/kp-agents:ux-ui"]
-    DOC["/kp-agents:documentation"]
+    S["/kp-agents:kp-setup"]
+    B["/kp-agents:kp-brainstorm"]
+    P["/kp-agents:kp-product"]
+    A["/kp-agents:kp-architect"]
+    D["/kp-agents:kp-developer"]
+    R["/kp-agents:kp-review"]
+    UX["/kp-agents:kp-ux-ui"]
+    DOC["/kp-agents:kp-documentation"]
     FIN((DONE))
 
     S -->|config prête| P
@@ -90,7 +90,7 @@ flowchart LR
 
 ---
 
-### 1. Brainstorm (`/kp-agents:brainstorm`)
+### 1. Brainstorm (`/kp-agents:kp-brainstorm`)
 
 **Rôle** : facilitateur de brainstorming. Explore une idée sous tous ses angles, propose des approches créatives et structure la réflexion pour la faire avancer concrètement.
 
@@ -119,8 +119,8 @@ flowchart TD
     STRUCT --> OUT
 
     OUT{Relais ?}
-    OUT -->|sujet mature| PRODUCT["/kp-agents:product"]
-    OUT -.->|incertitudes techniques| ARCHITECT["/kp-agents:architect"]
+    OUT -->|sujet mature| PRODUCT["/kp-agents:kp-product"]
+    OUT -.->|incertitudes techniques| ARCHITECT["/kp-agents:kp-architect"]
 
     style COMP fill:#e3f2fd,stroke:#1976D2
     style EXPLO fill:#e3f2fd,stroke:#1976D2
@@ -132,7 +132,7 @@ flowchart TD
 
 ---
 
-### 2. Product (`/kp-agents:product`)
+### 2. Product (`/kp-agents:kp-product`)
 
 **Rôle** : Product Manager. Transforme des idées brutes en spécifications produit actionnables : vision, roadmap, epics et stories avec critères d'acceptation.
 
@@ -163,9 +163,9 @@ flowchart TD
     PRODUCT_MD --> OUT
 
     OUT{Relais ?}
-    OUT -->|design technique| ARCHITECT["/kp-agents:architect"]
-    OUT -.->|besoin UX| UX["/kp-agents:ux-ui"]
-    OUT -.->|doc à mettre à jour| DOC["/kp-agents:documentation"]
+    OUT -->|design technique| ARCHITECT["/kp-agents:kp-architect"]
+    OUT -.->|besoin UX| UX["/kp-agents:kp-ux-ui"]
+    OUT -.->|doc à mettre à jour| DOC["/kp-agents:kp-documentation"]
 
     style CADRAGE fill:#e3f2fd,stroke:#1976D2
     style ROADMAP fill:#e3f2fd,stroke:#1976D2
@@ -180,7 +180,7 @@ flowchart TD
 
 ---
 
-### 3. Architect (`/kp-agents:architect`)
+### 3. Architect (`/kp-agents:kp-architect`)
 
 **Rôle** : Architecte logiciel senior. Conçoit des solutions techniques solides, évalue les compromis et documente les décisions d'architecture (ADR).
 
@@ -212,9 +212,9 @@ flowchart TD
     ADR --> OUT
 
     OUT{Relais ?}
-    OUT -->|implémentation| DEV["/kp-agents:developer"]
-    OUT -.->|questions produit| PRODUCT["/kp-agents:product"]
-    OUT -.->|doc obsolète| DOC["/kp-agents:documentation"]
+    OUT -->|implémentation| DEV["/kp-agents:kp-developer"]
+    OUT -.->|questions produit| PRODUCT["/kp-agents:kp-product"]
+    OUT -.->|doc obsolète| DOC["/kp-agents:kp-documentation"]
 
     style ANALYSE fill:#e3f2fd,stroke:#1976D2
     style OPTIONS fill:#e3f2fd,stroke:#1976D2
@@ -227,7 +227,7 @@ flowchart TD
 
 ---
 
-### 4. Developer (`/kp-agents:developer`)
+### 4. Developer (`/kp-agents:kp-developer`)
 
 **Rôle** : Développeur senior. Implémente les fonctionnalités en suivant rigoureusement les spécifications produit et techniques documentées.
 
@@ -266,8 +266,8 @@ flowchart TD
     BILAN --> OUT
 
     OUT{Relais ?}
-    OUT -->|review recommandée| REVIEW["/kp-agents:review"]
-    OUT -.->|écarts documentaires| DOC["/kp-agents:documentation"]
+    OUT -->|review recommandée| REVIEW["/kp-agents:kp-review"]
+    OUT -.->|écarts documentaires| DOC["/kp-agents:kp-documentation"]
 
     style CADRAGE fill:#e3f2fd,stroke:#1976D2
     style CTX fill:#e3f2fd,stroke:#1976D2
@@ -282,7 +282,7 @@ flowchart TD
 
 ---
 
-### 5. Review (`/kp-agents:review`)
+### 5. Review (`/kp-agents:kp-review`)
 
 **Rôle** : Reviewer senior. Relit, teste et valide le code produit par le Developer. Émet un verdict GO/NO-GO et écrit les recommandations d'amélioration dans la story.
 
@@ -319,8 +319,8 @@ flowchart TD
 
     OUT{Relais ?}
     VERDICT -->|GO, story DONE| FIN((DONE))
-    VERDICT -->|NO-GO, story IN PROGRESS| DEV["/kp-agents:developer"]
-    WRITE -.->|écarts documentaires| DOC["/kp-agents:documentation"]
+    VERDICT -->|NO-GO, story IN PROGRESS| DEV["/kp-agents:kp-developer"]
+    WRITE -.->|écarts documentaires| DOC["/kp-agents:kp-documentation"]
 
     style CTX fill:#e3f2fd,stroke:#1976D2
     style AUTO fill:#e3f2fd,stroke:#1976D2
@@ -336,7 +336,7 @@ flowchart TD
 
 ---
 
-### 6. Documentation (`/kp-agents:documentation`)
+### 6. Documentation (`/kp-agents:kp-documentation`)
 
 **Rôle** : responsable documentation technique et produit. Analyse la documentation existante, identifie les divergences avec le code, propose des corrections et maintient la documentation après validation.
 
@@ -371,8 +371,8 @@ flowchart TD
     INDEX --> OUT
 
     OUT{Relais ?}
-    OUT -.->|spécification future| PRODUCT["/kp-agents:product"]
-    OUT -.->|décision technique| ARCHITECT["/kp-agents:architect"]
+    OUT -.->|spécification future| PRODUCT["/kp-agents:kp-product"]
+    OUT -.->|décision technique| ARCHITECT["/kp-agents:kp-architect"]
 
     style ANALYSE fill:#e3f2fd,stroke:#1976D2
     style AUDIT fill:#e3f2fd,stroke:#1976D2
@@ -385,7 +385,7 @@ flowchart TD
 
 ---
 
-### 7. UX/UI (`/kp-agents:ux-ui`)
+### 7. UX/UI (`/kp-agents:kp-ux-ui`)
 
 **Rôle** : Designer UX/UI senior. Conçoit des interfaces intuitives et visuellement distinctives. Travaille entre Product et Developer.
 
@@ -419,9 +419,9 @@ flowchart TD
     SPECS --> OUT
 
     OUT{Relais ?}
-    OUT -->|specs prêtes| DEV["/kp-agents:developer"]
-    OUT -.->|choix produit non tranchés| PRODUCT["/kp-agents:product"]
-    OUT -.->|implications techniques fortes| ARCHITECT["/kp-agents:architect"]
+    OUT -->|specs prêtes| DEV["/kp-agents:kp-developer"]
+    OUT -.->|choix produit non tranchés| PRODUCT["/kp-agents:kp-product"]
+    OUT -.->|implications techniques fortes| ARCHITECT["/kp-agents:kp-architect"]
 
     style USERS fill:#e3f2fd,stroke:#1976D2
     style PARCOURS fill:#e3f2fd,stroke:#1976D2
@@ -435,7 +435,7 @@ flowchart TD
 
 ---
 
-### 8. Setup (`/kp-agents:setup`)
+### 8. Setup (`/kp-agents:kp-setup`)
 
 **Rôle** : configurateur du projet. Audite l'état de `.kp-agents.yml` et `.kp-agents.local.yml`, guide l'utilisateur pas à pas pour les compléter ou les corriger, et écrit les fichiers de config sans jamais écraser sans confirmation. **Seul agent autorisé** à écrire `.kp-agents.yml` et `.kp-agents.local.yml` — les 7 autres agents sont en lecture seule sur ces fichiers.
 
@@ -465,7 +465,7 @@ flowchart TD
     ANNONCE --> CONFIRM{Confirmation ?}
     CONFIRM -->|non| CANCEL[Aucune modification, annonce explicite]
     CONFIRM -->|oui| WRITE[5. Écriture atomique<br/>.kp-agents.yml<br/>.kp-agents.local.yml si nécessaire<br/>maj .gitignore]
-    WRITE --> HANDOFF[Bloc de handoff<br/>vers agent appelant ou /kp-agents:product]
+    WRITE --> HANDOFF[Bloc de handoff<br/>vers agent appelant ou /kp-agents:kp-product]
     CANCEL --> FIN((Fin))
     HANDOFF --> FIN
 
@@ -480,7 +480,7 @@ flowchart TD
     style FIN fill:#eeeeee,stroke:#9E9E9E
 ```
 
-**Auto-redirect** : tout agent qui détecte une config manquante / incomplète dans `.kp-agents.yml` propose `/kp-agents:setup` à l'utilisateur — la redirection est une **suggestion, jamais un blocage**. L'utilisateur peut toujours refuser et continuer en mode local dégradé.
+**Auto-redirect** : tout agent qui détecte une config manquante / incomplète dans `.kp-agents.yml` propose `/kp-agents:kp-setup` à l'utilisateur — la redirection est une **suggestion, jamais un blocage**. L'utilisateur peut toujours refuser et continuer en mode local dégradé.
 
 ---
 

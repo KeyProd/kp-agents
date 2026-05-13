@@ -5,7 +5,7 @@
     "email": "contact@keyprod.com"
   },
   "metadata": {
-    "description": "KeyProd agents marketplace for Claude Code — development workflow agents (brainstorm, product, architect, developer, review, documentation, ux-ui, setup)"
+    "description": "KeyProd agents marketplace for Claude Code — development workflow agents (kp-brainstorm, kp-product, kp-architect, kp-developer, kp-review, kp-documentation, kp-ux-ui, kp-setup) + standalone agent kp-daily (sessions Claude/Outlook/Teams synthesis)"
   },
   "plugins": [
     {

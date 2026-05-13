@@ -27,17 +27,18 @@ L'installation se fait directement depuis le repo git — aucun clone ni `sync.s
 /reload-plugins
 ```
 
-Puis invoque les agents avec le namespace `kp-agents:` :
+Puis invoque les agents avec le namespace `kp-agents:` (chaque skill est lui-même préfixé `kp-` pour garantir son unicité — convention v2.0.0) :
 
 ```
-/kp-agents:setup
-/kp-agents:brainstorm
-/kp-agents:product
-/kp-agents:architect
-/kp-agents:developer
-/kp-agents:review
-/kp-agents:documentation
-/kp-agents:ux-ui
+/kp-agents:kp-setup
+/kp-agents:kp-brainstorm
+/kp-agents:kp-product
+/kp-agents:kp-architect
+/kp-agents:kp-developer
+/kp-agents:kp-review
+/kp-agents:kp-documentation
+/kp-agents:kp-ux-ui
+/kp-agents:kp-daily
 ```
 
 ### Cursor et Codex (via sync.sh)
@@ -71,11 +72,11 @@ Après sync :
 
 ## Créer un agent
 
-Créer `agents/mon-agent.md` avec ce frontmatter :
+Créer `agents/kp-mon-agent.md` (le préfixe `kp-` est désormais obligatoire dans le nom de fichier ET dans le frontmatter `name:` — convention v2.0.0) :
 
 ```yaml
 ---
-name: mon-agent
+name: kp-mon-agent
 description: "Description longue pour les outils IA"
 short_description: "Description courte pour les listes"
 default_prompt: "Prompt suggéré à l'utilisateur."
@@ -86,12 +87,12 @@ default_prompt: "Prompt suggéré à l'utilisateur."
 Instructions, processus, règles...
 ```
 
-Lancer `./sync.sh` — le plugin Claude exposera l'agent comme `/kp-agents:mon-agent`, Cursor comme `@kp-mon-agent`, Codex avec la skill `kp-mon-agent`.
+Lancer `./sync.sh` — le plugin Claude exposera l'agent comme `/kp-agents:kp-mon-agent`, Cursor comme `@kp-mon-agent`, Codex avec la skill `kp-mon-agent`.
 
 ### Publier une mise à jour Claude Code
 
-1. Modifier l'agent source dans `agents/<nom>.md`
-2. Lancer `./sync.sh` pour régénérer `plugins/kp-agents/skills/<nom>/SKILL.md`. **La version patch est bumpée automatiquement** si le contenu des skills a changé (via un hash SHA256 stocké dans `_contentHash`).
+1. Modifier l'agent source dans `agents/kp-<nom>.md`
+2. Lancer `./sync.sh` pour régénérer `plugins/kp-agents/skills/kp-<nom>/SKILL.md`. **La version patch est bumpée automatiquement** si le contenu des skills a changé (via un hash SHA256 stocké dans `_contentHash`).
    - Pour l'ajout d'un nouvel agent ou une feature notable : `./sync.sh --minor` (`X.Y.Z` → `X.(Y+1).0`)
    - Pour une rupture (retrait d'agent, renommage de namespace) : `./sync.sh --major` (`X.Y.Z` → `(X+1).0.0`)
    - `--minor` et `--major` sont mutuellement exclusifs et ne se combinent pas avec `--clean` / `--clean-all`.
@@ -132,26 +133,27 @@ docs/              Documentation projet (vision, architecture, epics, stories)
 
 | Agent | Description |
 |-------|-------------|
-| `brainstorm` | Explorer des idées, challenger des hypothèses |
-| `product` | Structurer en roadmap, epics et stories |
-| `architect` | Concevoir l'architecture technique |
-| `developer` | Implémenter les stories et epics |
-| `review` | Relire, tester, valider le code |
-| `documentation` | Analyser et maintenir la documentation |
-| `ux-ui` | Designer UX/UI et identité visuelle |
-| `setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| `kp-brainstorm` | Explorer des idées, challenger des hypothèses |
+| `kp-product` | Structurer en roadmap, epics et stories |
+| `kp-architect` | Concevoir l'architecture technique |
+| `kp-developer` | Implémenter les stories et epics |
+| `kp-review` | Relire, tester, valider le code |
+| `kp-documentation` | Analyser et maintenir la documentation |
+| `kp-ux-ui` | Designer UX/UI et identité visuelle |
+| `kp-setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| `kp-daily` | Générer un daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
 
 ### Flux entre agents
 
 ```
-setup ┐
-      ↓
-brainstorm → product → architect → developer → review → documentation
-                                       ↑                    ↓
-                                       └────────────────────┘
+kp-setup ┐
+         ↓
+kp-brainstorm → kp-product → kp-architect → kp-developer → kp-review → kp-documentation
+                                                ↑                          ↓
+                                                └──────────────────────────┘
 ```
 
-`setup` est transversal : auto-redirect depuis tout agent détectant une config manquante. Détails dans [docs/agents.md](docs/agents.md).
+`kp-setup` est transversal : auto-redirect depuis tout agent détectant une config manquante. `kp-daily` est un agent standalone (pas dans le pipeline de dev). Détails dans [docs/agents.md](docs/agents.md).
 
 ## Configuration projet (`.kp-agents.yml` — optionnel)
 
@@ -180,7 +182,7 @@ tickets:
   project_key: POC        # override local pour pousser dans un projet sandbox
 ```
 
-Invoque `/kp-agents:setup` pour configurer ces fichiers interactivement — l'agent est audit-first et ne modifie rien sans confirmation.
+Invoque `/kp-agents:kp-setup` pour configurer ces fichiers interactivement — l'agent est audit-first et ne modifie rien sans confirmation.
 
 > **Important** : `.kp-agents.local.yml` doit être gitignoré (l'agent `setup` le fait automatiquement). Ne jamais committer de chemin machine-spécifique.
 
@@ -205,9 +207,9 @@ Puis dans Claude Code :
 
 ### Les anciens `/kp-brainstorm` (sans namespace) ne répondent plus
 
-Normal : la distribution Claude Code se fait désormais via le plugin marketplace. Les namespaces sont imposés sous la forme `/kp-agents:<nom>`. L'ancien install local via `sync.sh` a été automatiquement purgé au premier run de la nouvelle version.
+Normal : la distribution Claude Code se fait désormais via le plugin marketplace. Les skills sont préfixés `kp-` dans leur frontmatter (convention v2.0.0, garantit l'unicité côté Cursor / Codex et lève toute collision avec d'autres plugins) et le namespace de plugin (`kp-agents:`) reste préfixé devant. Forme d'invocation finale : `/kp-agents:kp-<nom>`. L'ancien install local via `sync.sh` a été automatiquement purgé au premier run de la nouvelle version.
 
-Utilise `/kp-agents:brainstorm` à la place de `/kp-brainstorm`, etc.
+Utilise `/kp-agents:kp-brainstorm` à la place de `/kp-brainstorm`, etc.
 
 ### Installer une branche feature (pour tester)
 

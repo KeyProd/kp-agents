@@ -78,9 +78,9 @@ Sur échec (timeout, 401, 403, 500, outil non chargé), proposer **3 options** :
 
 | Cause | Signal | Conseil |
 |---|---|---|
-| MCP non chargé | tool not found | Vérifier MCP JIRA activé dans la session, ou `/kp-agents:setup`. |
+| MCP non chargé | tool not found | Vérifier MCP JIRA activé dans la session, ou `/kp-agents:kp-setup`. |
 | Auth expirée | 401/403 | Reconnexion OAuth Atlassian nécessaire. |
-| Champ requis manquant | 400 + `errors.fieldName` | Ajouter dans `tickets.mapping.custom_fields` via `/kp-agents:setup`. |
+| Champ requis manquant | 400 + `errors.fieldName` | Ajouter dans `tickets.mapping.custom_fields` via `/kp-agents:kp-setup`. |
 
 #### Non-régression mode local
 

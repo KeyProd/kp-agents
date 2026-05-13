@@ -36,7 +36,9 @@ CLEAN_ALL=false
 BUMP_MINOR=false
 BUMP_MAJOR=false
 
-PREFIX="kp"  # Prefix for Cursor/Codex artefacts (kp-brainstorm, kp-product...)
+PREFIX="kp"  # Legacy artefact prefix (used only for cleanup of old installs).
+             # Since v2.0.0, agent names already include the `kp-` prefix in their
+             # frontmatter `name:` field — no auto-prefixing is applied at generation.
 
 # Colors
 GREEN='\033[0;32m'
@@ -387,14 +389,14 @@ CURSOR_EOF
 
 generate_cursor() {
     local name="$1" desc="$2" body="$3"
-    local dist_outfile="$DIST_CURSOR_DIR/${PREFIX}-${name}.mdc"
-    local install_outfile="$CURSOR_DIR/${PREFIX}-${name}.mdc"
+    local dist_outfile="$DIST_CURSOR_DIR/${name}.mdc"
+    local install_outfile="$CURSOR_DIR/${name}.mdc"
 
     generate_cursor_file "$dist_outfile" "$desc" "$body"
     if $INSTALL_TARGETS; then
         cp "$dist_outfile" "$install_outfile"
     fi
-    ok "Cursor  → ${PREFIX}-${name}.mdc"
+    ok "Cursor  → ${name}.mdc"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -407,14 +409,16 @@ generate_codex_skill() {
 
     [[ -z "$short_desc" ]] && short_desc="$desc"
 
+    # Strip the `kp-` prefix for a readable display name (KeyProd Brainstorm, not KeyProd Kp-brainstorm)
+    local display_base="${name#kp-}"
     local display_name
-    display_name="KeyProd $(echo "${name:0:1}" | tr '[:lower:]' '[:upper:]')${name:1}"
+    display_name="KeyProd $(echo "${display_base:0:1}" | tr '[:lower:]' '[:upper:]')${display_base:1}"
 
     mkdir -p "$skill_agents_dir"
 
     cat > "$skill_dir/SKILL.md" <<SKILL_EOF
 ---
-name: $(yaml_quote "${PREFIX}-${name}")
+name: $(yaml_quote "${name}")
 description: $(yaml_quote "$desc")
 metadata:
   short-description: $(yaml_quote "$short_desc")
@@ -437,8 +441,8 @@ SKILL_EOF
 
 generate_codex() {
     local name="$1" desc="$2" body="$3" short_desc="$4" default_prompt="$5"
-    local dist_skill_dir="$DIST_CODEX_DIR/${PREFIX}-${name}"
-    local install_skill_dir="$CODEX_DIR/${PREFIX}-${name}"
+    local dist_skill_dir="$DIST_CODEX_DIR/${name}"
+    local install_skill_dir="$CODEX_DIR/${name}"
 
     rm -rf "$dist_skill_dir"
     generate_codex_skill "$dist_skill_dir" "$name" "$desc" "$body" "$short_desc" "$default_prompt"
@@ -449,7 +453,7 @@ generate_codex() {
         cp -R "$dist_skill_dir" "$install_skill_dir"
     fi
 
-    ok "Codex   → skill ${PREFIX}-${name}"
+    ok "Codex   → skill ${name}"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -492,12 +496,12 @@ remove_agent() {
     # Plugin skill (committed to git, removed here because the agent no longer exists)
     rm -rf "$PLUGIN_SKILLS_DIR/${name}"
     # Cursor dist + install
-    rm -f "$DIST_CURSOR_DIR/${PREFIX}-${name}.mdc"
+    rm -f "$DIST_CURSOR_DIR/${name}.mdc"
     # Codex dist + install
-    rm -rf "$DIST_CODEX_DIR/${PREFIX}-${name}"
+    rm -rf "$DIST_CODEX_DIR/${name}"
     if $INSTALL_TARGETS; then
-        rm -f "$CURSOR_DIR/${PREFIX}-${name}.mdc"
-        rm -rf "$CODEX_DIR/${PREFIX}-${name}"
+        rm -f "$CURSOR_DIR/${name}.mdc"
+        rm -rf "$CODEX_DIR/${name}"
     fi
 }
 
@@ -536,7 +540,7 @@ clean() {
         log "Cleaning ${#previous[@]} previously installed agent(s) from manifest..."
         for name in "${previous[@]}"; do
             remove_agent "$name"
-            ok "Removed: ${PREFIX}-${name}"
+            ok "Removed: ${name}"
         done
     else
         log "No manifest found — fallback glob clean on ${PREFIX}-*"
@@ -720,6 +724,12 @@ main() {
             continue
         fi
 
+        # Naming convention: every agent name must carry the `kp-` prefix so the
+        # skill is unique across all targets (Claude Code plugin, Cursor, Codex).
+        if [[ "$AGENT_NAME" != ${PREFIX}-* ]]; then
+            warn "Agent name '${AGENT_NAME}' should start with '${PREFIX}-' (convention since v2.0.0)"
+        fi
+
         log "Processing: ${AGENT_NAME}"
 
         # Extract body and resolve includes
@@ -759,9 +769,9 @@ main() {
     echo "Usage:"
     echo "  Claude Code : install plugin via '/plugin marketplace add KeyProd/kp-agents'"
     echo "                + '/plugin install kp-agents@kp-agents', then invoke with"
-    echo "                '/kp-agents:brainstorm', '/kp-agents:product', '/kp-agents:developer', ..."
+    echo "                '/kp-agents:kp-brainstorm', '/kp-agents:kp-product', '/kp-agents:kp-daily', ..."
     echo "  Cursor      : @kp-brainstorm (via rules picker)"
-    echo "  Codex       : skills auto-détectées (kp-brainstorm, kp-product...)"
+    echo "  Codex       : skills auto-détectées (kp-brainstorm, kp-product, kp-daily...)"
     echo "  Plugin      : artefacts générés dans ./plugins/kp-agents/skills/ (commit + push pour distribuer)"
     echo "  Dist        : artefacts générés dans ./dist/{cursor,codex}"
     if ! $INSTALL_TARGETS; then

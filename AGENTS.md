@@ -87,7 +87,7 @@ Pour le contenu transverse *léger* qui doit être présent immédiatement à l'
 - `docs-structure` — Convention de structure documentaire (complète, inclut les 4 {{ref}} de templates)
 - `docs-structure-light` — Arborescence + règles, sans templates
 - `handoff` — Convention de relais inter-agents
-- `gotchas-transverses` — Gotchas communs aux 8 agents
+- `gotchas-transverses` — Gotchas communs aux 9 agents
 - `sources-config` — Schéma `.kp-agents.yml`, règles de résolution de chemin, pipelines MCP pour tickets, préférences git (v1.1.0)
 
 ### `{{ref:nom}}` — reference file (progressive disclosure, agentskills.io)
@@ -110,15 +110,15 @@ Invocations via le plugin Codex : `/kp-agents:<nom>`.
 
 ```mermaid
 flowchart LR
-    S["/kp-agents:setup"] -->|config prête| P["/kp-agents:product"]
-    B["/kp-agents:brainstorm"] -->|idée qualifiée| P
-    P -->|epics et stories| A["/kp-agents:architect"]
-    P -->|besoin UX| UX["/kp-agents:ux-ui"]
-    A -->|design technique| D["/kp-agents:developer"]
+    S["/kp-agents:kp-setup"] -->|config prête| P["/kp-agents:kp-product"]
+    B["/kp-agents:kp-brainstorm"] -->|idée qualifiée| P
+    P -->|epics et stories| A["/kp-agents:kp-architect"]
+    P -->|besoin UX| UX["/kp-agents:kp-ux-ui"]
+    A -->|design technique| D["/kp-agents:kp-developer"]
     UX -->|specs visuelles| D
-    D -->|implémentation| R["/kp-agents:review"]
+    D -->|implémentation| R["/kp-agents:kp-review"]
     R -->|NO-GO| D
-    R -->|GO + écarts| DOC["/kp-agents:documentation"]
+    R -->|GO + écarts| DOC["/kp-agents:kp-documentation"]
     D -->|écarts détectés| DOC
     P -. config manquante .-> S
     A -. config manquante .-> S
@@ -131,16 +131,19 @@ flowchart LR
 
 ## Agents disponibles
 
+Convention de nommage (v2.0.0) : tous les agents portent le préfixe `kp-` dès le frontmatter `name:`. Côté Codex, le skill se nomme directement `kp-<nom>`.
+
 | Agent | Fichier | Invocation Codex | Rôle |
 |-------|---------|-------------------|------|
-| brainstorm | `agents/brainstorm.md` | `/kp-agents:brainstorm` | Explorer des idées, challenger des hypothèses |
-| product | `agents/product.md` | `/kp-agents:product` | Structurer en roadmap, epics et stories |
-| architect | `agents/architect.md` | `/kp-agents:architect` | Concevoir l'architecture technique |
-| developer | `agents/developer.md` | `/kp-agents:developer` | Implémenter les stories et epics |
-| review | `agents/review.md` | `/kp-agents:review` | Relire, tester, valider le code |
-| documentation | `agents/documentation.md` | `/kp-agents:documentation` | Analyser et maintenir la documentation |
-| ux-ui | `agents/ux-ui.md` | `/kp-agents:ux-ui` | Designer UX/UI et identité visuelle |
-| setup | `agents/setup.md` | `/kp-agents:setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| kp-brainstorm | `agents/kp-brainstorm.md` | `kp-brainstorm` | Explorer des idées, challenger des hypothèses |
+| kp-product | `agents/kp-product.md` | `kp-product` | Structurer en roadmap, epics et stories |
+| kp-architect | `agents/kp-architect.md` | `kp-architect` | Concevoir l'architecture technique |
+| kp-developer | `agents/kp-developer.md` | `kp-developer` | Implémenter les stories et epics |
+| kp-review | `agents/kp-review.md` | `kp-review` | Relire, tester, valider le code |
+| kp-documentation | `agents/kp-documentation.md` | `kp-documentation` | Analyser et maintenir la documentation |
+| kp-ux-ui | `agents/kp-ux-ui.md` | `kp-ux-ui` | Designer UX/UI et identité visuelle |
+| kp-setup | `agents/kp-setup.md` | `kp-setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| kp-daily | `agents/kp-daily.md` | `kp-daily` | Générer un daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
 
 Pour Cursor : `@kp-<nom>` via le sélecteur de règles.
 Pour Codex : skill auto-détectée `kp-<nom>`.

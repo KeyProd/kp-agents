@@ -38,6 +38,7 @@ Puis invoque les agents avec le namespace `kp-agents:` (chaque skill est lui-mê
 /kp-agents:kp-review
 /kp-agents:kp-documentation
 /kp-agents:kp-ux-ui
+/kp-agents:kp-e2e
 /kp-agents:kp-daily
 ```
 
@@ -141,6 +142,7 @@ docs/              Documentation projet (vision, architecture, epics, stories)
 | `kp-documentation` | Analyser et maintenir la documentation |
 | `kp-ux-ui` | Designer UX/UI et identité visuelle |
 | `kp-setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| `kp-e2e` | Générer et maintenir des tests E2E browser (Playwright + Playwright MCP) dans `devel/` |
 | `kp-daily` | Générer un daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
 
 ### Flux entre agents

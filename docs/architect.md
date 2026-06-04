@@ -299,6 +299,50 @@ Frontmatter minimal : uniquement `description` (le champ clé que Claude utilise
   - **Dépendance à `jq`** : plus élégant qu'un script Python inline, mais ajoute une dépendance d'installation. `python3` est déjà présent.
 - **Références** : [docs/features/auto-bump/architect.md](features/auto-bump/architect.md) (spec technique détaillée), stories E-0002 S-0001/S-0002/S-0003 dans `docs/project/epics/E-0002-Auto-Bump-Version/`
 
+### ADR-006 — Refonte du dispositif E2E : agent unique `kp-test`
+
+- **Statut** : accepted (2026-06-04)
+- **Contexte** : le socle E2E de keyprod (projet de référence) a basculé en juin 2026 vers Pest 4 Browser (`apps/kpweb/tests/Browser/`), liaison test ↔ cas par préfixe `[KP-XXXXX]`, remontée `xray-sync.mjs`. Les deux agents `kp-xray` (designer Xray) et `kp-e2e` (engineer Playwright standalone, dossier `devel/`, annotation `xray`, `sync-xray.js`) sont obsolètes à ~80 %. Le besoin réel n'est pas un refresh mais un **pilotage orchestré** garantissant la conformité de bout en bout. Cadrage : [ideas/e2e-orchestrator.md](ideas/e2e-orchestrator.md) (qualifiée, spike de validation inclus).
+- **Décision** : remplacer le binôme par **un agent unique `kp-test`**, garant de conformité, structuré en orchestrateur + 6 refs (pattern `kp-setup`). Sa colonne vertébrale est une **Definition of Done à 6 critères** (cas Xray défini+rangé / test conforme / liaison bidirectionnelle / isolation seed-clean / validation / remontée). Conversationnel multi-cible (Claude prioritaire, Cursor/Codex natifs avec pertes assumées).
+- **Conséquences** :
+  - ✅ Point d'entrée unique ; conformité garantie par une DoD opposable
+  - ✅ Surface nette réduite (9 → 8 agents : −2 +1) ; pattern orchestrateur+refs déjà éprouvé
+  - ✅ Progressive disclosure (refs chargées à la demande côté Claude)
+  - ⚠️ Agent volumineux à maintenir ; détection d'état à rendre robuste (mitigée par spike)
+- **Alternatives rejetées** :
+  - **Refresh du binôme (2 agents séparés)** : ne répond pas à l'orchestration ni à la priorité conformité ; redondance documentaire
+  - **Trio (binôme + orchestrateur dédié)** : 3 agents, or les agents Claude Code n'ont pas de pipeline programmatique (handoffs uniquement) → l'orchestrateur n'est qu'un routeur conversationnel, déjà couvert par l'agent unique
+  - **Workflow scripté (tool `Workflow`)** : Claude-only, casse la disponibilité native Cursor/Codex exigée. Réservé à un éventuel mode batch additionnel
+- **Références** : [docs/features/kp-test/architect.md](features/kp-test/architect.md) (design détaillé)
+
+### ADR-007 — Dimension de configuration `testing` (système frontmatter v2.0.0)
+
+- **Statut** : accepted (2026-06-04)
+- **Contexte** : `kp-test` doit être project-agnostic (framework, dirs, commandes de run, référentiel de cas, stratégie d'isolation paramétrables). Le brainstorm proposait un bloc `testing:` dans `.kp-agents.yml`, **mais ce format est obsolète depuis la v2.0.0** : la config vit désormais dans les frontmatter `kp-agents:` des `docs/*.md` (`git.md`, `project.md`, `documentation.md` + `.local.md`), `kp-setup` gérant 6 dimensions.
+- **Décision** : ajouter une **dimension `testing`** au système v2.0.0 via `docs/testing.md` (commité — politique partagée) + `docs/testing.local.md` (gitignored — machine-spécifique). `kp-setup` gagne une **7ᵉ dimension** (ref `setup-testing.md`) ; le protocole `sources-config-base.md` est étendu. Schéma : `framework`, `tests_dir`, `run_commands`, `case_repository.*`, `isolation.*`, `conventions_doc`, `discovery.*`.
+- **Conséquences** :
+  - ✅ Cohérent avec le pattern « 1 dimension = 1 fichier » ; lisible par tout agent
+  - ✅ Séparation commité (équipe) / local (machine) ; agnosticité native
+  - ⚠️ Un fichier de config supplémentaire ; `kp-setup` à étendre
+- **Alternatives rejetées** :
+  - **`.kp-agents.yml`** : obsolète v2.0.0 (gotcha `kp-setup` : « ne jamais lire `.kp-agents.yml` »)
+  - **Sous-clé dans `docs/project.md`** (à côté de `tickets`) : mélange suivi-tickets et config-tests dans un même fichier, moins lisible
+
+### ADR-008 — Référentiel de cas : double canal MCP Atlassian + GraphQL Xray
+
+- **Statut** : accepted (2026-06-04)
+- **Contexte** : le critère 1 de la DoD exige qu'un cas soit **défini ET rangé** sous `/Tests PlayWright` (rangement bloquant — décision utilisateur). Le spike (FX1) montre que les steps sont en **prose markdown dans la description** (pas en Xray Manual Steps natifs) → le MCP Atlassian standard suffit pour lire/auditer/créer le contenu. Mais le **folder Xray** n'est pas exposé par le MCP. Le helper GraphQL historique (`xray-duplicate-cypress.js`) est archivé dans `devel/` (déprécié) — absent du socle courant.
+- **Décision** : `kp-test` opère sur **deux canaux** — (1) **MCP Atlassian standard** (`getJiraIssue`, `searchJiraIssuesUsingJql`) pour lecture/audit/recherche du contenu ; (2) **API GraphQL Xray pilotée en direct** (script Node ad-hoc : `authenticate` → `createTest` avec `folderPath` → `getFolder`) pour la création atomique + vérification du rangement. Credentials `XRAY_CLIENT_ID`/`XRAY_CLIENT_SECRET` réutilisés depuis `apps/kpweb/.env.testing` (déjà lus par `xray-sync.mjs`). Création **après confirmation** explicite (effet de bord externe).
+- **Conséquences** :
+  - ✅ Rangement folder garanti (conformité du critère 1) ; pas de nouveau secret à gérer
+  - ✅ Lecture/audit sans dépendance GraphQL (MCP suffit)
+  - ⚠️ Dépendance à l'API GraphQL Xray + credentials → si indisponibles, critère 1 non satisfiable (l'agent bloque, ne déclare jamais DONE sans rangement vérifié)
+  - ⚠️ Pilotage direct de l'API (pas de helper pérenne) — un helper pourra être scaffoldé plus tard
+- **Alternatives rejetées** :
+  - **MCP Atlassian seul** : ne voit pas les folders Xray → rangement non vérifiable, critère 1 incomplet
+  - **Helper Node pérenne obligatoire** : dépendance à créer (story `kp-developer`) avant tout usage de `kp-test` ; le pilotage direct lève ce blocage
+  - **Rangement non bloquant (warn)** : écarté par l'utilisateur — un cas non rangé n'est pas conforme (priorité « garant de conformité »)
+
 ## Sécurité, performance et opérations
 
 ### Sécurité

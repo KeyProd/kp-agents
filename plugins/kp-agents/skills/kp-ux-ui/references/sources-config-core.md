@@ -12,6 +12,8 @@ La configuration des sources externes vit dans des **fichiers markdown** dans `d
 | `docs/project.local.md` | ❌ gitignored | overrides `tickets.*` |
 | `docs/documentation.md` | ✅ | `product.mode`, `product.access` |
 | `docs/documentation.local.md` | ❌ gitignored | `product.path`, `global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs` |
+| `docs/testing.md` | ✅ | `testing.framework`, `testing.tests_dir`, `testing.run_commands`, `testing.case_repository.*`, `testing.isolation.*`, `testing.conventions_doc` |
+| `docs/testing.local.md` | ❌ gitignored | `testing.discovery.*`, `testing.case_repository.credentials_env` |
 
 ### Comportement au démarrage
 

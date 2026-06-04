@@ -28,6 +28,7 @@ Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il d�
 | `docs/git.md` + `docs/git.local.md` | Projet | Toujours — audit git |
 | `docs/project.md` + `docs/project.local.md` | Projet | Toujours — audit suivi projet |
 | `docs/documentation.md` + `docs/documentation.local.md` | Projet | Toujours — audit sources doc |
+| `docs/testing.md` + `docs/testing.local.md` | Projet | Toujours — audit dimension testing (agent kp-test) |
 | `CLAUDE.md` | Projet | Toujours — audit sections canoniques |
 | `.gitignore` | Projet | Toujours — vérification entrées locales |
 | `.kp-agents.yml` + `.kp-agents.local.yml` (legacy) | Projet | Si présents — déclenche la migration v1.x → v2.0.0 |
@@ -45,6 +46,8 @@ Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il d�
 | `docs/project.local.md` | Racine du projet | Si override personnel défini |
 | `docs/documentation.md` | Racine du projet | Si dimension `product` ou doc externe configurée |
 | `docs/documentation.local.md` | Racine du projet | Si chemins absolus à enregistrer |
+| `docs/testing.md` | Racine du projet | Si dimension `testing` configurée |
+| `docs/testing.local.md` | Racine du projet | Si découverte/credentials machine à enregistrer |
 | `apps/<name>/docs/index.md` | Apps détectées | En monorepo, si l'utilisateur valide le bootstrap par app |
 | `CLAUDE.md` (4 sections gérées) | Racine du projet | Toujours — sections `## Documentation`, `## Projet & Tickets`, `## Git`, `## Apps` |
 | `.gitignore` (entrée `docs/*.local.md`) | Racine du projet | Auto-ajouté si absent |
@@ -74,9 +77,10 @@ Lis dans cet ordre :
 2. `docs/git.md` + `docs/git.local.md` — parse frontmatter `kp-agents.branch_pattern`, `auto_commit`, `auto_push`
 3. `docs/project.md` + `docs/project.local.md` — parse frontmatter `kp-agents.tickets.*`
 4. `docs/documentation.md` + `docs/documentation.local.md` — parse frontmatter `kp-agents.product.*`, `kp-agents.global_doc.*`
-5. `CLAUDE.md` — repère présence des 4 sections canoniques (matching strict + fuzzy)
-6. `.gitignore` — vérifie si `docs/*.local.md` ou les entrées individuelles y figurent
-7. **Détection monorepo** : `apps/`, `packages/`, `pnpm-workspace.yaml`, `lerna.json`, `nx.json`, `turbo.json`, `Cargo.toml`, `package.json :: workspaces`
+5. `docs/testing.md` + `docs/testing.local.md` — parse frontmatter `kp-agents.testing.*`
+6. `CLAUDE.md` — repère présence des 4 sections canoniques (matching strict + fuzzy)
+7. `.gitignore` — vérifie si `docs/*.local.md` ou les entrées individuelles y figurent
+8. **Détection monorepo** : `apps/`, `packages/`, `pnpm-workspace.yaml`, `lerna.json`, `nx.json`, `turbo.json`, `Cargo.toml`, `package.json :: workspaces`
 
 Produis un rapport concis (5-10 lignes) : fichiers présents / absents, dimensions configurées, sections CLAUDE.md OK ou manquantes, monorepo détecté ou non, gitignore OK ou à compléter.
 
@@ -91,7 +95,7 @@ Une seule question d'orientation selon l'audit :
 
 ### 3. Identifier les dimensions à configurer
 
-Six dimensions indépendantes. L'utilisateur peut en vouloir une, plusieurs ou toutes. Si la demande initiale ne le précise pas, pose une méta-question d'orientation.
+Sept dimensions indépendantes. L'utilisateur peut en vouloir une, plusieurs ou toutes. Si la demande initiale ne le précise pas, pose une méta-question d'orientation.
 
 **Pour chaque dimension active, charge la procédure correspondante** (lecture à la demande) :
 
@@ -101,6 +105,7 @@ Six dimensions indépendantes. L'utilisateur peut en vouloir une, plusieurs ou t
 | `git` | voir `references/setup-git.md` (à lire à la demande) | `docs/git.md`, `docs/git.local.md` |
 | `tickets` | voir `references/setup-tickets.md` (à lire à la demande) | `docs/project.md`, `docs/project.local.md` |
 | `documentation` (product + global_doc) | voir `references/setup-documentation.md` (à lire à la demande) | `docs/documentation.md`, `docs/documentation.local.md` |
+| `testing` (E2E, agent kp-test) | voir `references/setup-testing.md` (à lire à la demande) | `docs/testing.md`, `docs/testing.local.md` |
 | `monorepo` (auto si workspaces détectés) | voir `references/setup-monorepo.md` (à lire à la demande) | `apps/<name>/docs/index.md` + entrée dans `docs/index.md` |
 | `claudemd` (toujours, en fin de flow) | voir `references/setup-claudemd.md` (à lire à la demande) | sections `##` dans `CLAUDE.md` |
 
@@ -122,10 +127,11 @@ Après confirmation, écris dans cet ordre (atomicité — soit tout, soit rien)
 2. `docs/git.md`, `docs/git.local.md` (selon dimension)
 3. `docs/project.md`, `docs/project.local.md` (selon dimension)
 4. `docs/documentation.md`, `docs/documentation.local.md` (selon dimension)
-5. `apps/<name>/docs/index.md` (si monorepo et bootstrap par app accepté)
-6. `docs/index.md` — pré-création section `## Apps` si monorepo (l'agent `documentation` enrichira ensuite)
-7. `CLAUDE.md` — sections canoniques (toujours en dernier, après tous les fichiers `docs/`)
-8. `.gitignore` — ajoute `docs/*.local.md` si absent (créer le fichier s'il n'existe pas)
+5. `docs/testing.md`, `docs/testing.local.md` (selon dimension)
+6. `apps/<name>/docs/index.md` (si monorepo et bootstrap par app accepté)
+7. `docs/index.md` — pré-création section `## Apps` si monorepo (l'agent `documentation` enrichira ensuite)
+8. `CLAUDE.md` — sections canoniques (toujours en dernier, après tous les fichiers `docs/`)
+9. `.gitignore` — ajoute `docs/*.local.md` si absent (créer le fichier s'il n'existe pas)
 
 Si l'utilisateur annule à n'importe quelle étape : **n'écris rien** et confirme explicitement qu'aucun fichier n'a été modifié.
 
@@ -153,7 +159,7 @@ Cas limites par dimension : voir la ref correspondante (`setup-git`, `setup-tick
 - Numérotation : les stories **repartent à `S-0001` dans chaque epic** (locale), les epics sont globales (`E-0001`, `E-0002`…). Ne jamais numéroter les stories globalement.
 - Les epics archivées sont sous `docs/project/epics/_archives/` — **lecture seule** pour contexte historique. Ne jamais y créer ni modifier de story.
 
-- **Seul `setup` écrit dans `docs/guidelines.md`, `docs/git.md`, `docs/git.local.md`, `docs/project.md`, `docs/project.local.md`, `docs/documentation.md`, `docs/documentation.local.md` et les sections gérées de `CLAUDE.md`** — les autres agents sont en lecture seule sur ces fichiers. Ne jamais déléguer leur écriture.
+- **Seul `setup` écrit dans `docs/guidelines.md`, `docs/git.md`, `docs/git.local.md`, `docs/project.md`, `docs/project.local.md`, `docs/documentation.md`, `docs/documentation.local.md`, `docs/testing.md`, `docs/testing.local.md` et les sections gérées de `CLAUDE.md`** — les autres agents sont en lecture seule sur ces fichiers. Ne jamais déléguer leur écriture.
 - **Body humain préservé** : setup pilote le **frontmatter** et certaines sections nommées de CLAUDE.md uniquement. Le body markdown des fichiers `docs/*.md` est de la prose humaine — ne l'écraser que sur demande explicite avec confirmation.
 - **`subtask_workflow` va dans `tickets.mapping`** (frontmatter `docs/project.md`), pas au niveau racine du frontmatter. `parent_managed_by_jira` aussi (même niveau que `subtask_workflow`).
 - **Jamais d'écriture partielle** : si une étape échoue ou si l'utilisateur annule, ne laisse aucun fichier à demi-écrit. Atomicité totale.

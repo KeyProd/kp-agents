@@ -3,3 +3,5 @@
 {{include:sources-config-tickets}}
 
 {{include:sources-config-git}}
+
+{{include:sources-config-testing}}

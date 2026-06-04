@@ -253,7 +253,7 @@ flowchart TD
 
 ### Évolution `kp-setup`
 - 7ᵉ dimension `testing` → nouvelle ref `includes/setup-testing.md` (modèle : `setup-git.md` / `setup-tickets.md`).
-- Protocole de lecture → étendre `sources-config-base.md` (tableau des fichiers + ligne `docs/testing.md`).
+- Protocole de lecture → ref dédiée `includes/sources-config-testing.md` (incluse dans `sources-config.md`, cohérent avec `sources-config-tickets`/`-git`) + ligne `docs/testing.md` / `.local.md` ajoutée au tableau de `sources-config-base.md`. *(ajustement d'implémentation : fichier dédié plutôt qu'extension inline de base — plus modulaire.)*
 - Heuristique de détection : présence de Pest (`vendor/bin/pest` + `tests/Browser/`) → propose `framework: pest-browser` + défauts.
 - Section `CLAUDE.md` gérée : ajouter `## Tests E2E` (ou intégrer à une section existante).
 

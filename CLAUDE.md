@@ -162,7 +162,7 @@ flowchart LR
 ```
 
 **Pipeline standard** : kp-brainstorm → kp-product → kp-architect → kp-developer → kp-review
-**Agents transversaux** : kp-ux-ui (entre kp-product et kp-developer), kp-documentation (après kp-review ou kp-developer), kp-setup (auto-redirect depuis tout agent détectant une config manquante)
+**Agents transversaux** : kp-ux-ui (entre kp-product et kp-developer), kp-documentation (après kp-review ou kp-developer), kp-setup (auto-redirect depuis tout agent détectant une config manquante), kp-test (tests E2E pilotés par référentiel de cas, après kp-developer)
 **Agents standalone** : kp-daily (hors pipeline — synthèse quotidienne sessions Claude / Outlook / Teams)
 **Relais** : chaque agent produit un bloc de handoff structuré pour transmettre le contexte au suivant
 
@@ -179,8 +179,9 @@ Convention de nommage (v2.0.0) : tous les agents portent le préfixe `kp-` dès 
 | kp-review | `agents/kp-review.md` | `/kp-agents:kp-review` | Relire, tester, valider le code |
 | kp-documentation | `agents/kp-documentation.md` | `/kp-agents:kp-documentation` | Analyser et maintenir la documentation |
 | kp-ux-ui | `agents/kp-ux-ui.md` | `/kp-agents:kp-ux-ui` | Designer UX/UI et identité visuelle |
-| kp-setup | `agents/kp-setup.md` | `/kp-agents:kp-setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| kp-setup | `agents/kp-setup.md` | `/kp-agents:kp-setup` | Configurer les sources du projet (frontmatter `kp-agents:` des `docs/*.md` : git, project, documentation, testing) |
 | kp-daily | `agents/kp-daily.md` | `/kp-agents:kp-daily` | Générer un daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
+| kp-test | `agents/kp-test.md` | `/kp-agents:kp-test` | Orchestrer les tests E2E (cas Xray + test code + remontée), garant de conformité de bout en bout |
 
 Pour Cursor : `@kp-<nom>` via le sélecteur de règles (`@kp-brainstorm`, `@kp-daily`…).
 Pour Codex : skill auto-détectée `kp-<nom>` (`kp-brainstorm`, `kp-daily`…).

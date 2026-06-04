@@ -34,6 +34,7 @@ Table de référence machine-readable. Signaux = mots-clés ou contexte déclenc
 | « écran », « parcours utilisateur », « persona », « wireframe », « palette », « identité visuelle », « UX », « UI » | `ux-ui` | — | Spec produit → `product` ; implémentation CSS/front → `developer` |
 | « audite la doc », « documente X », « la doc est fausse », « qu'est-ce qui manque », « INDEX », post-implémentation | `documentation` | — | Nouvelle spec → `product` ; nouveau design → `architect` |
 | « configure les sources », « setup le projet », « où vit la doc », config manquante détectée par un agent | `setup` | — | — |
+| « teste KP-XXXXX », « cas Xray », « test E2E », « remonte les résultats », « audite la couverture E2E », « pourquoi ce test est bloqué » | `test` | Config `testing` (`docs/testing.md`) | Seeders de domaine → `developer` ; stratégie de couverture → `product` |
 
 > Cette table est lue par les agents via `context.routing` (`.kp-context.yml`). Elle remplace les indications de routing textuelles dispersées dans chaque skill.
 

@@ -16,7 +16,9 @@ author: architect-agent
 
 ## 1. Contexte et objectif
 
-Le socle E2E de keyprod (projet de référence) a basculé en juin 2026 vers **Pest 4 Browser** (`apps/kpweb/tests/Browser/`), avec liaison test ↔ cas par **préfixe `[KP-XXXXX]`** et remontée via `xray-sync.mjs`. Les deux agents actuels (`kp-xray`, `kp-e2e`) restent calés sur l'ancienne méthodo Playwright standalone (`devel/`, annotation `xray`, `sync-xray.js`) — obsolètes à ~80 %.
+Le socle E2E de keyprod (projet de référence) cible **Playwright** (`apps/kpweb/tests/e2e/`), avec liaison test ↔ cas par **préfixe `[KP-XXXXX]`** et remontée via `xray-sync.mjs`. Les deux agents actuels (`kp-xray`, `kp-e2e`) restent calés sur l'ancienne méthodo Playwright standalone (`devel/`, annotation `xray`, `sync-xray.js`) — obsolètes à ~80 %.
+
+> *Mise à jour 2026-06-09 : le framework rebascule de Pest 4 Browser vers **Playwright**. La DoD à 6 critères, l'orchestration et l'architecture config-driven restent inchangées — seuls le framework, le pattern de fichiers (`*.spec.ts`) et les idiomes de test (`test()`, `test.fixme()`) changent.*
 
 **Objectif** : un point d'entrée unique qui, pour un cas donné, **garantit que toute la chaîne est conforme** (cas Xray, test code, liaison, isolation seed/clean, validation, remontée) et **pilote la convergence** vers un test vert remonté.
 
@@ -38,14 +40,14 @@ La DoD est le **contrat central** de l'agent : elle est inscrite dans le `SKILL.
 |---|---------|----------|-------------|------------|
 | **1** | **Cas Xray défini ET rangé** — issue type `Test` existe, **rangée sous `root_folder`** (`/Tests PlayWright/…`), summary `Module > comportement`, description au gabarit (Persona / Écran / Préconditions / Étapes / Résultat / Automatisation / Cadre), label `case_label` | ✅ (rangement inclus — décision Q2) | `kp-test-case-design` | — (création après confirmation, cf. §7) |
 | **2** | **Test code conforme** — fichier dans `tests_dir`, conventions respectées (`data-cy`, pas de `sleep`, strict mode, `assertNoJavaScriptErrors`), description FR métier | ✅ | `kp-test-implementation` | — |
-| **3** | **Liaison bidirectionnelle** — préfixe `[KP-XXXXX]` exact dans le `it()` **ET** ligne `Automatisation : … <fichier>` de la description Xray pointant le bon fichier (finding FX2) | ✅ | `kp-test-implementation` | — |
+| **3** | **Liaison bidirectionnelle** — préfixe `[KP-XXXXX]` exact dans le `test()` **ET** ligne `Automatisation : … <fichier>` de la description Xray pointant le bon fichier (finding FX2) | ✅ | `kp-test-implementation` | — |
 | **4** | **Isolation seed + clean** — seed **dédié test** (jamais métier, D5), `beforeEach` + `ref` unique, cleanup idempotent `afterEach` | ✅ | `kp-test-data-isolation` | **Seed de domaine manquant → handoff `kp-developer`** |
 | **5** | **Validation** — runs verts répétables (2-3×), zéro flake | ✅ | `kp-test-results-sync` | — |
 | **6** | **Remontée effective** — `run_commands.with_sync` → Test Execution créée dans Xray | ✅ | `kp-test-results-sync` | — |
 
 **Sous-critère non bloquant** : « cas lié à une story » (lien JIRA natif). Le référentiel actuel a `issuelinks: []` (finding FX3) → **warn configurable**, jamais bloquant.
 
-**Mapping clé ↔ `it()` = 1:N** (finding FX4) : un cas peut être couvert par plusieurs `it()` ; la couverture s'évalue en **agrégeant** (statut maximal `FAILED > PASSED > TODO`, comme `xray-sync.mjs`).
+**Mapping clé ↔ `test()` = 1:N** (finding FX4) : un cas peut être couvert par plusieurs `test()` ; la couverture s'évalue en **agrégeant** (statut maximal `FAILED > PASSED > TODO`, comme `xray-sync.mjs`).
 
 ---
 
@@ -93,9 +95,9 @@ Le `SKILL.md` contient : persona + DoD (§3) + routine de lecture config (§6) +
 ---
 kp-agents:
   testing:
-    framework: pest-browser            # SEUL supporté. playwright = hook futur. cypress = déprécié
-    tests_dir: apps/kpweb/tests/Browser
-    test_file_pattern: "*Test.php"
+    framework: playwright              # framework livré. pest-browser = autre exemple. cypress = déprécié
+    tests_dir: apps/kpweb/tests/e2e
+    test_file_pattern: "*.spec.ts"
     run_commands:
       headless:  "make test-browser"
       with_sync: "make test-browser-xray"
@@ -107,8 +109,8 @@ kp-agents:
       project_key: KP
       root_folder: "/Tests PlayWright"
       test_link_pattern: "\\[KP-\\d+\\]"     # regex de liaison (machine)
-      test_link_format: "[KP-{id}]"          # gabarit de préfixe injecté dans le it()
-      case_label: pest-browser               # label de convention réel (finding FX4)
+      test_link_format: "[KP-{id}]"          # gabarit de préfixe injecté dans le test()
+      case_label: playwright                 # label de convention réel (finding FX4)
       graphql_endpoint: "https://xray.cloud.getxray.app/api/v2"
     isolation:
       test_seed_namespace: "Database\\Seeders\\Browser"   # seeds DÉDIÉS test — jamais métier (D5)
@@ -169,7 +171,7 @@ Matérialise « où on en est ». Validé par le spike (F1/F2). Pour une cible (
 
 ### Lectures (ordre)
 1. **Story / contexte** fourni par l'utilisateur.
-2. **Filesystem** : `grep -roE "<test_link_pattern>" <tests_dir>` → localise le(s) `it()` portant la clé.
+2. **Filesystem** : `grep -roE "<test_link_pattern>" <tests_dir>` → localise le(s) `test()` portant la clé.
 3. **Cas Xray** : MCP `getJiraIssue` (contenu) + GraphQL `getFolder` (rangement).
 4. **Runtime** (si demandé) : dernier run / Test Execution.
 
@@ -177,10 +179,10 @@ Matérialise « où on en est ». Validé par le spike (F1/F2). Pour une cible (
 
 | État | Signature | Critère DoD en écart | Prochain pas |
 |------|-----------|----------------------|--------------|
-| **Absent** | aucun `it()` pour la clé | 1, 2, 3 | créer cas (§7) puis implémenter |
-| **Squelette** | `it("[KP-X] …")->todo();` sans corps | 2 | discovery MCP + implémenter |
-| **Rédigé-bloqué** | corps `function` complet + `->todo()` + commentaire `BLOCKER:` | 4 (le plus souvent) | **parser le `BLOCKER:` → handoff `kp-developer`** (précondition/seed) |
-| **Actif** | `it("[KP-X] …", function(){…})` | 5, 6 | valider (run) + remonter |
+| **Absent** | aucun `test()` pour la clé | 1, 2, 3 | créer cas (§7) puis implémenter |
+| **Squelette** | `test.fixme('[KP-X] …')` sans corps | 2 | discovery MCP + implémenter |
+| **Rédigé-bloqué** | corps complet + `test.fixme()` + commentaire `BLOCKER:` | 4 (le plus souvent) | **parser le `BLOCKER:` → handoff `kp-developer`** (précondition/seed) |
+| **Actif** | `test('[KP-X] …', async () => {…})` | 5, 6 | valider (run) + remonter |
 
 + **statut runtime** (vert / rouge / flake), orthogonal.
 
@@ -194,7 +196,7 @@ flowchart TD
     C1 -->|non| DESIGN[Proposer + créer cas après confirmation]
     C1 -->|oui| C2{Test code présent ?}
     DESIGN --> C2
-    C2 -->|absent ou squelette| IMPL[Discovery MCP + implémenter]
+    C2 -->|absent ou squelette| IMPL[Discovery MCP local + implémenter]
     C2 -->|rédigé-bloqué| BLK{Précondition seed/flag ?}
     BLK -->|oui| DEV[Handoff kp-developer: seed dédié test]
     BLK -->|non| IMPL
@@ -239,7 +241,7 @@ flowchart TD
 |-----------|-------|
 | **`kp-developer`** (seeds) | Owner exclusif des seeds. `kp-test` **n'écrit jamais** dans `database/seeds/`. Sur besoin → **handoff explicite** : « créer un seeder **dédié test** pour `<domaine>` sous `isolation.test_seed_namespace`, ne pas toucher aux seeders métier ». **Invariant D5** : si `kp-test` détecte qu'un test dépend d'un seed **hors** `test_seed_namespace` (= seed métier détourné) → refus + handoff. |
 | **`kp-product`** (stratégie) | Owner des axes de couverture et priorités (P0/P1/P2). `kp-test` exécute la couverture demandée ; handoff entrant possible (`kp-product` → « voici l'axe à couvrir »). Au quotidien : l'utilisateur cible un parcours / une clé. |
-| **`kp-architect`** (bootstrap) | Owner du scaffolding harness (`tests/Browser/`, Makefile, `.env.testing`) sur un nouveau projet. |
+| **`kp-architect`** (bootstrap) | Owner du scaffolding harness (`tests/e2e/`, `playwright.config.ts`, `.env.testing`) sur un nouveau projet. |
 | **app code** (`apps/<app>/`) | `kp-test` ne pose jamais de `data-cy` lui-même → **recommandation** à `kp-developer` (finding FX5, `kpweb-recommendations.md`). |
 
 ---
@@ -254,7 +256,7 @@ flowchart TD
 ### Évolution `kp-setup`
 - 7ᵉ dimension `testing` → nouvelle ref `includes/setup-testing.md` (modèle : `setup-git.md` / `setup-tickets.md`).
 - Protocole de lecture → ref dédiée `includes/sources-config-testing.md` (incluse dans `sources-config.md`, cohérent avec `sources-config-tickets`/`-git`) + ligne `docs/testing.md` / `.local.md` ajoutée au tableau de `sources-config-base.md`. *(ajustement d'implémentation : fichier dédié plutôt qu'extension inline de base — plus modulaire.)*
-- Heuristique de détection : présence de Pest (`vendor/bin/pest` + `tests/Browser/`) → propose `framework: pest-browser` + défauts.
+- Heuristique de détection : présence de Playwright (`playwright.config.{ts,js}` + `@playwright/test`) → propose `framework: playwright` + défauts.
 - Section `CLAUDE.md` gérée : ajouter `## Tests E2E` (ou intégrer à une section existante).
 
 ### Documentation
@@ -272,9 +274,9 @@ flowchart TD
 
 | Risque | Prob. | Impact | Mitigation |
 |--------|-------|--------|------------|
-| **R1 — Config `testing` absente** sur un nouveau projet | Moyenne | Élevé | Auto-redirect `kp-setup` + défauts pest-browser si Laravel/Pest détecté |
+| **R1 — Config `testing` absente** sur un nouveau projet | Moyenne | Élevé | Auto-redirect `kp-setup` + défauts playwright si config Playwright détectée |
 | **R2 — Credentials Xray / API GraphQL indispo** (critère 1 bloquant) | Élevée | Élevé | Mode dégradé : bloquer sur critère 1, signaler le prérequis, ne jamais déclarer DONE sans rangement vérifié. Réutiliser `apps/kpweb/.env.testing` |
-| **R3 — Playwright MCP local indispo** (discovery) | Élevée | Moyen | Ébauche depuis story+conventions, `->todo()`, demande de démarrer MCP (finding F5) |
+| **R3 — Playwright MCP local indispo** (discovery) | Élevée | Moyen | Ébauche depuis story+conventions, `test.fixme()`, demande de démarrer MCP (finding F5) |
 | **R4 — Détection d'état erronée** (doublon créé) | Moyenne | Élevé | `grep test_link_pattern` + MCP/GraphQL **avant** toute création ; confirmation avant `createTest` |
 | **R5 — Seed métier détourné** | Confirmée (D5) | Élevé | Invariant dur : refus + handoff `kp-developer` si dépendance hors `test_seed_namespace` |
 | **R6 — Agent volumineux** (SKILL + 6 refs) | Moyenne | Moyen | Progressive disclosure côté Claude ; surveiller la taille inline Cursor/Codex (scinder si >500 lignes générées) |
@@ -286,7 +288,7 @@ flowchart TD
 
 - **Spike déjà réalisé** (cf. idée, F1-F5 + FX1-FX4) : détection d'état filesystem validée, critère 1 vérifiable via MCP, double canal de liaison confirmé.
 - **À valider après implémentation** : dérouler `kp-test` en `auto` sur 1-2 cas P0 keyprod réels — idéalement un cas **rédigé-bloqué** (KP-18190, Events) pour exercer le parsing `BLOCKER:` + handoff `kp-developer`, et un cas **actif** (Auth, KP-18179) pour exercer validation + remontée.
-- **Validation agnostique** (plus tard) : poser un `docs/testing.md` adapté sur un projet tiers (hook `playwright`).
+- **Validation agnostique** (plus tard) : poser un `docs/testing.md` adapté sur un projet tiers (hook `pest-browser` ou un autre framework).
 
 ---
 

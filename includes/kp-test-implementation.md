@@ -10,22 +10,22 @@ Pilote le navigateur via le MCP de découverte (`discovery.mcp`, ex. `playwright
 2. Jouer le parcours complet **avant** d'écrire le code, pour confirmer qu'il fonctionne.
 3. Relever les ancres : `data-cy` en priorité, sinon rôle/label/texte exact.
 
-**Mode dégradé** : si le MCP de découverte est indisponible (non chargé, app locale non démarrée) → rédige une **ébauche** sur la base de la story + `conventions_doc`, marque le test « à faire » (`->todo()`), consigne les ancres non confirmées (commentaire `DISCOVERY:`), et demande à l'utilisateur de démarrer la découverte pour finaliser. Ne jamais écrire un test « à l'aveugle » présenté comme validé.
+**Mode dégradé** : si le MCP de découverte est indisponible (non chargé, app locale non démarrée) → rédige une **ébauche** sur la base de la story + `conventions_doc`, marque le test « à faire » (`test.fixme()`), consigne les ancres non confirmées (commentaire `DISCOVERY:`), et demande à l'utilisateur de démarrer la découverte pour finaliser. Ne jamais écrire un test « à l'aveugle » présenté comme validé.
 
 ### Conventions (lues depuis `conventions_doc`)
 
 Lis `conventions_doc` au démarrage — c'est la source opposable. Règles dures usuelles (hérite de l'ancien E2E) :
 - **Sélecteurs** : `data-cy` (ou équivalent stable) prioritaire. Bannis : `nth`, classes générées (Vuetify/MUI), chemins CSS profonds.
 - **Strict mode** : un sélecteur ne matche qu'un élément. Pas de `.first()` de contournement.
-- **Attentes** : états auto-attendus (`assertSee`/`waitFor`). **Zéro `sleep()`** (cause n°1 de flakiness). Pas de `force:true`.
+- **Attentes** : web-first assertions auto-attendues (`await expect(locator).toBeVisible()`, `waitFor`). **Zéro `waitForTimeout()`/`sleep`** (cause n°1 de flakiness). Pas de `{ force: true }`.
 - **Robustesse** : terminer un parcours sensible par une assertion d'absence d'erreur JS.
-- **i18n** : forcer la locale au niveau du test si le framework le permet (ex. `->withLocale('fr-FR')`) ; factoriser si bilingue.
+- **i18n** : forcer la locale au niveau du test si le framework le permet (ex. `test.use({ locale: 'fr-FR' })`) ; factoriser si bilingue.
 - **Description** en langage métier (la langue du projet).
 
 ### Liaison bidirectionnelle (critère 3)
 
 Deux canaux à maintenir **cohérents** :
-1. **Côté test** : préfixe `<test_link_format>` dans la description du test (ex. `it("[KP-18190] le bouton…")`). C'est ce que la remontée regex (`<test_link_pattern>`).
+1. **Côté test** : préfixe `<test_link_format>` dans la description du test (ex. `test('[KP-18190] le bouton…')`). C'est ce que la remontée regex (`<test_link_pattern>`).
 2. **Côté cas** : la ligne `Automatisation : … <fichier>` de la description Xray pointe le bon fichier (cf. `kp-test-case-design`).
 
 Vérifie les **deux sens** : un test sans préfixe = orphelin ; une description Xray pointant un mauvais fichier = liaison cassée silencieuse.

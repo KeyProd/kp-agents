@@ -10,6 +10,8 @@ author: brainstorm-agent
 
 > Session de cadrage : repenser les agents `kp-xray` et `kp-e2e`, alignés sur l'ancienne méthodo Playwright standalone, pour les remplacer par **un agent unique `kp-test`**, cohérent avec le nouveau socle keyprod (Pest 4 Browser + préfixe `[KP-XXXXX]` + remontée `xray-sync.mjs`) — tout en gardant une **architecture project-agnostic** (config-driven) pour les autres projets distribués via le plugin Claude Code / Cursor / Codex.
 
+> **⚠️ Mise à jour 2026-06-09 — bascule framework.** Le socle E2E rebascule de **Pest 4 Browser** vers **Playwright**. La décision **D4** ci-dessous est donc **inversée** : `playwright` est désormais le framework livré, `pest-browser` un exemple alternatif config-driven. Les observations datées du spike du 2026-06-04 (label `pest-browser`, fichiers `*Test.php`, idiomes `it()` / `->todo()`) sont **conservées telles quelles comme trace de l'état Pest d'alors** ; l'implémentation courante (includes `kp-test-*`, dimension `testing`) reflète Playwright (`*.spec.ts`, `test()`, `test.fixme()`).
+
 ---
 
 ## Décisions validées (2026-06-04)
@@ -21,7 +23,7 @@ Arbitrages tranchés par l'utilisateur après lecture de la proposition complèt
 | **D1** | Approche retenue | **B — orchestrateur unique** (cf. scoring 4,75) | Pas de binôme conservé, pas de 3ᵉ agent, pas de Workflow scripté |
 | **D2** | Nommage | L'agent s'appelle **`kp-test`** (et non `kp-e2e`) | Sémantiquement juste : couvre Xray + tests + validation + remontée. `kp-xray` **ET** `kp-e2e` sont remplacés |
 | **D3** | Priorité de l'agent | **Garant de conformité** : sa mission n°1 est que *tout soit bien défini selon les règles attendues* — cas Xray, test code, validation, remontée Xray, **stratégie de seed et de clean**. Pas un simple générateur de tests | La colonne vertébrale devient une **Definition of Done à 6 critères** (cf. §4) que l'agent audite et fait converger |
-| **D4** | Framework | **`pest-browser` uniquement** livré. `playwright` = extension future (hook prévu en config). `cypress` = **déprécié, non supporté** | Scope concret resserré ; l'architecture reste config-driven pour accueillir playwright plus tard sans réécrire l'agent |
+| **D4** | Framework | **`playwright` livré** (bascule 2026-06-09, cf. note en tête — *à l'origine `pest-browser`*). `pest-browser` = exemple alternatif config-driven. `cypress` = **déprécié, non supporté** | L'architecture config-driven absorbe le changement de framework sans réécrire l'agent |
 | **D5** | Seeds | Périmètre **`kp-developer`**, confirmé. **Invariant ajouté** : l'orchestration garantit que tout seed utilisé est **dédié aux tests** (jamais un seed métier de l'application) | Handoff vers `kp-developer` spécifiant « seed dédié test » ; détection/refus si un seed métier est détourné |
 | **D6** | Multi-cible | **Claude = cible de référence**. L'agent reste **nativement disponible sur Cursor et Codex**, avec pertes potentielles assumées | Confirme B (et non E/Workflow Claude-only) : on optimise pour Claude sans sacrifier la disponibilité Cursor/Codex |
 
@@ -237,7 +239,7 @@ Toute la mécanique projet-spécifique (Pest, `make`, `[KP-]`, `/Tests PlayWrigh
 **Techniques** :
 - Un agent = **un seul `.md` dans `agents/`** ; le pattern orchestrateur+refs s'exprime via `{{include:}}` / `{{ref:}}` (supportés par `sync.sh`).
 - Le projet-spécifique (Pest, Make, `[KP-]`, `/Tests PlayWright`, namespace seed) **ne doit pas** être hardcodé dans `agents/kp-test.md` → lecture du bloc `testing:`.
-- **Framework livré = pest-browser uniquement (D4)** ; la config porte un champ `framework` prêt pour `playwright` ; `cypress` retiré.
+- **Framework livré = playwright (D4, bascule 2026-06-09)** ; la config porte un champ `framework` (autre exemple : `pest-browser`) ; `cypress` retiré.
 - Le tool `Workflow` est Claude-only → **exclu du cœur** même sous priorité Claude (D6 exige le natif Cursor/Codex). Réservé à un éventuel mode batch *additionnel*.
 
 **Humaines** : utilisateur solo, multi-projets → simplicité > spécialisation organisationnelle. Méthode keyprod **récente** (juin 2026) → l'agent doit la **rendre lisible**, pas juste la suivre.
@@ -406,7 +408,7 @@ Lecture seule des 13 cas via `getJiraIssue` / `searchJiraIssuesUsingJql` (cloudI
 > **Depuis** : brainstorm-agent
 > **Contexte** : refonte du dispositif E2E `kp-agents` — remplacement du binôme obsolète `kp-xray` + `kp-e2e` par **un agent unique `kp-test`**, garant de conformité, aligné Pest Browser + `[KP-]`, architecture config-driven.
 > **Acquis (décisions tranchées D1-D6)** :
-> - **D1** Approche B (orchestrateur unique) ; **D2** nom = `kp-test` (remplace xray ET e2e) ; **D3** priorité = garant de conformité via une **DoD à 6 critères** (cas Xray / test code / liaison / **seed-clean** / validation / remontée) ; **D4** `pest-browser` seul livré, `playwright` en hook futur, `cypress` retiré ; **D5** seeds = `kp-developer` avec invariant « **dédiés test, jamais métier** » ; **D6** Claude prioritaire, natif Cursor/Codex avec pertes assumées.
+> - **D1** Approche B (orchestrateur unique) ; **D2** nom = `kp-test` (remplace xray ET e2e) ; **D3** priorité = garant de conformité via une **DoD à 6 critères** (cas Xray / test code / liaison / **seed-clean** / validation / remontée) ; **D4** `playwright` livré (bascule 2026-06-09 ; `pest-browser` = exemple alternatif config-driven), `cypress` retiré ; **D5** seeds = `kp-developer` avec invariant « **dédiés test, jamais métier** » ; **D6** Claude prioritaire, natif Cursor/Codex avec pertes assumées.
 > - Diagnostic : les 2 agents actuels obsolètes à ~80 % (stack, dossier, liaison, remontée).
 > - Pattern d'implémentation : « orchestrateur + refs » à la `kp-setup`.
 > - Agnosticité via bloc `testing:` dans `.kp-agents.yml` (framework, tests_dir, run_commands, case_repository, **isolation**, conventions_doc, discovery).

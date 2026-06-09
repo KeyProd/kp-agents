@@ -246,9 +246,9 @@ Configuration lue dans le frontmatter `kp-agents:` de `docs/testing.md` (commit�
 ---
 kp-agents:
   testing:
-    framework: pest-browser            # seul framework livré ; playwright = hook futur
-    tests_dir: apps/kpweb/tests/Browser
-    test_file_pattern: "*Test.php"
+    framework: playwright              # framework livré ; pest-browser = autre exemple (config-driven)
+    tests_dir: apps/kpweb/tests/e2e
+    test_file_pattern: "*.spec.ts"
     run_commands:
       headless:  "make test-browser"
       with_sync: "make test-browser-xray"
@@ -261,7 +261,7 @@ kp-agents:
       root_folder: "/Tests PlayWright"
       test_link_pattern: "\\[KP-\\d+\\]"   # regex de liaison (machine)
       test_link_format: "[KP-{id}]"        # gabarit de préfixe injecté dans le test
-      case_label: pest-browser
+      case_label: playwright
       graphql_endpoint: "https://xray.cloud.getxray.app/api/v2"
     isolation:
       test_seed_namespace: "Database\\Seeders\\Browser"
@@ -291,5 +291,5 @@ kp-agents:
 2. **Héritage** : `case_repository.mcp_server` vide → utiliser `tickets.mcp_server` (`docs/project.md`). Idem `project_key` peut s'aligner sur `tickets.project_key`.
 3. **Secrets** : `credentials_env` pointe un fichier `.env` gitignored (jamais commité, jamais affiché). `kp-test` lit `XRAY_CLIENT_ID`/`SECRET` pour l'auth GraphQL du référentiel de cas.
 4. **Rangement bloquant** : si `credentials_env` absent ou auth GraphQL KO, le critère 1 (cas rangé) est non satisfiable → `kp-test` signale le prérequis, ne déclare jamais un cas DONE sans rangement vérifié.
-5. **Agnosticité** : `framework: pest-browser` est le seul livré. Pour un autre framework (ex. `playwright`), remplir les mêmes clés différemment — `kp-test` applique la config, sans hardcode.
+5. **Agnosticité** : `framework: playwright` est le framework livré. Pour un autre framework (ex. `pest-browser`), remplir les mêmes clés différemment — `kp-test` applique la config, sans hardcode.
 6. Config absente / incomplète → warn + `/kp-agents:kp-setup` + mode local dégradé. Jamais bloquant en dehors du critère 1 (rangement).

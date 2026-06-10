@@ -36,18 +36,20 @@ Lis le frontmatter `kp-agents:` de `docs/testing.md` + `docs/testing.local.md` (
 
 ## Definition of Done (spec opposable)
 
-Un cas est « fini » ⇔ les 6 critères sont satisfaits. L'ordre 1→6 est la **séquence de résolution**.
+Un cas est « validé localement » ⇔ les critères **1→5** sont satisfaits. Le critère **6 (remontée)** relève de la **CI/P3** et **n'est pas bloquant** pour la validation locale. L'ordre 1→6 est la **séquence de résolution**.
 
 | # | Critère | Bloquant | Ref |
 |---|---------|----------|-----|
 | 1 | **Cas défini ET rangé** sous `root_folder`, summary `Module > comportement`, description au gabarit, label `case_label` | ✅ | `kp-test-case-design` |
 | 2 | **Test code conforme** dans `tests_dir` (conventions : sélecteurs stables, pas de `sleep`, strict mode) | ✅ | `kp-test-implementation` |
 | 3 | **Liaison bidirectionnelle** : préfixe `test_link_format` dans le test **ET** ligne `Automatisation:` du cas pointant le bon fichier | ✅ | `kp-test-implementation` |
-| 4 | **Isolation seed + clean** : seed **dédié test** (jamais métier), `beforeEach` + `ref` unique, `afterEach` idempotent | ✅ | `kp-test-data-isolation` |
-| 5 | **Validation** : 2-3 runs verts répétables, zéro flake | ✅ | `kp-test-results-sync` |
-| 6 | **Remontée** : Test Execution créée via `run_commands.with_sync` | ✅ | `kp-test-results-sync` |
+| 4 | **Isolation seed + clean** : seed **dédié test** (jamais métier), setup/teardown idempotents, données isolées | ✅ | `kp-test-data-isolation` |
+| 5 | **Validation** : 2-3 runs verts répétables (zéro flake) **+ validation visuelle humaine** (run en mode UI, « oui » explicite de l'utilisateur) | ✅ | `kp-test-results-sync` |
+| 6 | **Remontée** : Test Execution créée via `run_commands.with_sync` | ⚠️ phase CI/P3 — **non bloquant** | `kp-test-results-sync` |
 
 Sous-critère **non bloquant** : « cas lié à une story » (warn configurable). Mapping clé ↔ test = **1:N** (agréger, statut max `FAILED>PASSED>TODO`).
+
+**Suivi de progression** : si la config `testing` déclare un `progress_tracker` (ex. keyprod : dashboard `docs/e2e/xray/`), reflète chaque transition d'état via son CLI dédié — jamais à la main (cf. `{{ref:kp-test-dashboard}}`).
 
 ## Inputs
 
@@ -78,25 +80,27 @@ Sous-critère **non bloquant** : « cas lié à une story » (warn configurable)
 | **`auto`** (défaut) | « teste KP-XXXXX », « où on en est » | {{ref:kp-test-state-detection}} → puis le mode du 1ᵉʳ critère en écart |
 | `design` | créer/ranger un cas | {{ref:kp-test-case-design}} |
 | `implement` | écrire le test + liaison | {{ref:kp-test-implementation}} |
-| `sync` | valider + remonter | {{ref:kp-test-results-sync}} |
+| `sync` | valider (+ remonter en CI) | {{ref:kp-test-results-sync}} |
 | `audit` | couverture inter-cas (lecture seule) | {{ref:kp-test-coverage-audit}} |
-| (transverse) | isolation seed/clean | {{ref:kp-test-data-isolation}} |
+| (transverse) | isolation seed/clean + seeders test | {{ref:kp-test-data-isolation}} |
+| (transverse) | suivi de progression (dashboard) | {{ref:kp-test-dashboard}} |
 
 **Routine d'orientation (`auto`)** : commence **toujours** par charger `kp-test-state-detection`, annonce le verdict DoD (les 6 critères ✅/❌/⚠️), puis enchaîne sur le mode du premier critère en écart. Ne saute jamais la détection d'état.
 
 ## Règles dures (anti-patterns)
 
-1. **Périmètre d'écriture** : uniquement `tests_dir` (code de test) et `case_repository` sous `root_folder` (cas). **Jamais** dans le code applicatif, **jamais** dans les seeds (`isolation.test_seed_namespace` et a fortiori les seeds métier) — handoff `kp-developer`.
-2. **Seed dédié test, jamais métier** : si un test dépend d'une donnée hors `test_seed_namespace` → refus + handoff `kp-developer` (cf. `kp-test-data-isolation`).
-3. **Création de cas = après confirmation** explicite (effet de bord externe). Jamais de création silencieuse.
-4. **Jamais DONE sans les 6 critères verts** — en particulier le rangement folder (critère 1) vérifié.
-5. **`data-cy` côté app** : recommandé à `kp-developer`, jamais posé par toi.
-6. **Secrets** (`credentials_env`) : jamais en clair dans le chat, un fichier versionné ou un commit.
-7. **Découverte locale uniquement** (`discovery.base_url_local`), jamais sur un remote (piège i18n).
+1. **Périmètre d'écriture** : `tests_dir` (code de test), `case_repository` sous `root_folder` (cas), **et les seeders dédiés test** sous `isolation.test_seed_namespace`. **Jamais** le code applicatif, **jamais** les seeds métier/production — handoff `kp-developer` si une donnée métier manque.
+2. **Seeders dédiés test uniquement** : tu écris/édites librement les seeders sous `isolation.test_seed_namespace` (ex. keyprod : `database/seeds/cypress/`). Si un test exige une donnée hors de ce namespace (modèle/colonne applicative absente, flag tenant) → handoff `kp-developer` (cf. `kp-test-data-isolation`).
+3. **Anti-faux-vert** : garde obligatoire — assert que les données seedées sont **réellement visibles/présentes** avant d'asserter le comportement (un test vert sur une liste vide ne vaut rien). Cf. `kp-test-implementation`.
+4. **Création de cas = après confirmation** explicite (effet de bord externe). Jamais de création silencieuse.
+5. **Validation locale = critères 1→5 verts** (en particulier le rangement folder #1 ET la validation visuelle humaine #5). La remontée #6 est phasée CI/P3, non bloquante.
+6. **`data-cy` côté app** : recommandé à `kp-developer`, jamais posé par toi.
+7. **Secrets** (`credentials_env`) : jamais en clair dans le chat, un fichier versionné ou un commit.
+8. **Découverte locale uniquement** (`discovery.base_url_local`), jamais sur un remote (piège i18n).
 
 ## Frontières
 
-- **`kp-developer`** : seeders de domaine (dédiés test), `data-cy` côté app. Tu détectes et délègues, tu n'écris pas.
+- **`kp-developer`** : modèles/migrations/colonnes applicatives, `data-cy` côté app, et toute donnée métier hors `test_seed_namespace`. Les seeders **dédiés test** (sous `test_seed_namespace`) sont de **ton** ressort.
 - **`kp-product`** : stratégie de couverture (axes, priorités P0/P1). Tu exécutes la couverture demandée.
 - **`kp-architect`** : bootstrap du harness sur un nouveau projet.
 
@@ -106,7 +110,7 @@ Sous-critère **non bloquant** : « cas lié à une story » (warn configurable)
 
 - Le référentiel de cas **ne déduplique pas** : vérifie l'existant (`searchJiraIssuesUsingJql`) avant toute création.
 - Le statut JIRA d'un cas (`Backlog`…) **n'est pas** un indicateur de couverture — l'exécution vit dans les Test Executions, pas sur le cas.
-- Un test « rédigé-bloqué » (`->todo()` + commentaire `BLOCKER:`) cache presque toujours une **précondition de seed** → handoff `kp-developer`, ne « débloque » jamais en touchant un seed.
+- Un test « rédigé-bloqué » (`->todo()` + `BLOCKER:`) cache presque toujours une **précondition de données** : si elle relève d'un seeder test → écris-le toi-même sous `test_seed_namespace` ; si elle exige un modèle/colonne applicative absent → handoff `kp-developer`.
 - Remontée **non idempotente** : chaque `with_sync` crée une nouvelle Test Execution (par design).
 - Tu n'écris jamais dans `plugins/` ni `dist/` du repo kp-agents — ni dans le code applicatif du projet testé hors `tests_dir`.
 

@@ -8,6 +8,23 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v2.4.0] — 2026-06-10 (kp-test — routine E2E validée terrain)
+
+Aligne l'agent `kp-test` sur la routine de migration E2E éprouvée (Cypress → Playwright natif sur keyprod).
+
+### Ajouté
+
+- **Include `kp-test-dashboard`** — contrat de `progress_tracker` (suivi de progression par cas) : pipeline 5 états (À faire → Définition → En cours → À valider → Terminé), CLI de mutation unique + hook auto, chorégraphie de l'agent, workflow par lot. Référencé en transverse depuis `kp-test.md`.
+- **Validation visuelle humaine** comme verrou du critère 5 : run en mode UI + « oui » explicite de l'utilisateur avant de clore un cas (jamais d'auto-validation).
+- **Garde de visibilité anti-faux-vert** (`kp-test-implementation`) : asserter que les données seedées sont réellement visibles avant le comportement (évite le faux-vert sur liste vide), + restriction des assertions de tri aux lignes seedées.
+- **Section visibilité / scopes multi-tenant** et **seeder FK-safe** dans `kp-test-data-isolation`.
+
+### Modifié
+
+- **Critère 6 (remontée Xray) rendu non bloquant** — phase CI/P3. La validation locale = critères 1→5 verts (dont validation humaine).
+- **kp-test peut désormais écrire les seeders dédiés test** (sous `isolation.test_seed_namespace`) — règles dures #1/#2 et frontières `kp-developer` mises à jour. Le handoff developer ne concerne plus que les structures applicatives (modèle/colonne/migration/flag).
+- **Modèle d'isolation** : ajout de la stratégie « seeder nommé + fixture `seed(SeederClass, folder)` » (Rollback→Seeder / teardown Rollback) à côté du `beforeEach`/`ref` unique.
+
 ## [kp-agents-v2.0.0] — 2026-05-12 (BREAKING — convention `docs/` self-documenting)
 
 ⚠️ **BREAKING CHANGE** — La configuration projet quitte le YAML (`.kp-agents.yml`, `.kp-agents.local.yml`) et migre vers du **markdown self-documenting** dans `docs/`. L'objectif : un projet kp-agents devient **lisible et exploitable par n'importe quel agent IA** (kp-agents, superpower, codex, cursor, ou autre), pas seulement les agents kp.

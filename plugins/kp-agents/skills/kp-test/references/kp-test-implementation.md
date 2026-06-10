@@ -30,9 +30,13 @@ Deux canaux à maintenir **cohérents** :
 
 Vérifie les **deux sens** : un test sans préfixe = orphelin ; une description Xray pointant un mauvais fichier = liaison cassée silencieuse.
 
-### Juge LLM (auto-contrôle, anti-faux-vert)
+### Anti-faux-vert (garde de visibilité + juge LLM)
 
-Avant de déclarer le test conforme, relis-le contre le cas : **« ce test échoue-t-il réellement si le résultat attendu du cas n'est pas atteint ? »**. Si la réponse est non (le test passe sans rien vérifier d'utile), il ne teste pas la bonne chose → recommence.
+Deux contrôles obligatoires avant de déclarer le test conforme :
+1. **Garde de visibilité** : avant d'asserter un comportement sur des données seedées (tri, filtre, présence), **assert d'abord que ces données sont réellement visibles** (ex. les N lignes seedées présentes dans le tableau). Sans cette garde, un scope/visibilité non satisfait rend la liste vide et l'assertion passe à tort (`[] === []`) — c'est le faux-vert n°1 (cf. `kp-test-data-isolation`, section visibilité).
+2. **Juge LLM** : relis le test contre le cas — **« échoue-t-il réellement si le résultat attendu n'est pas atteint ? »**. Si non, il ne teste rien d'utile → recommence.
+
+Note tri/ordre : sur une table contenant des données préexistantes non contrôlées, **restreins l'assertion d'ordre aux seules lignes seedées** (le collation backend diffère du tri JS sur des libellés arbitraires) ; et utilise une attente active (re-poll) car le DOM se réordonne en asynchrone.
 
 ### Frontière
 

@@ -38,6 +38,16 @@ Deux contrôles obligatoires avant de déclarer le test conforme :
 
 Note tri/ordre : sur une table contenant des données préexistantes non contrôlées, **restreins l'assertion d'ordre aux seules lignes seedées** (le collation backend diffère du tri JS sur des libellés arbitraires) ; et utilise une attente active (re-poll) car le DOM se réordonne en asynchrone.
 
+**Pièges de faux-vert récurrents** (chacun a produit un test vert qui ne testait rien) :
+1. **Message d'erreur** : n'assert JAMAIS un conteneur d'erreur générique « non vide » (classe de messages/erreur partagée). Elle matche aussi les **hints** et est évaluée **avant** la réponse backend → passe à tort. Assert le **texte exact** du message attendu (l'attente web-first synchronise sur la réponse serveur).
+2. **Recherche puis présence** : après une recherche, assert que la liste est **filtrée à la seule ligne cible** (compte total == 1 **et** contenu attendu), pas qu'« une ligne correspondante existe » dans une liste non filtrée — sinon on ne prouve ni que la recherche marche ni que le résultat est visible.
+3. **Recherche = sous-chaîne** : un libellé préfixe d'un autre fait matcher plusieurs lignes → garde de comptage par **regex ancré** (`^…$`).
+4. **Précondition** : avant un test de création/restauration, assert que l'entité **n'existe pas** au départ — sinon on ne distingue pas « produit par l'action » de « déjà présent ».
+5. **Effet persistant** : pour une action dont l'effet doit survivre (interrupteur, paramètre), **recharge la page** et ré-assert l'état — sinon on ne teste que l'optimistic UI, pas l'écriture réelle.
+6. **UI asynchrone** (autocomplete/listbox/option téléportée) : attendre que l'option filtrée soit **stable et visible** avant le clic, et la fermeture de l'overlay avant l'action suivante (flake intermittent sinon).
+
+Frontière de mock : un cas dont la mutation dépend d'un **service externe non mocké** (ex. provisioning d'identité type Cognito) n'est pas automatisable dans un harness mocké → `test.fixme` + commentaire `BLOCKER:`, plutôt qu'un test fragile ou faux-vert.
+
 ### Frontière
 
 Tu écris **uniquement** dans `tests_dir`. Si un `data-cy` manque côté app, **recommande-le à `kp-developer`** (jamais posé par toi). L'isolation (seed/clean) relève du mode `data-isolation`.

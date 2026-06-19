@@ -17,7 +17,7 @@ Modifier un rôle = éditer son agent + ses skills (`claude/`) **et** ses équiv
 
 ## Distribution
 
-- **Claude Code** → plugin marketplace (`claude/`, commité dans git). Le catalogue racine `.claude-plugin/marketplace.json` pointe sur `./claude`. Installation : `/plugin marketplace add KeyProd/kp-agents` + `/plugin install kp-agents@kp-agents`. Invocation : `/kp-agents:<nom>`
+- **Claude Code** → plugin marketplace (`claude/`, commité dans git). Le catalogue racine `.claude-plugin/marketplace.json` pointe sur `./` (le repo entier est le plugin). Installation : `/plugin marketplace add KeyProd/kp-agents` + `/plugin install kp-agents@kp-agents`. Invocation : `/kp-agents:<nom>`
 - **Cursor** → règles copiées par `sync.sh` dans `~/.cursor/rules/kp-*.mdc`
 - **Codex** → skills copiées par `sync.sh` dans `~/.codex/skills/kp-*/`
 
@@ -25,11 +25,11 @@ Modifier un rôle = éditer son agent + ses skills (`claude/`) **et** ses équiv
 
 ```
 .claude-plugin/
-  marketplace.json   ← Catalogue marketplace Claude Code (source: ./claude)
-claude/              ← Plugin Claude Code (commité, distribué via marketplace)
-  .claude-plugin/plugin.json   ← Manifeste : name, version (montée à la main), description
+  marketplace.json   ← Catalogue marketplace (source: ./ → le repo entier est le plugin)
+  plugin.json        ← Manifeste plugin : name, version (manuelle), agents[] (liste de fichiers) + skills[] → ./claude
+claude/              ← Contenu du plugin Claude Code (référencé par plugin.json)
   agents/kp-<role>.md          ← Subagent : contexte + méthode + bonnes pratiques (10)
-  skills/kp-<skill>/           ← Skill d'action ou partagée (21)
+  skills/kp-<skill>/           ← Skill d'action ou partagée (22)
     SKILL.md         ← frontmatter name + description, puis la procédure
     references/*.md   ← Templates / gabarits lourds chargés à la demande
 codex/               ← Skills Codex (monolithiques par rôle — réplication à venir)
@@ -60,8 +60,8 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 ## Ajouter ou modifier un agent
 
 1. Éditer le contenu dans les **3 dossiers** (`claude/skills/kp-<nom>/`, `codex/kp-<nom>/`, `cursor/kp-<nom>.mdc`) en respectant le format de chacun.
-2. Pour un **nouvel** agent : créer aussi `codex/kp-<nom>/agents/openai.yaml` et, si besoin, les `references/` côté Claude.
-3. **Monter la version** dans `claude/.claude-plugin/plugin.json` (patch / minor / major) + mettre à jour `CHANGELOG.md`.
+2. Pour un **nouvel** agent : ajouter son fichier à la liste `agents[]` de `.claude-plugin/plugin.json`, créer aussi `codex/kp-<nom>/agents/openai.yaml` et, si besoin, les `references/` côté Claude.
+3. **Monter la version** dans `.claude-plugin/plugin.json` (patch / minor / major) + mettre à jour `CHANGELOG.md`.
 4. Lancer `./sync.sh` pour installer Cursor + Codex en local.
 5. `git add` + commit (le hook de pré-commit vérifie le bump) + tag `kp-agents-v<X.Y.Z>` + push.
 
@@ -70,7 +70,7 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 ## Règles critiques
 
 - **Toute modification d'agent doit être répliquée dans les 3 dossiers.** Le contenu est dupliqué par design.
-- **La version est unique et manuelle** (`claude/.claude-plugin/plugin.json` → `version`), référence pour les 3 cibles.
+- **La version est unique et manuelle** (`.claude-plugin/plugin.json` → `version`), référence pour les 3 cibles.
 - **`sync.sh` ne génère plus rien** : il copie `cursor/` et `codex/` vers `~/.cursor` / `~/.codex` et câble le hook. Ne pas y remettre de templating ou de bump.
 
 ## sync.sh

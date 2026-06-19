@@ -8,6 +8,22 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v3.1.1] — fix packaging : le repo est aussi un plugin uploadable
+
+Le dépôt n'exposait `plugin.json` que dans `claude/` ; un téléversement direct du repo échouait avec `Invalid plugin: missing .claude-plugin/plugin.json` (l'uploader attend le manifeste à la racine).
+
+### Corrigé
+
+- **Manifeste plugin déplacé à la racine** : `.claude-plugin/plugin.json` (source de version unique), avec champs de chemins `agents[]` (liste des 10 fichiers `./claude/agents/*.md`) et `skills[]` (`./claude/skills/`). Le contenu reste dans `claude/` ; `codex/` et `cursor/` ne sont pas référencés → exclus du plugin.
+- **`marketplace.json`** : `source` `./claude` → `./` (le repo entier est le plugin auto-référencé).
+- **Supprimé** `claude/.claude-plugin/plugin.json` (évite la double source de version).
+- **Hook de pré-commit** : lit la version depuis `.claude-plugin/plugin.json` (racine).
+- Docs (CLAUDE.md, AGENTS.md, README.md) mises à jour : emplacement du manifeste, source `./`, note « ajouter le nouvel agent à `agents[]` ».
+
+> Le champ `agents` du manifeste exige une **liste de fichiers** (pas un dossier) — chaque nouvel agent doit y être ajouté.
+
+---
+
 ## [kp-agents-v3.1.0] — Audit cohérence agents/skills : templates manquants + skill partagée
 
 Suite à un audit de cohérence agents↔skills (câblage sain, 0 skill orpheline) : comblement des trous de couverture et nettoyage.

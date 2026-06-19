@@ -1,0 +1,26 @@
+{
+  "name": "kp-agents",
+  "description": "KeyProd agents for the development workflow: kp-brainstorm, kp-product, kp-architect, kp-developer, kp-review, kp-documentation, kp-ux-ui, kp-setup, kp-test, kp-daily",
+  "version": "3.1.1",
+  "author": {
+    "name": "KeyProd",
+    "email": "contact@keyprod.com"
+  },
+  "homepage": "https://github.com/KeyProd/kp-agents",
+  "repository": "https://github.com/KeyProd/kp-agents",
+  "agents": [
+    "./claude/agents/kp-architect.md",
+    "./claude/agents/kp-brainstorm.md",
+    "./claude/agents/kp-daily.md",
+    "./claude/agents/kp-developer.md",
+    "./claude/agents/kp-documentation.md",
+    "./claude/agents/kp-product.md",
+    "./claude/agents/kp-review.md",
+    "./claude/agents/kp-setup.md",
+    "./claude/agents/kp-test.md",
+    "./claude/agents/kp-ux-ui.md"
+  ],
+  "skills": [
+    "./claude/skills/"
+  ]
+}

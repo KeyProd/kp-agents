@@ -21,7 +21,7 @@ Modifier un rôle = éditer son **agent** + ses **skills** côté `claude/`, **e
 
 ## Distribution
 
-- **Claude Code** → plugin marketplace (`claude/`, commité dans git). Le catalogue racine `.claude-plugin/marketplace.json` pointe sur `./claude`. Installation utilisateur :
+- **Claude Code** → plugin marketplace (`claude/`, commité dans git). Le catalogue racine `.claude-plugin/marketplace.json` pointe sur `./` (le repo entier est le plugin). Installation utilisateur :
   `/plugin marketplace add KeyProd/kp-agents` + `/plugin install kp-agents@kp-agents`.
   Invocation : les **subagents** s'auto-délèguent (sur leur `description`) ou s'adressent via `@agent-kp-agents:kp-<role>` ; les **skills** restent invocables `/kp-agents:<skill>` (mais sont surtout appelées par les agents via l'outil `Skill`).
   Claude Code n'est **pas** installé localement par `sync.sh` — il passe par le marketplace git.
@@ -32,11 +32,11 @@ Modifier un rôle = éditer son **agent** + ses **skills** côté `claude/`, **e
 
 ```
 .claude-plugin/
-  marketplace.json   ← Catalogue marketplace Claude Code (source: ./claude)
-claude/              ← Plugin Claude Code (commité, distribué via marketplace)
-  .claude-plugin/plugin.json   ← Manifeste : name, version (montée à la main), description
+  marketplace.json   ← Catalogue marketplace (source: ./ → le repo entier est le plugin)
+  plugin.json        ← Manifeste plugin : name, version (manuelle), agents[] (liste de fichiers) + skills[] → ./claude
+claude/              ← Contenu du plugin Claude Code (référencé par plugin.json)
   agents/kp-<role>.md          ← Subagent : contexte + méthode + bonnes pratiques (10)
-  skills/kp-<skill>/           ← Skill d'action ou partagée (21)
+  skills/kp-<skill>/           ← Skill d'action ou partagée (22)
     SKILL.md         ← frontmatter name + description, puis la procédure
     references/*.md   ← Templates / gabarits lourds, chargés à la demande (progressive disclosure)
 codex/               ← Skills Codex (monolithiques par rôle — réplication agents/skills à venir)
@@ -56,7 +56,7 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 
 - **Toute modification d'agent doit être répliquée dans les 3 dossiers** (`claude/`, `codex/`, `cursor/`). Le contenu est dupliqué par design — il n'y a pas de mécanisme qui propage un changement d'un dossier à l'autre.
 - **Respecter le format propre à chaque cible** (voir « Format par cible » ci-dessous). Ne pas copier-coller un `.mdc` Cursor dans `claude/` ou inversement : les frontmatters diffèrent.
-- **La version est unique et manuelle** : `claude/.claude-plugin/plugin.json` → champ `version`. C'est la version de référence pour les 3 cibles. La monter à la main dès qu'un skill change (le hook de pré-commit le rappelle).
+- **La version est unique et manuelle** : `.claude-plugin/plugin.json` → champ `version`. C'est la version de référence pour les 3 cibles. La monter à la main dès qu'un skill change (le hook de pré-commit le rappelle).
 - **`sync.sh` ne génère plus rien** — il copie `cursor/` et `codex/` vers `~/.cursor` / `~/.codex`. Ne pas y remettre de logique de templating ou de bump.
 - Préfixe `kp-` **obligatoire** dans le nom de fichier ET dans le frontmatter `name:` (unicité du skill sur les 3 cibles, pas de collision avec d'autres plugins).
 
@@ -81,9 +81,9 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 
 ## Ajouter ou modifier un agent
 
-1. Côté **Claude** : éditer le **subagent** (`claude/agents/kp-<role>.md`, contexte + méthode) et/ou la **skill** concernée (`claude/skills/kp-<skill>/`, l'action). Garder les agents fins : toute procédure réutilisable va dans une skill.
+1. Côté **Claude** : éditer le **subagent** (`claude/agents/kp-<role>.md`, contexte + méthode) et/ou la **skill** concernée (`claude/skills/kp-<skill>/`, l'action). Garder les agents fins : toute procédure réutilisable va dans une skill. **Nouvel agent** → ajouter son fichier à la liste `agents[]` de `.claude-plugin/plugin.json` (ce champ liste les fichiers, pas un dossier).
 2. Côté **Codex / Cursor** : répliquer le changement dans `codex/kp-<nom>/` et `cursor/kp-<nom>.mdc` (encore monolithiques par rôle). Pour un **nouvel** agent Codex : créer aussi `codex/kp-<nom>/agents/openai.yaml`.
-3. **Monter la version** dans `claude/.claude-plugin/plugin.json` (patch pour un correctif, minor pour un ajout d'agent / une feature, major pour une rupture). Mettre à jour `CHANGELOG.md`.
+3. **Monter la version** dans `.claude-plugin/plugin.json` (patch pour un correctif, minor pour un ajout d'agent / une feature, major pour une rupture). Mettre à jour `CHANGELOG.md`.
 4. Lancer `./sync.sh` pour installer Cursor + Codex en local (macOS).
 5. Publier : `git add` + commit (le hook de pré-commit vérifie le bump) + tag `kp-agents-v<X.Y.Z>` + push. Les utilisateurs Claude reçoivent la maj au prochain `/plugin marketplace update`.
 
@@ -99,7 +99,7 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 
 ## Versioning & hook de pré-commit
 
-- **Versioning manuel** : aucun bump automatique. La version vit dans `claude/.claude-plugin/plugin.json`.
+- **Versioning manuel** : aucun bump automatique. La version vit dans `.claude-plugin/plugin.json`.
 - **`.githooks/pre-commit`** : si un commit modifie un agent ou un skill (`claude/agents/`, `claude/skills/`, `codex/`, `cursor/`) **sans** que `version` ait changé vs `HEAD`, le commit est **bloqué**. Les commits qui ne touchent pas aux agents/skills (docs, `sync.sh`…) passent librement.
 - Activation : `git config core.hooksPath .githooks` (fait automatiquement par `sync.sh`).
 - Contournement ponctuel : `git commit --no-verify`.

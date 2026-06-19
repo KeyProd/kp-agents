@@ -74,8 +74,8 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 
 ### Publier une mise à jour
 
-1. Éditer l'agent dans les 3 dossiers.
-2. **Monter la version** à la main dans `claude/.claude-plugin/plugin.json` (patch / minor / major) + mettre à jour `CHANGELOG.md`.
+1. Éditer l'agent dans les 3 dossiers. **Nouvel agent** → l'ajouter à la liste `agents[]` de `.claude-plugin/plugin.json` (ce champ liste des fichiers, pas un dossier).
+2. **Monter la version** à la main dans `.claude-plugin/plugin.json` (patch / minor / major) + mettre à jour `CHANGELOG.md`.
 3. `./sync.sh` pour installer Cursor + Codex en local.
 4. `git add` + commit (le hook de pré-commit vérifie le bump) + `git tag kp-agents-v<X.Y.Z>` + push.
 5. Les utilisateurs Claude reçoivent la maj au prochain `/plugin marketplace update`.
@@ -92,11 +92,12 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 ## Structure
 
 ```
-.claude-plugin/marketplace.json   Catalogue marketplace Claude Code (source: ./claude)
-claude/                           Plugin Claude Code (commité)
-  .claude-plugin/plugin.json      Manifeste : name, version (manuelle), description
+.claude-plugin/
+  marketplace.json                Catalogue marketplace (source: ./ → le repo est le plugin)
+  plugin.json                     Manifeste : name, version (manuelle), agents[] + skills[] → ./claude
+claude/                           Contenu du plugin Claude Code (commité)
   agents/kp-<role>.md             Subagent : contexte + méthode (10)
-  skills/kp-<skill>/              SKILL.md + references/ : actions partagées & spécifiques (21)
+  skills/kp-<skill>/              SKILL.md + references/ : actions partagées & spécifiques (22)
 codex/kp-<nom>/                   SKILL.md + agents/openai.yaml (monolithique par rôle)
 cursor/kp-<nom>.mdc               Règle Cursor
 sync.sh                           Installe cursor/ + codex/ en local (macOS)

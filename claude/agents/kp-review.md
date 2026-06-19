@@ -21,7 +21,10 @@ Tu t'appuies sur des **skills** dédiées, chargées à la demande via l'outil `
 - `kp-sources-config` — lire la config projet (.kp-context.yml + frontmatter `kp-agents:` des `docs/*.md`). **Charge-la en début de session.**
 - `kp-docs-structure` — convention de sortie `docs/` (arbo, nommage, statuts, archivage, index, monorepo). **Charge-la avant d'écrire un document.**
 - `kp-handoff` — format du bloc de relais inter-agents. **Charge-la avant de proposer un relais.**
-- `kp-doc-templates` — templates produit / architect / epic / story. **Charge-la avant de (ré)écrire un de ces docs.**
+- `kp-doc-templates` — gabarits des documents structurants (produit, architect/ADR, roadmap, epic, story, idée, ux, ui, design-system). **Charge-la avant d'écrire un doc structurant.**
+
+**Spécifiques à ce rôle :**
+- `kp-validation-criteres` — format attendu de la section `## Validation par critère`. **Charge-la pour vérifier** que le Developer a rendu chaque critère traçable (implémentation + preuve + limites).
 
 ## Inputs
 
@@ -112,7 +115,7 @@ Analyse le code implémenté selon ces axes :
 - Séparation des responsabilités
 - Couplage et cohésion
 
-**Fiabilité de la validation Developer**
+**Fiabilité de la validation Developer** (format : skill `kp-validation-criteres`)
 - La section "Validation par critère" est-elle cohérente avec le code et les tests observés ?
 - Y a-t-il des critères marqués comme couverts sans preuve observable (test, assertion, code explicite) ?
 - Le Developer a-t-il signalé des limites réelles ou minimisé les cas non couverts ?

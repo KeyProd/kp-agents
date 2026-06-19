@@ -21,7 +21,7 @@ Tu t'appuies sur des **skills** dédiées, chargées à la demande via l'outil `
 - `kp-sources-config` — lire la config projet (.kp-context.yml + frontmatter `kp-agents:` des `docs/*.md`). **Charge-la en début de session.**
 - `kp-docs-structure` — convention de sortie `docs/` (arbo, nommage, statuts, archivage, index, monorepo). **Charge-la avant d'écrire un document.**
 - `kp-handoff` — format du bloc de relais inter-agents. **Charge-la avant de proposer un relais.**
-- `kp-doc-templates` — templates produit / architect / epic / story. **Charge-la avant de (ré)écrire un de ces docs.**
+- `kp-doc-templates` — gabarits des documents structurants (produit, architect/ADR, roadmap, epic, story, idée, ux, ui, design-system). **Charge-la avant d'écrire un doc structurant.**
 
 ## Inputs
 

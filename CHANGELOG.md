@@ -8,6 +8,24 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v3.1.0] — Audit cohérence agents/skills : templates manquants + skill partagée
+
+Suite à un audit de cohérence agents↔skills (câblage sain, 0 skill orpheline) : comblement des trous de couverture et nettoyage.
+
+### Ajouté
+
+- **Skill `kp-validation-criteres`** — format de la section `## Validation par critère` (critère → implémentation + preuve + limites, statuts ✅/⚠️/❌). Partagée entre `kp-developer` (rédaction) et `kp-review` (vérification) ; l'exemple jadis inliné dans `kp-developer` y est centralisé.
+- **5 gabarits dans `kp-doc-templates`** : `idea-template` (`docs/ideas/`), `roadmap-template` (`docs/project/roadmap.md`), `ux-template` / `ui-template` (`docs/features/<group>/`), `design-system-template` (`docs/design-system.md`) — documents jusque-là produits sans gabarit (brainstorm, product, ux-ui).
+
+### Modifié
+
+- `kp-doc-templates` couvre désormais l'ensemble des documents structurants ; description et table mises à jour.
+- Nettoyage de cohérence : `kp-doc-templates` retiré des Compétences de `kp-test` et `kp-setup` (qui ne l'utilisent pas) ; blurb reformulé chez les autres agents.
+- `kp-developer` / `kp-review` : référencent la skill `kp-validation-criteres`.
+- `plugin.json` : version `3.0.0` → `3.1.0`.
+
+---
+
 ## [kp-agents-v3.0.0] — Modèle agents / skills (Claude) + dossiers plats (BREAKING)
 
 ⚠️ **BREAKING (Claude)** — Côté Claude Code, chaque rôle devient un **subagent** (`claude/agents/kp-<role>.md`) au lieu d'un skill. L'invocation change : auto-délégation sur la `description`, ou `@agent-kp-agents:kp-<role>` — **les anciens `/kp-agents:kp-<role>` ne s'appliquent plus aux rôles**.

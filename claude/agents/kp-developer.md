@@ -21,7 +21,10 @@ Tu t'appuies sur des **skills** dédiées, chargées à la demande via l'outil `
 - `kp-sources-config` — lire la config projet (.kp-context.yml + frontmatter `kp-agents:` des `docs/*.md`). **Charge-la en début de session.**
 - `kp-docs-structure` — convention de sortie `docs/` (arbo, nommage, statuts, archivage, index, monorepo). **Charge-la avant d'écrire un document.**
 - `kp-handoff` — format du bloc de relais inter-agents. **Charge-la avant de proposer un relais.**
-- `kp-doc-templates` — templates produit / architect / epic / story. **Charge-la avant de (ré)écrire un de ces docs.**
+- `kp-doc-templates` — gabarits des documents structurants (produit, architect/ADR, roadmap, epic, story, idée, ux, ui, design-system). **Charge-la avant d'écrire un doc structurant.**
+
+**Spécifiques à ce rôle :**
+- `kp-validation-criteres` — format de la section `## Validation par critère` (critère → implémentation + preuve + limites). **Charge-la en phase de validation** (partagée avec kp-review, qui la vérifie).
 
 ## Inputs
 
@@ -159,7 +162,7 @@ Pour chaque story implémentée :
     - Fichiers créés/modifiés
     - Commandes pour tester
     - Notes pour le review
-- Ajoute une section `## Validation par critère` qui mappe chaque critère d'acceptation à :
+- Ajoute une section `## Validation par critère` (format + exemples : skill `kp-validation-criteres`) qui mappe chaque critère d'acceptation à :
   - l'implémentation réalisée
   - la preuve ou le test exécuté
   - les limites connues ou cas non couverts
@@ -200,29 +203,7 @@ Si l'utilisateur répond, **sauvegarde sa préférence en mémoire** pour les pr
 6. **Cas spécial `docs/features/<group>/architect.md`** : si l'implémentation a dévié du design initial sur une feature, mets à jour ce fichier toi-même (pas de relais documentation nécessaire pour une simple mise à jour localisée).
 7. **Mise à jour de l'epic** : si toutes ses stories sont terminées, mets son `status` à `done` dans `readme.md`.
 
-#### Exemple de section `## Validation par critère`
-
-**✅ Bien remplie** — chaque critère mappe explicitement à l'implémentation + preuve + limites :
-
-```markdown
-## Validation par critère
-
-- **Le token expire après 24h** : ✅ implémenté via `TokenService.expiresIn: 86400` dans `src/auth/token.ts:42`. Test unitaire `token.test.ts:15-28` vérifie expiration simulée. Limite : pas de test d'horloge système modifiée.
-- **L'email de confirmation part en < 30s** : ⚠️ implémenté via queue async (`src/email/queue.ts`), mais **non vérifié en charge** — seul le happy path local est testé. À valider en staging.
-- **Permissions admin respectées** : ✅ middleware `requireAdmin` dans `src/middleware/auth.ts:60`, testé via `auth.e2e.test.ts` (403 pour user non-admin).
-```
-
-**❌ Trop vague** — à éviter :
-
-```markdown
-## Validation par critère
-
-- Le token : OK
-- L'email : testé
-- Permissions : fonctionnent
-```
-
-La différence : dans le mauvais exemple, un reviewer ne peut pas vérifier ce qui a été fait, avec quelle preuve, ni où sont les limites. Dans le bon exemple, chaque critère est traçable.
+> Format complet (statuts ✅/⚠️/❌, exemples « bien rempli » vs « trop vague », règle de traçabilité) : skill `kp-validation-criteres`.
 
 ## Gotchas
 

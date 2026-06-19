@@ -4,7 +4,48 @@ Toutes les modifications notables de kp-agents sont listées ici. Format inspir�
 
 Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` → champ `version`). Les tags git suivent le format `<plugin-name>-v<X.Y.Z>`.
 
-> **Note sur l'auto-bump** : depuis la release v0.3.0, `sync.sh` bumpe automatiquement le composant `patch` de la version quand le contenu des skills change (hash SHA256 stocké dans `plugin.json._contentHash`). Les flags `--minor` et `--major` permettent de forcer un bump de niveau supérieur. Voir ADR-005 dans [`docs/architect.md`](docs/architect.md).
+> **Note sur le versioning** : depuis la refonte « dossiers plats par outil », le bump de version est **manuel** (`claude/.claude-plugin/plugin.json` → `version`). Un hook de pré-commit (`.githooks/pre-commit`) bloque tout commit modifiant un skill sans bump de version. L'auto-bump par `sync.sh` (hash SHA256 / `_contentHash`) a été supprimé.
+
+---
+
+## [kp-agents-v3.0.0] — Modèle agents / skills (Claude) + dossiers plats (BREAKING)
+
+⚠️ **BREAKING (Claude)** — Côté Claude Code, chaque rôle devient un **subagent** (`claude/agents/kp-<role>.md`) au lieu d'un skill. L'invocation change : auto-délégation sur la `description`, ou `@agent-kp-agents:kp-<role>` — **les anciens `/kp-agents:kp-<role>` ne s'appliquent plus aux rôles**.
+
+Découpage **contexte/méthode** (agents) ↔ **actions** (skills). Les blocs jadis dupliqués dans les 10 agents sont extraits en **skills partagées** ; les procédures spécifiques deviennent des **skills d'action**. Périmètre : `claude/` uniquement — `codex/` et `cursor/` restent monolithiques par rôle (réplication à venir).
+
+### Ajouté
+
+- **10 subagents** `claude/agents/kp-<role>.md` : persona + méthode + bonnes pratiques + section « Compétences (skills) ». Auto-délégation via `description`, accès aux skills via l'outil `Skill`.
+- **21 skills** `claude/skills/` :
+  - **Partagées (4)** : `kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates` (dé-duplication des blocs communs aux 10 agents).
+  - **Spécifiques** : `kp-test-*` (7), `kp-setup-*` (8), `kp-doc-index`, `kp-uxui-dev-specs`.
+- Le hook de pré-commit couvre désormais aussi `claude/agents/`.
+
+### Modifié
+
+- `plugin.json` : version `2.4.0` → `3.0.0`.
+- `CLAUDE.md`, `AGENTS.md`, `README.md`, `docs/agents.md` : modèle agents/skills + nouvelle invocation Claude.
+- Nettoyage : retrait d'un gotcha obsolète (références `plugins/`/`dist/`/`agents/`) hérité de l'ancienne architecture.
+
+### Inclus dans cette release — Refonte « dossiers plats par outil »
+
+Suppression de la mécanique de génération/templating. Chaque outil a désormais son dossier dédié, au format attendu, avec le contenu **écrit à plat et dupliqué**. Les skills sont **identiques** à ceux générés précédemment (aucun changement de contenu → version inchangée).
+
+### Modifié
+
+- **Architecture** : `agents/` + `includes/` + génération `sync.sh` → 3 dossiers plats `claude/`, `codex/`, `cursor/`. Plus de `{{include}}` / `{{ref}}`, plus de `dist/`.
+- **`claude/`** remplace `plugins/kp-agents/` (via `git mv`). `.claude-plugin/marketplace.json` pointe désormais sur `./claude` (transparent pour les utilisateurs au prochain `marketplace update`).
+- **`sync.sh`** réduit à une simple installation locale : copie `cursor/` → `~/.cursor/rules` et `codex/` → `~/.codex/skills`, et câble le hook de pré-commit. Flags réduits à `--clean` et `-h`.
+- **Versioning manuel** : retrait de l'auto-bump, du hash de contenu (`_contentHash`, `_lastAutoVersion`) et des flags `--minor` / `--major`.
+
+### Ajouté
+
+- **`.githooks/pre-commit`** — bloque un commit qui modifie un skill (`claude/skills/`, `codex/`, `cursor/`) sans bump de `version` dans `plugin.json`. Activé via `git config core.hooksPath .githooks` (câblé par `sync.sh`).
+
+### Supprimé
+
+- `agents/`, `includes/`, `dist/`, `.installed-agents`, et toute la logique de génération/résolution d'includes/refs et d'auto-bump dans `sync.sh`.
 
 ---
 

@@ -2,159 +2,123 @@
 
 ## Principe fondamental
 
-Ce projet est un **système de distribution multi-cibles** pour des agents IA.
-La source de vérité unique est le dossier `agents/`. Les dossiers `plugins/kp-agents/skills/` et `dist/` sont **entièrement générés** par `sync.sh` — ne jamais y écrire manuellement.
+Ce projet est un **catalogue d'agents IA distribué sur 3 outils**.
+Il n'y a **plus de génération ni de templating** : chaque outil a son dossier dédié, au format qu'il attend directement. Le contenu de chaque agent est **écrit à plat et dupliqué** dans les 3 dossiers.
+
+```
+claude/   ← plugin Claude Code : subagents (agents/) + skills (skills/)
+codex/    ← skills Codex
+cursor/   ← règles Cursor (.mdc)
+```
+
+**Modèle agents / skills (côté Claude)** : chaque rôle est un **subagent** (`claude/agents/kp-<role>.md`) qui porte le **contexte + la méthode + les bonnes pratiques** et **délègue les actions** à des **skills** dédiées (`claude/skills/`) :
+- **skills partagées** (dé-duplication des blocs jadis copiés dans tous les agents) : `kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates` ;
+- **skills spécifiques** : procédures `kp-test-*` (7), `kp-setup-*` (8), `kp-doc-index`, `kp-uxui-dev-specs`.
+
+⚠️ **Transitoire** : ce découpage agents/skills n'est appliqué que sur `claude/` pour l'instant. `codex/` et `cursor/` restent des skills / règles **monolithiques par rôle** jusqu'à une passe de réplication ultérieure.
+
+Modifier un rôle = éditer son **agent** + ses **skills** côté `claude/`, **et** ses équivalents `codex/` / `cursor/`. Pas de source unique, pas de `sync.sh` qui régénère : `sync.sh` se contente d'**installer** Cursor et Codex sur la machine locale.
 
 ## Distribution
 
-- **Claude Code** → plugin marketplace (`plugins/kp-agents/`, commité dans git). Installation utilisateur via `/plugin marketplace add KeyProd/kp-agents` + `/plugin install kp-agents@kp-agents`. Invocation : `/kp-agents:<nom>`
-- **Cursor** → règles importées localement par `sync.sh` (`~/.cursor/rules/kp-*.mdc`)
-- **Codex** → skills importées localement par `sync.sh` (`~/.codex/skills/kp-*/`)
-
-`sync.sh` **ne dépose plus rien dans `~/.claude/commands/`** — cette cible est gérée exclusivement par le plugin marketplace. Les résidus d'anciennes installations y sont automatiquement purgés au premier run.
+- **Claude Code** → plugin marketplace (`claude/`, commité dans git). Le catalogue racine `.claude-plugin/marketplace.json` pointe sur `./claude`. Installation utilisateur :
+  `/plugin marketplace add KeyProd/kp-agents` + `/plugin install kp-agents@kp-agents`.
+  Invocation : les **subagents** s'auto-délèguent (sur leur `description`) ou s'adressent via `@agent-kp-agents:kp-<role>` ; les **skills** restent invocables `/kp-agents:<skill>` (mais sont surtout appelées par les agents via l'outil `Skill`).
+  Claude Code n'est **pas** installé localement par `sync.sh` — il passe par le marketplace git.
+- **Cursor** → règles copiées par `sync.sh` dans `~/.cursor/rules/kp-*.mdc`
+- **Codex** → skills copiées par `sync.sh` dans `~/.codex/skills/kp-*/`
 
 ## Structure du projet
 
 ```
-agents/            ← Source de vérité. Un fichier .md par agent.
-includes/          ← Templates réutilisables, injectés via {{include:nom}}
 .claude-plugin/
-  marketplace.json ← Catalogue marketplace Claude Code (statique)
-plugins/           ← GÉNÉRÉ par sync.sh, COMMITÉ dans git
-  kp-agents/
-    .claude-plugin/plugin.json    ← Manifeste statique (name, version, description)
-    skills/<nom>/SKILL.md         ← Skills générés par sync.sh
-dist/              ← GÉNÉRÉ. NON commité (.gitignore)
-  cursor/          ← Règles Cursor (kp-*.mdc)
-  codex/           ← Skills Codex (kp-*/SKILL.md + agents/openai.yaml)
-sync.sh            ← Script de synchronisation agents/ → plugins/ + dist/
-.installed-agents  ← Manifeste local (non versionné) : liste des agents installés au dernier sync
-.kp-agents.yml         ← OPTIONNEL — politique de sources du projet (commité)
-.kp-agents.local.yml   ← OPTIONNEL — chemins machine-spécifiques (gitignoré)
-docs/              ← Documentation projet (vision, architecture, epics, stories)
+  marketplace.json   ← Catalogue marketplace Claude Code (source: ./claude)
+claude/              ← Plugin Claude Code (commité, distribué via marketplace)
+  .claude-plugin/plugin.json   ← Manifeste : name, version (montée à la main), description
+  agents/kp-<role>.md          ← Subagent : contexte + méthode + bonnes pratiques (10)
+  skills/kp-<skill>/           ← Skill d'action ou partagée (21)
+    SKILL.md         ← frontmatter name + description, puis la procédure
+    references/*.md   ← Templates / gabarits lourds, chargés à la demande (progressive disclosure)
+codex/               ← Skills Codex (monolithiques par rôle — réplication agents/skills à venir)
+  kp-<nom>/
+    SKILL.md         ← Skill (frontmatter name + description + metadata)
+    agents/openai.yaml   ← Interface Codex (display_name, default_prompt, policy)
+cursor/              ← Règles Cursor
+  kp-<nom>.mdc       ← Règle (frontmatter description + alwaysApply)
+sync.sh              ← Installe cursor/ → ~/.cursor/rules et codex/ → ~/.codex/skills (macOS)
+.githooks/pre-commit ← Vérifie le bump de version quand un skill change
+docs/                ← Documentation projet (vision, architecture, epics, stories)
+.kp-agents.yml          ← OPTIONNEL — politique de sources du projet (commité)
+.kp-agents.local.yml    ← OPTIONNEL — chemins machine-spécifiques (gitignoré)
 ```
-
-## Ajouter ou modifier un agent
-
-1. Créer ou modifier le fichier dans `agents/kp-<nom>.md` — le préfixe `kp-` est **obligatoire** dans le nom de fichier ET dans le frontmatter `name:` (convention v2.0.0, assure l'unicité du skill sur les 3 cibles)
-2. Respecter le frontmatter obligatoire :
-   ```yaml
-   ---
-   name: kp-<nom>
-   description: "<description longue>"
-   short_description: "<description courte>"
-   default_prompt: "<prompt par défaut>"
-   ---
-   ```
-3. Lancer `./sync.sh` (ou `./sync.sh --dist-only` pour générer sans installer Cursor/Codex)
-4. Le script génère le SKILL.md dans `plugins/kp-agents/skills/kp-<nom>/` et les artefacts Cursor (`kp-<nom>.mdc`) / Codex (`kp-<nom>/SKILL.md`). Aucun double-préfixage : `sync.sh` utilise directement le `name:` du frontmatter, qui doit déjà inclure `kp-`.
-5. Publier la mise à jour Claude :
-   - `sync.sh` **bumpe automatiquement la version patch** si le contenu des skills a changé (cf. `_contentHash` + `_lastAutoVersion` dans `plugin.json` — géré par le script, ne pas modifier à la main)
-   - Pour un bump mineur ou majeur (ajout/retrait d'agent, rupture), utiliser `./sync.sh --minor` ou `./sync.sh --major`
-   - `git add agents/ plugins/` puis commit, tag `kp-agents-v<X.Y.Z>` et push
-   - Les utilisateurs reçoivent la maj au prochain `/plugin marketplace update`
-
-### Flags disponibles
-
-| Flag | Effet |
-|------|-------|
-| `--dist-only` | Génère dans `plugins/` et `dist/` sans installer dans `~/.cursor` et `~/.codex` |
-| `--clean` | Supprime les agents listés dans `.installed-agents` (plugin skills + Cursor + Codex) puis sort |
-| `--clean-all` | Supprime tous les `kp-*` via glob (plugin skills + Cursor + Codex) puis sort |
-| `--minor` | Force un bump mineur (`X.Y.Z` → `X.(Y+1).0`). À utiliser pour l'ajout d'un nouvel agent ou une feature significative. Exclusif avec `--major`, incompatible avec `--clean` / `--clean-all`. |
-| `--major` | Force un bump majeur (`X.Y.Z` → `(X+1).0.0`). À utiliser pour une rupture (retrait d'agent, renommage de namespace). Exclusif avec `--minor`. |
-
-Sans `--minor` ni `--major`, `sync.sh` **auto-bumpe le patch** si le contenu des skills a changé (SHA256 stocké dans `plugin.json._contentHash`). Un édit manuel de `version` dans `plugin.json` est **respecté** (comparaison avec `_lastAutoVersion`) — `sync.sh` n'écrase jamais un bump manuel.
 
 ## Règles critiques
 
-- **Ne jamais écrire dans `plugins/kp-agents/skills/`** — c'est généré, tout sera écrasé au prochain sync. `plugins/kp-agents/.claude-plugin/plugin.json` est **statique** et bumpé à la main lors d'une release
-- **Ne jamais écrire dans `dist/`** — c'est un dossier généré, tout sera écrasé au prochain sync
-- **Ne jamais modifier les fichiers dans `~/.cursor/rules/` ou `~/.codex/skills/`** — ils sont installés par `sync.sh`
-- **Toujours passer par `agents/`** pour toute modification d'agent
-- Nettoyage automatique au début de chaque sync : utilise `.installed-agents` pour supprimer chirurgicalement les agents du run précédent (permet de supprimer proprement un agent retiré de `agents/`). Fallback sur glob `kp-*` si le manifeste est absent.
-- Cleanup one-shot des résidus d'installations Claude locales antérieures (`dist/claude/` + `~/.claude/commands/kp-*.md`) au début de chaque `sync.sh` — idempotent
-- **Configuration projet (`.kp-agents.yml` / `.kp-agents.local.yml`)** — depuis v1.1.0. **Seul l'agent `setup`** a le droit d'écrire ces fichiers. Les autres agents les lisent au démarrage et appliquent les règles de l'include `sources-config` (redirection chemin, fallback write, protocole d'erreur MCP). Absence de fichier = mode 100% local, comportement identique à v1.0.x.
+- **Toute modification d'agent doit être répliquée dans les 3 dossiers** (`claude/`, `codex/`, `cursor/`). Le contenu est dupliqué par design — il n'y a pas de mécanisme qui propage un changement d'un dossier à l'autre.
+- **Respecter le format propre à chaque cible** (voir « Format par cible » ci-dessous). Ne pas copier-coller un `.mdc` Cursor dans `claude/` ou inversement : les frontmatters diffèrent.
+- **La version est unique et manuelle** : `claude/.claude-plugin/plugin.json` → champ `version`. C'est la version de référence pour les 3 cibles. La monter à la main dès qu'un skill change (le hook de pré-commit le rappelle).
+- **`sync.sh` ne génère plus rien** — il copie `cursor/` et `codex/` vers `~/.cursor` / `~/.codex`. Ne pas y remettre de logique de templating ou de bump.
+- Préfixe `kp-` **obligatoire** dans le nom de fichier ET dans le frontmatter `name:` (unicité du skill sur les 3 cibles, pas de collision avec d'autres plugins).
 
-## Includes et references
+## Format par cible
 
-Deux directives de composition sont résolues par `sync.sh` avant écriture dans `plugins/` et `dist/` :
+### Claude — subagents (`claude/agents/kp-<role>.md`)
+- Frontmatter `name` (= `kp-<role>`), `description` (signaux de déclenchement → pilote l'auto-délégation), `color`, `tools` optionnel (omis = hérite tout, dont l'outil `Skill`).
+- Body = system prompt : persona + rôle + méthode/process + règles dures + frontières + gotchas + une section **« Compétences (skills) »** listant les skills à charger à la demande.
+- L'agent ne duplique pas les blocs partagés : il **pointe** vers `kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates` et ses skills spécifiques.
 
-### `{{include:nom}}` — inline sur toutes les cibles
-Pour le contenu transverse *léger* qui doit être présent immédiatement à l'activation du skill :
-- `activation` — Rôle et persistance (2 lignes)
-- `dependency-versions` — Règle « Versions des dépendances » (architect, developer, review)
-- `docs-structure` — Convention de structure documentaire (complète, inclut les 4 {{ref}} de templates)
-- `docs-structure-light` — Arborescence + règles, sans templates
-- `handoff` — Convention de relais inter-agents
-- `gotchas-transverses` — Gotchas communs aux 9 agents
-- `sources-config` — Schéma `.kp-agents.yml`, règles de résolution de chemin, pipelines MCP pour tickets, préférences git (v1.1.0)
+### Claude — skills (`claude/skills/kp-<skill>/`)
+- `SKILL.md` — frontmatter `name` + `description` (orientée déclenchement / usage), puis la procédure.
+- `references/*.md` — gabarits/templates lourds chargés à la demande (`Read`).
+- **Partagées** : `kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`. **Spécifiques** : `kp-test-*`, `kp-setup-*`, `kp-doc-index`, `kp-uxui-dev-specs`.
 
-### `{{ref:nom}}` — reference file (progressive disclosure, agentskills.io)
-Pour le contenu *lourd* ne servant que ponctuellement (templates de livrables) :
-- **Claude plugin** : le fichier est copié dans `plugins/kp-agents/skills/<agent>/references/<nom>.md` et la directive est remplacée par un pointeur court. Claude Code charge le template **à la demande** via Read.
-- **Cursor / Codex** : inline (ces cibles ne supportent pas la sous-arborescence → fallback behavior).
+### Codex (`codex/kp-<nom>/`)
+- `SKILL.md` — frontmatter `name`, `description`, `metadata.short-description`, puis le corps inliné (pas de sous-dossier `references/` : tout est dans le SKILL.md).
+- `agents/openai.yaml` — `interface` (`display_name`, `short_description`, `default_prompt`) + `policy.allow_implicit_invocation`.
 
-Refs disponibles :
-- `product-template`, `architect-template`, `epic-template`, `story-template`, `index-template`
+### Cursor (`cursor/kp-<nom>.mdc`)
+- Frontmatter `description` + `alwaysApply: false`, puis le corps inliné.
 
-### Stratégie d'inclusion par agent
-- Tous les agents : `{{include:docs-structure}}` (la light version a été supprimée — surcoût marginal)
-- Templates lourds : `{{ref:}}` partout pour progressive disclosure
+## Ajouter ou modifier un agent
 
-## Pattern « agent = orchestrateur + refs procédurales »
+1. Côté **Claude** : éditer le **subagent** (`claude/agents/kp-<role>.md`, contexte + méthode) et/ou la **skill** concernée (`claude/skills/kp-<skill>/`, l'action). Garder les agents fins : toute procédure réutilisable va dans une skill.
+2. Côté **Codex / Cursor** : répliquer le changement dans `codex/kp-<nom>/` et `cursor/kp-<nom>.mdc` (encore monolithiques par rôle). Pour un **nouvel** agent Codex : créer aussi `codex/kp-<nom>/agents/openai.yaml`.
+3. **Monter la version** dans `claude/.claude-plugin/plugin.json` (patch pour un correctif, minor pour un ajout d'agent / une feature, major pour une rupture). Mettre à jour `CHANGELOG.md`.
+4. Lancer `./sync.sh` pour installer Cursor + Codex en local (macOS).
+5. Publier : `git add` + commit (le hook de pré-commit vérifie le bump) + tag `kp-agents-v<X.Y.Z>` + push. Les utilisateurs Claude reçoivent la maj au prochain `/plugin marketplace update`.
 
-Quand un agent dépasse ~300 lignes générées **ou** a 3+ modes distincts, refactorer en :
+## sync.sh
 
 ```
-plugins/kp-agents/skills/<agent>/
-├── SKILL.md                  Persona + scope + router (≤ 250 lignes)
-├── persona.md                Carte d'identité légère (auto-généré)
-└── references/
-    ├── <mode-A>.md           Procédure du mode A
-    ├── <mode-B>.md           Procédure du mode B
-    └── ...
+./sync.sh            # installe cursor/ → ~/.cursor/rules et codex/ → ~/.codex/skills + câble le hook
+./sync.sh --clean    # supprime les kp-* installés (~/.cursor/rules, ~/.codex/skills) puis sort
+./sync.sh -h         # aide
 ```
 
-Le `SKILL.md` contient :
-- Persona, scope, anti-patterns globaux (gotchas transverses)
-- Inputs/Outputs tables
-- **Routing** : « selon la demande, charge `references/<mode>.md` »
-- Cas limites globaux uniquement
+`sync.sh` câble aussi `core.hooksPath .githooks` (idempotent) pour activer le hook de pré-commit.
 
-Les refs (sources dans `includes/<agent>-<mode>.md`) contiennent :
-- Questions à poser pour ce mode
-- Outputs spécifiques
-- Edge cases du mode
-- Templates spécifiques
+## Versioning & hook de pré-commit
 
-**Référence d'implémentation** : `setup` (8b26798) — orchestrateur 261 lignes + 4 refs (`setup-product`, `setup-tickets`, `setup-git`, `setup-global-doc`). Avant : 592 lignes monolithiques.
-
-**Critères de refactor** :
-| Signal | Action |
-|--------|--------|
-| > 350 lignes générées | Refactor recommandé |
-| 3+ modes avec procédures distinctes | Refactor recommandé |
-| Procédures dimension-spécifiques en cas limites volumineux | Extraire en refs |
-| Une persona, plusieurs workflows | Orchestrateur + refs (pas plusieurs skills) |
-
-**Anti-pattern** : ne **pas** fragmenter en plusieurs slash commands (`kp-agents:setup-product`, `kp-agents:setup-tickets`...). L'agent reste UNE entité avec UNE persona — la décomposition est interne, invisible pour l'utilisateur.
+- **Versioning manuel** : aucun bump automatique. La version vit dans `claude/.claude-plugin/plugin.json`.
+- **`.githooks/pre-commit`** : si un commit modifie un agent ou un skill (`claude/agents/`, `claude/skills/`, `codex/`, `cursor/`) **sans** que `version` ait changé vs `HEAD`, le commit est **bloqué**. Les commits qui ne touchent pas aux agents/skills (docs, `sync.sh`…) passent librement.
+- Activation : `git config core.hooksPath .githooks` (fait automatiquement par `sync.sh`).
+- Contournement ponctuel : `git commit --no-verify`.
 
 ## Workflow inter-agents
 
-Invocations via le plugin Claude Code : `/kp-agents:<nom>`.
+Côté Claude, chaque rôle est un subagent (`@agent-kp-agents:<nom>` ou auto-délégation). Le diagramme ci-dessous décrit le pipeline conceptuel (noms de rôle, indépendants de l'outil).
 
 ```mermaid
 flowchart LR
-    S["/kp-agents:kp-setup"] -->|config prête| P["/kp-agents:kp-product"]
-    B["/kp-agents:kp-brainstorm"] -->|idée qualifiée| P
-    P -->|epics et stories| A["/kp-agents:kp-architect"]
-    P -->|besoin UX| UX["/kp-agents:kp-ux-ui"]
-    A -->|design technique| D["/kp-agents:kp-developer"]
+    S["kp-setup"] -->|config prête| P["kp-product"]
+    B["kp-brainstorm"] -->|idée qualifiée| P
+    P -->|epics et stories| A["kp-architect"]
+    P -->|besoin UX| UX["kp-ux-ui"]
+    A -->|design technique| D["kp-developer"]
     UX -->|specs visuelles| D
-    D -->|implémentation| R["/kp-agents:kp-review"]
+    D -->|implémentation| R["kp-review"]
     R -->|NO-GO| D
-    R -->|GO + écarts| DOC["/kp-agents:kp-documentation"]
+    R -->|GO + écarts| DOC["kp-documentation"]
     D -->|écarts détectés| DOC
     P -. config manquante .-> S
     A -. config manquante .-> S
@@ -168,20 +132,19 @@ flowchart LR
 
 ## Agents disponibles
 
-Convention de nommage (v2.0.0) : tous les agents portent le préfixe `kp-` dès le frontmatter `name:`. Ce préfixe garantit l'unicité du skill côté Cursor / Codex et lève toute collision avec d'autres plugins. Côté Claude Code, le namespace de plugin (`kp-agents:`) reste préfixé devant le nom du skill → `/kp-agents:kp-brainstorm`.
+Convention de nommage : tous les rôles portent le préfixe `kp-` dès le frontmatter `name:`. Côté Claude Code, ce sont désormais des **subagents** : auto-délégation sur la `description`, ou adressage explicite `@agent-kp-agents:kp-<role>`.
 
-| Agent | Fichier | Invocation Claude | Rôle |
-|-------|---------|-------------------|------|
-| kp-brainstorm | `agents/kp-brainstorm.md` | `/kp-agents:kp-brainstorm` | Explorer des idées, challenger des hypothèses |
-| kp-product | `agents/kp-product.md` | `/kp-agents:kp-product` | Structurer en roadmap, epics et stories |
-| kp-architect | `agents/kp-architect.md` | `/kp-agents:kp-architect` | Concevoir l'architecture technique |
-| kp-developer | `agents/kp-developer.md` | `/kp-agents:kp-developer` | Implémenter les stories et epics |
-| kp-review | `agents/kp-review.md` | `/kp-agents:kp-review` | Relire, tester, valider le code |
-| kp-documentation | `agents/kp-documentation.md` | `/kp-agents:kp-documentation` | Analyser et maintenir la documentation |
-| kp-ux-ui | `agents/kp-ux-ui.md` | `/kp-agents:kp-ux-ui` | Designer UX/UI et identité visuelle |
-| kp-setup | `agents/kp-setup.md` | `/kp-agents:kp-setup` | Configurer les sources du projet (frontmatter `kp-agents:` des `docs/*.md` : git, project, documentation, testing) |
-| kp-daily | `agents/kp-daily.md` | `/kp-agents:kp-daily` | Générer un daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
-| kp-test | `agents/kp-test.md` | `/kp-agents:kp-test` | Orchestrer les tests E2E (cas Xray + test code + remontée), garant de conformité de bout en bout |
+| Agent | Invocation Claude | Rôle |
+|-------|-------------------|------|
+| kp-brainstorm | `@agent-kp-agents:kp-brainstorm` | Explorer des idées, challenger des hypothèses |
+| kp-product | `@agent-kp-agents:kp-product` | Structurer en roadmap, epics et stories |
+| kp-architect | `@agent-kp-agents:kp-architect` | Concevoir l'architecture technique |
+| kp-developer | `@agent-kp-agents:kp-developer` | Implémenter les stories et epics |
+| kp-review | `@agent-kp-agents:kp-review` | Relire, tester, valider le code |
+| kp-documentation | `@agent-kp-agents:kp-documentation` | Analyser et maintenir la documentation |
+| kp-ux-ui | `@agent-kp-agents:kp-ux-ui` | Designer UX/UI et identité visuelle |
+| kp-setup | `@agent-kp-agents:kp-setup` | Configurer les sources du projet (git, project, documentation, testing) |
+| kp-daily | `@agent-kp-agents:kp-daily` | Daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
+| kp-test | `@agent-kp-agents:kp-test` | Orchestrer les tests E2E (cas Xray + test code + remontée) |
 
-Pour Cursor : `@kp-<nom>` via le sélecteur de règles (`@kp-brainstorm`, `@kp-daily`…).
-Pour Codex : skill auto-détectée `kp-<nom>` (`kp-brainstorm`, `kp-daily`…).
+Pour Cursor : `@kp-<nom>` via le sélecteur de règles. Pour Codex : skill auto-détectée `kp-<nom>`. (Codex/Cursor restent monolithiques par rôle — réplication du modèle agents/skills à venir.)

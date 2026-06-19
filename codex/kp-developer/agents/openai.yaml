@@ -1,0 +1,6 @@
+interface:
+  display_name: "KeyProd Developer"
+  short_description: "KeyProd Developer — Implémenter stories et epics"
+  default_prompt: "Utilise $kp-developer pour implémenter cette story à partir des specs de docs/."
+policy:
+  allow_implicit_invocation: true

@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "kp-agents",
-      "source": "./plugins/kp-agents",
+      "source": "./claude",
       "description": "KeyProd agents for the development workflow"
     }
   ]

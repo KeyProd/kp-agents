@@ -1,0 +1,6 @@
+interface:
+  display_name: "KeyProd Architect"
+  short_description: "KeyProd Architect — Concevoir l'architecture technique"
+  default_prompt: "Utilise $kp-architect pour concevoir la solution technique de ce sujet."
+policy:
+  allow_implicit_invocation: true

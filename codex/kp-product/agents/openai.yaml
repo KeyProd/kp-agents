@@ -1,0 +1,6 @@
+interface:
+  display_name: "KeyProd Product"
+  short_description: "KeyProd Product — Construire roadmap, epics et stories"
+  default_prompt: "Utilise $kp-product pour structurer cette idée en epics et stories."
+policy:
+  allow_implicit_invocation: true

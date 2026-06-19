@@ -1,0 +1,6 @@
+interface:
+  display_name: "KeyProd Documentation"
+  short_description: "KeyProd Documentation — Analyser et maintenir la documentation"
+  default_prompt: "Utilise $kp-documentation pour analyser la documentation et proposer ou maintenir les docs projet."
+policy:
+  allow_implicit_invocation: true

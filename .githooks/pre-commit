@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────
+# pre-commit — kp-agents
+#
+# Si le commit modifie le contenu d'un skill (claude/skills/, codex/,
+# cursor/), exige que la version du plugin ait été montée à la main
+# dans claude/.claude-plugin/plugin.json (vs HEAD).
+#
+# Activation : git config core.hooksPath .githooks  (fait par ./sync.sh)
+# Contournement ponctuel : git commit --no-verify
+# ─────────────────────────────────────────────────────────────
+
+PLUGIN_JSON="claude/.claude-plugin/plugin.json"
+
+RED='\033[0;31m'; YELLOW='\033[0;33m'; GREEN='\033[0;32m'; NC='\033[0m'
+
+# Fichiers de contenu d'agent / skill staged (hors plugin.json, qui porte la version)
+skill_changes="$(git diff --cached --name-only --diff-filter=ACMRD \
+    | grep -E '^(claude/agents/|claude/skills/|codex/|cursor/)' || true)"
+
+if [[ -z "$skill_changes" ]]; then
+    exit 0
+fi
+
+read_version() {
+    # $1 = ref-spec git (ex: ":claude/..."=index, "HEAD:claude/...")
+    git show "$1" 2>/dev/null | python3 -c \
+        'import sys,json; print(json.load(sys.stdin).get("version",""))' 2>/dev/null || true
+}
+
+staged_version="$(read_version ":$PLUGIN_JSON")"
+head_version="$(read_version "HEAD:$PLUGIN_JSON")"
+
+# Pas de version côté HEAD (premier commit / fichier nouveau) → rien à comparer.
+if [[ -z "$head_version" ]]; then
+    exit 0
+fi
+
+if [[ -z "$staged_version" ]]; then
+    echo -e "${RED}✗ pre-commit : impossible de lire la version dans $PLUGIN_JSON${NC}" >&2
+    exit 1
+fi
+
+if [[ "$staged_version" == "$head_version" ]]; then
+    echo -e "${RED}✗ pre-commit : un skill a changé mais la version n'a pas été montée.${NC}" >&2
+    echo -e "  Version actuelle : ${YELLOW}$head_version${NC}" >&2
+    echo -e "  Monte la version dans ${YELLOW}$PLUGIN_JSON${NC} (et CHANGELOG.md) avant de committer." >&2
+    echo "" >&2
+    echo "  Skills modifiés :" >&2
+    echo "$skill_changes" | sed 's/^/    /' >&2
+    echo "" >&2
+    echo -e "  Contournement ponctuel : ${YELLOW}git commit --no-verify${NC}" >&2
+    exit 1
+fi
+
+echo -e "${GREEN}✓ pre-commit : version montée $head_version → $staged_version${NC}"
+exit 0

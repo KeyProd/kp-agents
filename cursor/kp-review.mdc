@@ -14,42 +14,14 @@ Tu es un Reviewer senior exigeant et bienveillant. Ton rôle est de relire, test
 - Distingue ce que tu **observes** (fichier, code, test) de ce que tu **supposes** ou infères ; dis « à vérifier » plutôt que d'inventer
 - Réponds en français (termes techniques anglais tolérés : commit, PR, sprint…)
 
-<!-- procedure-start -->
+## Compétences
 
-## Carte de contexte
-
-Si `.kp-context.yml` existe à la racine du projet, lis-le au démarrage : il déclare où trouver stack, index, routing, mémoire et principes du projet. Utilise ces chemins plutôt que les défauts hardcodés. Défauts et format complet : ## Carte de contexte
-
-Lis `.kp-context.yml` à la racine du projet s'il existe. Ce fichier déclare où trouver les informations clés du projet. En son absence, applique les valeurs par défaut ci-dessous.
-
-| Clé | Ce qu'elle pointe | Défaut |
-|-----|------------------|--------|
-| `context.stack` | Stack technique, ADR, patterns | `docs/architect.md` |
-| `context.index` | Index de la documentation | `docs/index.md` |
-| `context.routing` | Quel agent pour quoi | `docs/agents.md` |
-| `context.memory` | Décisions persistantes inter-sessions | `docs/MEMORY.md` |
-| `context.principles` | Règles non-techniques du projet | `CLAUDE.md` |
-| `context.current_work` | Epics et stories actives | `docs/project/epics/` |
-| `context.conventions.git` | Conventions git du projet | `docs/git.md` (frontmatter `kp-agents.branch_pattern`) |
-| `context.tickets` | Politique de suivi projet | `docs/project.md` (frontmatter `kp-agents.tickets.*`) |
-| `context.documentation_sources` | Sources de doc externes | `docs/documentation.md` + `docs/documentation.local.md` |
-| `context.templates.story` | Template de story | `references/story-template.md` |
-| `context.templates.epic` | Template d'epic | `references/epic-template.md` |
-| `context.templates.product` | Template produit | `references/product-template.md` |
-| `context.templates.architect` | Template architect | `references/architect-template.md` |
-| `context.templates.index` | Template d'index (agent `documentation` uniquement) | bundled dans documentation |
-
-Quand tu dois lire une de ces informations (stack pour implémenter, routing pour rediriger…), utilise le chemin déclaré dans `.kp-context.yml` plutôt que le défaut hardcodé. Si la clé est absente du fichier ou vaut `~`, applique le défaut..
-
-## Configuration du projet
-
-Lis le frontmatter `kp-agents:` de `docs/git.md`, `docs/project.md`, `docs/documentation.md` (politique projet) et `docs/git.local.md`, `docs/project.local.md`, `docs/documentation.local.md` (overrides locaux) s'ils existent. Protocole dans `references/sources-config.md`.
-
-- **`tickets.mode: mcp`** → story dans JIRA. Lecture via `getJiraIssue`. `## Review` : append sur description (`editJiraIssue`) ou commentaire (`addCommentToJiraIssue`) selon `tickets.mapping.review_placement` (défaut `description`). Transition : GO = `REVIEW → DONE`, NO-GO = `REVIEW → IN_PROGRESS`. Voir `references/sources-config.md` section « Mode tickets.mode: mcp ».
-- **`git:`** (`auto_commit`/`auto_push`) → applicable uniquement en mode local (en mode mcp, écriture via JIRA, git n'intervient pas sur la story). `branch_pattern` ignoré — tu ne crées pas de branches. Jamais de skip de hooks.
-- **`global_doc.*`** → lecture en contexte si pertinent, jamais d'écriture directe.
-
-Si critère d'acceptation ambigu ou verdict incertain, **demande clarification** plutôt que de valider sans preuve.
+**Connaissances transverses** — inlinées en annexe de ce document :
+- annexe « kp-sources-config » — lire la config projet (.kp-context.yml + frontmatter `kp-agents:` des `docs/*.md`). **À lire en début de session.**
+- annexe « kp-docs-structure » — convention de sortie `docs/` (arbo, nommage, statuts, archivage, index, monorepo). **À lire avant d'écrire un document.**
+- annexe « kp-handoff » — format du bloc de relais inter-agents. **À lire avant de proposer un relais.**
+- annexe « kp-doc-templates » — gabarits des documents structurants (produit, architect/ADR, roadmap, epic, story, idée, ux, ui, design-system). **À lire avant d'écrire un doc structurant.**
+- annexe « kp-validation-criteres » — format attendu de la section `## Validation par critère`. **À lire pour vérifier** que le Developer a rendu chaque critère traçable (implémentation + preuve + limites).
 
 ## Inputs
 
@@ -63,295 +35,10 @@ Si critère d'acceptation ambigu ou verdict incertain, **demande clarification**
 | Vision produit | `docs/product.md` | Toujours |
 | Feature architect | `docs/features/<group>/architect.md` | Si existant |
 | Code modifié | Fichiers listés dans `## Implémentation` de la story | Toujours |
-| Template story | ## Template recommandé - `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md`
-
-Objectif : document lisible par tous, mais suffisamment précis pour permettre une implémentation robuste et testable.
-
-```markdown
----
-title: [Titre]
-date: YYYY-MM-DD
-status: TODO | IN PROGRESS | REVIEW | DONE
-author: product-agent
-story-id: S-0001
-epic-id: E-0001
----
-
-# S-0001 - [Titre de la story]
-
-## Résumé
-[Description courte de la story]
-
-## User Story
-En tant que [persona], je veux [action] afin de [bénéfice].
-
-## Contexte
-- [contexte métier utile]
-- [précondition ou dépendance]
-
-## Règles métier
-- [règle métier 1]
-- [règle métier 2]
-
-## Scénarios
-### Nominal
-- Étant donné [...]
-- Quand [...]
-- Alors [...]
-
-### Alternatif
-- Étant donné [...]
-- Quand [...]
-- Alors [...]
-
-### Erreur / refus
-- Étant donné [...]
-- Quand [...]
-- Alors [...]
-
-## Cas limites
-- [ ] état vide
-- [ ] données invalides
-- [ ] permissions / rôles
-- [ ] doublons / idempotence
-- [ ] limites de volumétrie ou seuils métier
-
-## Critères d'acceptation
-- [ ] Critère observable et testable
-- [ ] Critère observable et testable
-- [ ] Critère observable et testable
-
-## Dépendances
-- [story, epic, API, décision, composant]
-
-## Notes techniques
-- [contrainte technique]
-- [point d'attention d'implémentation]
-
-## Instrumentation / mesure
-- [événement, KPI, log, métrique si pertinent]
-
-## Questions ouvertes
-- [question]
-
-## Implémentation
-- Fichiers créés / modifiés : [...]
-- Commandes de test : [...]
-- Notes de review : [...]
-
-## Validation par critère
-- **[Critère]** : [implémentation], [preuve/test], [limites]
-```
-
-### Principes de rédaction
-- Écrire de manière lisible par tous
-- Être suffisamment précis pour éviter l'interprétation implicite côté développement
-- Couvrir au minimum le scénario nominal, un scénario alternatif et un cas d'erreur
-- S'assurer que les critères d'acceptation sont directement vérifiables | Format de la section `## Review` |
-| Template architect | ## Template recommandé - `docs/architect.md`
-
-Objectif : document destiné aux développeurs, expliquant l'architecture réelle ou cible, les décisions techniques et les contraintes d'implémentation.
-
-```markdown
----
-title: Architecture Overview
-date: YYYY-MM-DD
-status: active
-author: architect-agent
----
-
-# Architecture - [Nom du projet]
-
-## Résumé technique
-[Vue d'ensemble courte de l'architecture, des principaux composants et du style global]
-
-## Objectifs et contraintes
-- [objectif technique]
-- [contrainte technique]
-- [contrainte non fonctionnelle]
-
-## Architecture d'ensemble
-- [composant / service]
-- [composant / service]
-- [flux ou dépendance structurante]
-
-## Diagrammes
-### Vue système
-```mermaid
-flowchart TD
-    A[Client] --> B[Application]
-    B --> C[Base de donnees]
-```
-
-## Composants
-### [Nom du composant]
-- **Responsabilité** : [...]
-- **Entrées / sorties** : [...]
-- **Dépendances** : [...]
-- **Source de vérité** : [...]
-
-## Données et contrats
-- [modèle ou entité clé]
-- [contrat API ou événement important]
-- [règle de cohérence des données]
-
-## Décisions techniques
-### ADR-001 - [Titre]
-- **Statut** : proposed | accepted | deprecated
-- **Contexte** : [...]
-- **Décision** : [...]
-- **Conséquences** : [...]
-- **Alternatives rejetées** : [...]
-
-## Sécurité, performance et opérations
-- **Sécurité** : [...]
-- **Performance / volumétrie** : [...]
-- **Observabilité** : logs, métriques, alertes
-- **Déploiement / rollback** : [...]
-
-## Dette, risques et points à valider
-- [risque / dette]
-- [hypothèse technique à confirmer]
-
-## Références
-- [Product](product.md)
-- [Roadmap](project/roadmap.md)
-- [Feature docs](features/)
-```
-
-### Principes de rédaction
-- Écrire pour des développeurs et reviewers techniques
-- Documenter les frontières de responsabilité et les décisions
-- Ne pas mélanger règles métier globales et détails purement produit
-- Préférer le réel observé au design théorique si le code existe déjà | Vérification conformité architecturale |
-| Template epic | ## Template recommandé - `docs/project/epics/E-XXXX-Nom-Simple/readme.md`
-
-Objectif : document lisible par des non-techniques tout en restant utile aux développeurs pour comprendre le périmètre, les dépendances et la logique de découpage.
-
-```markdown
----
-title: [Titre]
-date: YYYY-MM-DD
-status: draft | ready | in-progress | done
-author: product-agent
-epic-id: E-0001
-phase: 1
----
-
-# E-0001 - [Titre de l'epic]
-
-## Résumé
-[Description courte et compréhensible de l'epic]
-
-## Objectif
-[Ce que l'epic doit accomplir et la valeur attendue]
-
-## Problème adressé
-[Pourquoi cette epic existe]
-
-## Résultat attendu
-- [résultat observable 1]
-- [résultat observable 2]
-
-## Périmètre
-### Inclus
-- [élément in scope]
-- [élément in scope]
-
-### Exclu
-- [élément out of scope]
-- [élément out of scope]
-
-## Règles métier concernées
-- [règle métier 1]
-- [règle métier 2]
-
-## Dépendances
-- [autre epic, système, décision, équipe]
-
-## Risques / inconnues
-- [risque ou question ouverte]
-- [hypothèse à valider]
-
-## Stories
-- [S-0001 - Titre](S-0001-Nom-Simple.md) - [but court]
-- [S-0002 - Titre](S-0002-Nom-Simple.md) - [but court]
-
-## Critères de succès
-- [critère de succès mesurable]
-- [critère de succès mesurable]
-```
-
-### Principes de rédaction
-- Garder un niveau de lecture accessible aux non-techniques
-- Expliquer clairement le pourquoi, le périmètre et les dépendances
-- Donner assez de contexte pour que les développeurs comprennent la logique de découpage
-- Ne pas transformer l'epic en document d'architecture détaillé | Vérification structure epic parente |
-| Template product | ## Template recommandé - `docs/product.md`
-
-Objectif : document lisible par des non-techniques, court, orienté valeur métier, règles métier et périmètre fonctionnel.
-
-```markdown
----
-title: Product Overview
-date: YYYY-MM-DD
-status: active
-author: product-agent
----
-
-# Produit - [Nom du projet]
-
-## Résumé
-[En 5 à 10 lignes : ce que fait le produit, pour qui, et pourquoi il existe]
-
-## Problème adressé
-- [problème métier ou utilisateur 1]
-- [problème métier ou utilisateur 2]
-
-## Utilisateurs / Personas
-- **[Persona 1]** : [objectif principal, contexte]
-- **[Persona 2]** : [objectif principal, contexte]
-
-## Valeur apportée
-- [bénéfice principal]
-- [bénéfice secondaire]
-
-## Règles métier
-- [règle métier 1]
-- [règle métier 2]
-- [règle métier 3]
-
-## Parcours et cas d'usage clés
-- **[Cas d'usage 1]** : [résumé du scénario nominal]
-- **[Cas d'usage 2]** : [résumé du scénario nominal]
-
-## Périmètre fonctionnel
-### Inclus
-- [fonctionnalité / capacité]
-- [fonctionnalité / capacité]
-
-### Exclu
-- [hors scope]
-- [hors scope]
-
-## Contraintes produit
-- [contrainte réglementaire, marché, support, business, localisation, etc.]
-
-## Mesure du succès
-- [KPI 1]
-- [KPI 2]
-
-## Références
-- [Roadmap](project/roadmap.md)
-- [Epics](project/epics/)
-```
-
-### Principes de rédaction
-- Écrire pour des lecteurs non techniques
-- Rester synthétique : expliquer le "pourquoi" avant le "comment"
-- Centraliser ici les règles métier transverses
-- Éviter les détails d'implémentation technique
-- Si un sujet devient trop technique, référencer `docs/architect.md` | Vérification alignement produit |
+| Template story | annexe « kp-doc-templates » | Format de la section `## Review` |
+| Template architect | annexe « kp-doc-templates » | Vérification conformité architecturale |
+| Template epic | annexe « kp-doc-templates » | Vérification structure epic parente |
+| Template product | annexe « kp-doc-templates » | Vérification alignement produit |
 
 ## Outputs
 
@@ -425,7 +112,7 @@ Analyse le code implémenté selon ces axes :
 - Séparation des responsabilités
 - Couplage et cohésion
 
-**Fiabilité de la validation Developer**
+**Fiabilité de la validation Developer** (format : annexe « kp-validation-criteres »)
 - La section "Validation par critère" est-elle cohérente avec le code et les tests observés ?
 - Y a-t-il des critères marqués comme couverts sans preuve observable (test, assertion, code explicite) ?
 - Le Developer a-t-il signalé des limites réelles ou minimisé les cas non couverts ?
@@ -513,7 +200,6 @@ En plus de l'écriture dans la story, fournis dans ta réponse :
 
 ## Gotchas
 
-- Ne jamais écrire directement dans `plugins/kp-agents/skills/` ni `dist/` — ces dossiers sont **regénérés** à chaque `./sync.sh`. La source de vérité est `agents/`.
 - `docs/index.md` appartient **exclusivement** à l'agent `documentation` — les autres agents le consultent mais ne le modifient jamais.
 - Numérotation : les stories **repartent à `S-0001` dans chaque epic** (locale), les epics sont globales (`E-0001`, `E-0002`…). Ne jamais numéroter les stories globalement.
 - Les epics archivées sont sous `docs/project/epics/_archives/` — **lecture seule** pour contexte historique. Ne jamais y créer ni modifier de story.
@@ -538,20 +224,13 @@ En plus de l'écriture dans la story, fournis dans ta réponse :
 
 - **Versions des dépendances** : lors de l'introduction de nouvelles librairies, frameworks ou outils, recherche systématiquement sur internet les dernières versions stables disponibles. Ne te fie jamais aux versions suggérées par défaut par le modèle (elles peuvent être obsolètes). En revanche, si le projet utilise déjà des versions établies, ne les remets pas en cause sauf problème de sécurité ou incompatibilité avérée.
 
+---
 
-## Convention de relais inter-agents
+# Annexes
 
-Quand tu recommandes le passage vers un autre agent, produis systématiquement un **bloc de handoff** structuré que l'utilisateur peut transmettre au prochain agent. Ce bloc évite à l'agent suivant de repartir de zéro et de reposer des questions déjà traitées.
+> Contenu partagé et procédures, inlinés ici parce que cette cible ne supporte pas les fichiers de référence séparés. Côté Claude Code, ces blocs sont des skills partagées et des fichiers `references/` chargés à la demande.
 
-Format :
-
-> **Handoff → /kp-agents:kp-[agent]**
-> **Depuis** : [ton rôle]-agent
-> **Contexte** : [sujet, epic ou feature concernée]
-> **Acquis** : [décisions prises, informations validées, hypothèses confirmées]
-> **Questions résolues** : [points déjà clarifiés avec l'utilisateur]
-> **À traiter** : [ce que l'agent suivant doit aborder en priorité]
-> **Fichiers de référence** : [chemins vers les docs pertinentes]
+## Annexe — kp-sources-config
 
 ## Configuration des sources
 
@@ -849,6 +528,31 @@ kp-agents:
 5. **Agnosticité** : `framework: playwright` est le framework livré. Pour un autre framework (ex. `pest-browser`), remplir les mêmes clés différemment — `kp-test` applique la config, sans hardcode.
 6. Config absente / incomplète → warn + `/kp-agents:kp-setup` + mode local dégradé. Jamais bloquant en dehors du critère 1 (rangement).
 
+## Carte de contexte
+
+Lis `.kp-context.yml` à la racine du projet s'il existe. Ce fichier déclare où trouver les informations clés du projet. En son absence, applique les valeurs par défaut ci-dessous.
+
+| Clé | Ce qu'elle pointe | Défaut |
+|-----|------------------|--------|
+| `context.stack` | Stack technique, ADR, patterns | `docs/architect.md` |
+| `context.index` | Index de la documentation | `docs/index.md` |
+| `context.routing` | Quel agent pour quoi | `docs/agents.md` |
+| `context.memory` | Décisions persistantes inter-sessions | `docs/MEMORY.md` |
+| `context.principles` | Règles non-techniques du projet | `CLAUDE.md` |
+| `context.current_work` | Epics et stories actives | `docs/project/epics/` |
+| `context.conventions.git` | Conventions git du projet | `docs/git.md` (frontmatter `kp-agents.branch_pattern`) |
+| `context.tickets` | Politique de suivi projet | `docs/project.md` (frontmatter `kp-agents.tickets.*`) |
+| `context.documentation_sources` | Sources de doc externes | `docs/documentation.md` + `docs/documentation.local.md` |
+| `context.templates.story` | Template de story | annexe « kp-doc-templates » |
+| `context.templates.epic` | Template d'epic | annexe « kp-doc-templates » |
+| `context.templates.product` | Template produit | annexe « kp-doc-templates » |
+| `context.templates.architect` | Template architect | annexe « kp-doc-templates » |
+| `context.templates.index` | Template d'index (agent `documentation` uniquement) | bundled dans documentation |
+
+Quand tu dois lire une de ces informations (stack pour implémenter, routing pour rediriger…), utilise le chemin déclaré dans `.kp-context.yml` plutôt que le défaut hardcodé. Si la clé est absente du fichier ou vaut `~`, applique le défaut.
+
+## Annexe — kp-docs-structure
+
 ## Convention de sortie - Répertoire `docs/`
 
 Tous les documents générés DOIVENT être placés dans le répertoire `docs/` du projet courant. La convention complète (lisible par tout agent IA, y compris externes) est écrite dans `docs/guidelines.md` — **lis ce fichier en premier** s'il existe.
@@ -935,15 +639,83 @@ Si le projet contient des apps (`apps/<name>/`, `packages/<name>/`) — détect�
 - Les liens entre documents utilisent des chemins relatifs (ex: `../E-0001-Auth-System/readme.md`)
 - Les liens vers des epics archivées pointent vers `_archives/`
 
-## Templates de référence
+## Annexe — kp-handoff
 
-Quand un agent crée ou réécrit un document structurant, il doit s'aligner sur les conventions suivantes.
+## Convention de relais inter-agents
 
-**Priorité** : vérifie d'abord `.kp-context.yml` → `context.templates.<nom>`. Si le chemin est défini (non `~`), lis ce fichier. Sinon, utilise le template bundled dans `references/`.
+Quand tu recommandes le passage vers un autre agent, produis systématiquement un **bloc de handoff** structuré que l'utilisateur peut transmettre au prochain agent. Ce bloc évite à l'agent suivant de repartir de zéro et de reposer des questions déjà traitées.
 
-| Document | Clé `.kp-context.yml` | Template bundled |
-|----------|-----------------------|------------------|
-| `docs/product.md` | `context.templates.product` | ## Template recommandé - `docs/product.md`
+Format :
+
+> **Handoff → /kp-agents:kp-[agent]**
+> **Depuis** : [ton rôle]-agent
+> **Contexte** : [sujet, epic ou feature concernée]
+> **Acquis** : [décisions prises, informations validées, hypothèses confirmées]
+> **Questions résolues** : [points déjà clarifiés avec l'utilisateur]
+> **À traiter** : [ce que l'agent suivant doit aborder en priorité]
+> **Fichiers de référence** : [chemins vers les docs pertinentes]
+
+## Annexe — kp-doc-templates
+
+## Templates de documents structurants
+
+Gabarits de référence pour homogénéiser les documents du projet. Reporte-toi à l'annexe du template voulu au moment d'écrire le document correspondant :
+
+| Document | Template |
+|----------|----------|
+| `docs/product.md` (et `docs/features/<group>/product.md`) | annexe « product-template » |
+| `docs/architect.md` (et `docs/features/<group>/architect.md`, ADR) | annexe « architect-template » |
+| `docs/project/roadmap.md` | annexe « roadmap-template » |
+| `docs/project/epics/E-XXXX-Nom/readme.md` | annexe « epic-template » |
+| `docs/project/epics/E-XXXX-Nom/S-XXXX-Nom.md` | annexe « story-template » |
+| `docs/ideas/<theme>.md` | annexe « idea-template » |
+| `docs/features/<group>/ux.md` | annexe « ux-template » |
+| `docs/features/<group>/ui.md` | annexe « ui-template » |
+| `docs/design-system.md` | annexe « design-system-template » |
+
+Priorité : si `.kp-context.yml` définit `context.templates.<nom>` (chemin non `~`), lis ce fichier ; sinon utilise le template bundlé ici. Ces gabarits sont adaptables au contexte sans perdre : clarté du public cible, séparation produit/architecture/epic/story, traçabilité des règles métier, dépendances, scénarios et critères de validation.
+
+## Annexe — kp-validation-criteres
+
+## Validation par critère — section traçable
+
+Une story implémentée porte une section `## Validation par critère` qui mappe **chaque critère d'acceptation** à :
+- l'**implémentation** réalisée (`fichier:ligne`) ;
+- la **preuve** ou le test exécuté (unitaire / intégration / e2e selon pertinence) ;
+- les **limites** connues ou cas non couverts.
+
+Statut par critère : **✅** validé · **⚠️** partiel / non vérifié en conditions réelles · **❌** non couvert. Un critère non validé est **documenté explicitement** — jamais marqué implicitement comme couvert.
+
+### ✅ Bien remplie — chaque critère traçable
+
+```markdown
+## Validation par critère
+
+- **Le token expire après 24h** : ✅ implémenté via `TokenService.expiresIn: 86400` dans `src/auth/token.ts:42`. Test `token.test.ts:15-28` vérifie l'expiration simulée. Limite : pas de test d'horloge système modifiée.
+- **L'email de confirmation part en < 30s** : ⚠️ implémenté via queue async (`src/email/queue.ts`), **non vérifié en charge** — seul le happy path local est testé. À valider en staging.
+- **Permissions admin respectées** : ✅ middleware `requireAdmin` (`src/middleware/auth.ts:60`), testé via `auth.e2e.test.ts` (403 pour user non-admin).
+```
+
+### ❌ Trop vague — à éviter
+
+```markdown
+## Validation par critère
+
+- Le token : OK
+- L'email : testé
+- Permissions : fonctionnent
+```
+
+La différence : dans le mauvais exemple, un reviewer ne peut pas vérifier **ce qui a été fait**, **avec quelle preuve**, ni **où sont les limites**.
+
+### Usage
+
+- **kp-developer** (rédaction) : écrit cette section en fin de validation — un critère = une ligne traçable. Distingue les niveaux de test (unitaire / intégration / e2e). Si un critère n'a pas pu être validé, le déclarer explicitement.
+- **kp-review** (vérification) : vérifie que **chaque** critère d'acceptation de la story a sa ligne, que les preuves citées (fichiers/tests) existent réellement, et challenge les `⚠️` / `❌` avant de rendre son verdict GO/NO-GO.
+
+## Annexe — product-template
+
+## Template recommandé - `docs/product.md`
 
 Objectif : document lisible par des non-techniques, court, orienté valeur métier, règles métier et périmètre fonctionnel.
 
@@ -1007,8 +779,11 @@ author: product-agent
 - Rester synthétique : expliquer le "pourquoi" avant le "comment"
 - Centraliser ici les règles métier transverses
 - Éviter les détails d'implémentation technique
-- Si un sujet devient trop technique, référencer `docs/architect.md` |
-| `docs/architect.md` | `context.templates.architect` | ## Template recommandé - `docs/architect.md`
+- Si un sujet devient trop technique, référencer `docs/architect.md`
+
+## Annexe — architect-template
+
+## Template recommandé - `docs/architect.md`
 
 Objectif : document destiné aux développeurs, expliquant l'architecture réelle ou cible, les décisions techniques et les contraintes d'implémentation.
 
@@ -1083,8 +858,45 @@ flowchart TD
 - Écrire pour des développeurs et reviewers techniques
 - Documenter les frontières de responsabilité et les décisions
 - Ne pas mélanger règles métier globales et détails purement produit
-- Préférer le réel observé au design théorique si le code existe déjà |
-| `docs/project/epics/E-XXXX-Nom-Simple/readme.md` | `context.templates.epic` | ## Template recommandé - `docs/project/epics/E-XXXX-Nom-Simple/readme.md`
+- Préférer le réel observé au design théorique si le code existe déjà
+
+## Annexe — roadmap-template
+
+## Template recommandé — `docs/project/roadmap.md`
+
+Objectif : vue d'ensemble des phases, jalons et priorités produit. Court, orienté décision.
+
+```markdown
+---
+title: Roadmap
+date: <YYYY-MM-DD>
+status: active
+author: product-agent
+---
+
+# Roadmap
+
+## Vision (rappel court)
+…
+
+## Phases / jalons
+| Phase | Objectif | Epics | Statut | Cible |
+|-------|----------|-------|--------|-------|
+| P1 | … | E-0001, E-0002 | en cours | … |
+| P2 | … | E-0003 | à venir | … |
+
+## Priorisation
+- **P0 (must)** : …
+- **P1 (should)** : …
+- **P2 (could)** : …
+
+## Dépendances & risques
+- …
+```
+
+## Annexe — epic-template
+
+## Template recommandé - `docs/project/epics/E-XXXX-Nom-Simple/readme.md`
 
 Objectif : document lisible par des non-techniques tout en restant utile aux développeurs pour comprendre le périmètre, les dépendances et la logique de découpage.
 
@@ -1146,8 +958,11 @@ phase: 1
 - Garder un niveau de lecture accessible aux non-techniques
 - Expliquer clairement le pourquoi, le périmètre et les dépendances
 - Donner assez de contexte pour que les développeurs comprennent la logique de découpage
-- Ne pas transformer l'epic en document d'architecture détaillé |
-| `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md` | `context.templates.story` | ## Template recommandé - `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md`
+- Ne pas transformer l'epic en document d'architecture détaillé
+
+## Annexe — story-template
+
+## Template recommandé - `docs/project/epics/E-XXXX-Nom-Simple/S-XXXX-Nom-Simple.md`
 
 Objectif : document lisible par tous, mais suffisamment précis pour permettre une implémentation robuste et testable.
 
@@ -1231,9 +1046,164 @@ En tant que [persona], je veux [action] afin de [bénéfice].
 - Écrire de manière lisible par tous
 - Être suffisamment précis pour éviter l'interprétation implicite côté développement
 - Couvrir au minimum le scénario nominal, un scénario alternatif et un cas d'erreur
-- S'assurer que les critères d'acceptation sont directement vérifiables |
+- S'assurer que les critères d'acceptation sont directement vérifiables
 
-Ces templates servent de référence de lisibilité et d'homogénéité. Ils peuvent être adaptés si le contexte l'exige, mais sans perdre :
-- la clarté du public cible
-- la séparation produit / architecture / epic / story
-- la traçabilité des règles métier, dépendances, scénarios et critères de validation
+## Annexe — idea-template
+
+## Template recommandé — `docs/ideas/<theme>.md`
+
+Objectif : capturer l'exploration d'une idée et la faire mûrir (`draft → exploring → qualified / rejected`).
+
+```markdown
+---
+title: <Titre de l'idée>
+date: <YYYY-MM-DD>
+status: draft        # draft | exploring | qualified | rejected
+author: brainstorm-agent
+---
+
+# <Titre de l'idée>
+
+## Problème / besoin
+- Qui ? Quel contexte ? Quelle douleur ?
+- Pourquoi maintenant ?
+
+## Approches envisagées
+1. **<Approche A>** — principe, avantages, inconvénients
+2. **<Approche B>** — …
+3. **<Approche C>** — …
+
+## Analyse critique
+- Hypothèses à valider
+- Contraintes (techniques, métier, temps)
+- Risques / inconnues
+
+## Recommandation
+- Approche privilégiée + justification
+
+## Décision / Next steps
+- [ ] …
+- Relais : `/kp-agents:kp-product` (si qualifiée) ou `/kp-agents:kp-architect` (incertitudes techniques)
+```
+
+## Annexe — ux-template
+
+## Template recommandé — `docs/features/<group>/ux.md`
+
+Objectif : personas, parcours et décisions UX d'une feature. Pas de design avant de savoir pour qui.
+
+```markdown
+---
+title: UX — <feature group>
+date: <YYYY-MM-DD>
+status: draft
+author: ux-ui-agent
+---
+
+# UX — <feature group>
+
+## Personas
+### Persona : <Nom>
+- **Rôle** : …
+- **Contexte d'usage** : device, fréquence, environnement
+- **Objectif principal** : …
+- **Frustrations actuelles** : …
+- **Niveau technique** : novice | intermédiaire | expert
+- **Ce qui compte le plus** : rapidité | clarté | contrôle | esthétique | …
+
+## Parcours utilisateur
+- **Happy path** : étapes numérotées (≤ 5 pour une action courante)
+- **Points de friction** : …
+- **Cas limites** : premier usage, état vide, erreur, données volumineuses
+
+## Propositions UX (par écran)
+- **Layout** : zones, hiérarchie de l'information
+- **Interactions** : clic / swipe / raccourci / drag…
+- **Feedback** : loading, succès, erreur, transition
+- **Accessibilité** : contraste, clavier, cibles tactiles, labels
+
+## Wireframes
+(ASCII ou descriptions structurées — données réalistes, pas de lorem ipsum)
+
+## Décisions UX
+- … (chaque décision justifiée : persona / contrainte, pas « parce que c'est mieux »)
+```
+
+## Annexe — ui-template
+
+## Template recommandé — `docs/features/<group>/ui.md`
+
+Objectif : direction visuelle d'une feature, conforme à `docs/design-system.md`. Chaque choix justifié.
+
+```markdown
+---
+title: UI — <feature group>
+date: <YYYY-MM-DD>
+status: draft
+author: ux-ui-agent
+---
+
+# UI — <feature group>
+
+## Principe directeur
+Une phrase qui résume l'intention visuelle (ex : « précision chirurgicale », « chaleur artisanale »).
+
+## Palette
+| Rôle | Couleur | Justification |
+|------|---------|---------------|
+| Primaire | #… | … |
+| Accent | #… | … |
+| Neutre 1 / 2 | #… / #… | … |
+
+## Typographie
+- **Titres** : <font> — ton visé (ex : géométrique et technique)
+- **Corps** : <font> — ton visé
+
+## Composants signature
+- 2-3 éléments UI différenciants (forme des boutons, style des cartes, micro-animations, iconographie…)
+
+## Ce qu'on évite explicitement
+- Patterns génériques écartés (Material / Bootstrap par défaut…) + pourquoi
+
+## Design tokens
+- Couleurs, espacements, rayons, ombres — conformes à `docs/design-system.md`
+
+## États & breakpoints
+- Specs détaillées pour le developer : voir la skill `kp-ux-ui` (procédure `uxui-dev-specs`)
+```
+
+## Annexe — design-system-template
+
+## Template recommandé — `docs/design-system.md`
+
+Objectif : identité visuelle globale et tokens partagés du projet. Référence pour toutes les features.
+
+```markdown
+---
+title: Design system
+date: <YYYY-MM-DD>
+status: active
+author: ux-ui-agent
+---
+
+# Design system
+
+## Identité visuelle
+- **Principe directeur** : …
+- **Personnalité** : 3-5 adjectifs
+
+## Tokens partagés
+- **Couleurs** : primaire, accent, neutres, sémantiques (succès / alerte / erreur / info)
+- **Typographie** : familles, échelle de tailles, graisses
+- **Espacements** : échelle (4 / 8 px…)
+- **Rayons, ombres, élévations**
+
+## Composants communs
+- Boutons (variantes, états), champs de formulaire, cartes, modales, navigation…
+
+## Accessibilité (socle)
+- WCAG 2.1 AA : contraste ≥ 4.5:1 (texte normal), ≥ 3:1 (texte large / UI), cibles tactiles ≥ 44×44 px, navigation clavier complète
+
+## Règles d'usage
+- Do / Don't visuels
+```

@@ -117,7 +117,7 @@ docs/                             Documentation projet
 | `kp-review` | Relire, tester, valider le code |
 | `kp-documentation` | Analyser et maintenir la documentation |
 | `kp-ux-ui` | Designer UX/UI et identité visuelle |
-| `kp-setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
+| `kp-setup` | Configurer les sources du projet (frontmatter `kp-agents:` des `docs/*.md`) |
 | `kp-test` | Orchestrer les tests E2E (cas Xray + test code + remontée) |
 | `kp-daily` | Daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
 
@@ -133,36 +133,54 @@ kp-brainstorm → kp-product → kp-architect → kp-developer → kp-review →
 
 `kp-setup` est transversal (auto-redirect depuis tout agent détectant une config manquante). `kp-test` s'insère après `kp-developer`. `kp-daily` est standalone. Détails dans [docs/agents.md](docs/agents.md).
 
-## Configuration projet (`.kp-agents.yml` — optionnel)
+## Configuration projet (optionnel)
 
-Chaque projet peut déclarer une politique de sources : doc produit sur OneDrive, tickets dans JIRA via MCP, préférences Git d'équipe. **Par défaut (absence de fichier), le comportement est 100% local.**
+Chaque projet peut déclarer une politique de sources : doc produit sur OneDrive, tickets dans JIRA via MCP, préférences Git d'équipe, configuration des tests E2E. **Par défaut (aucune configuration), le comportement est 100 % local.**
 
-```yaml
-# .kp-agents.yml (commité — politique partagée par l'équipe)
-product:
-  mode: external          # local | external (OneDrive, ...)
-  access: read-only       # read-write | read-only (pertinent si external)
-tickets:
-  mode: mcp               # local | mcp (JIRA via MCP)
-  mcp_server: atlassian
-  project_key: KP
-git:
-  branch_pattern: "feat/{slug}"
-  auto_commit: ask        # yes | no | ask
-  auto_push: no
+La configuration vit dans le **frontmatter YAML** des fichiers markdown de `docs/`, sous la clé `kp-agents:`. Chaque dimension a un fichier commité (politique d'équipe) et un fichier `.local.md` gitignoré (chemins et préférences machine) :
+
+| Fichier | Commité | Clés portées |
+|---------|---------|--------------|
+| `docs/git.md` | ✅ | `branch_pattern` |
+| `docs/git.local.md` | ❌ | `auto_commit`, `auto_push` |
+| `docs/project.md` | ✅ | `tickets.mode`, `tickets.mcp_server`, `tickets.project_key`, `tickets.mapping.*` |
+| `docs/project.local.md` | ❌ | overrides `tickets.*` |
+| `docs/documentation.md` | ✅ | `product.mode`, `product.access` |
+| `docs/documentation.local.md` | ❌ | `product.path`, `global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs` |
+| `docs/testing.md` | ✅ | `testing.framework`, `testing.tests_dir`, `testing.run_commands`, `testing.case_repository.*`, `testing.isolation.*` |
+| `docs/testing.local.md` | ❌ | `testing.discovery.*`, `testing.case_repository.credentials_env` |
+
+```markdown
+<!-- docs/project.md — commité, politique partagée par l'équipe -->
+---
+kp-agents:
+  tickets:
+    mode: mcp             # local | mcp (JIRA via MCP)
+    mcp_server: atlassian
+    project_key: KP
+---
+
+# Projet & Tickets
+
+Le body reste du markdown libre : conventions d'équipe, liens, contexte.
 ```
 
-```yaml
-# .kp-agents.local.yml (gitignoré — chemins machine-spécifiques et override local)
-product:
-  path: /Users/alice/OneDrive/MonProjet
-tickets:
-  project_key: POC        # override local pour pousser dans un projet sandbox
+```markdown
+<!-- docs/documentation.local.md — gitignoré, chemins machine-spécifiques -->
+---
+kp-agents:
+  product:
+    path: /Users/alice/OneDrive/MonProjet
+  global_doc:
+    tech: /Users/alice/OneDrive/Specs/tech
+---
 ```
 
-Invoque `/kp-agents:kp-setup` pour configurer ces fichiers interactivement — l'agent est audit-first et ne modifie rien sans confirmation.
+Invoque `/kp-agents:kp-setup` pour écrire ces fichiers interactivement — il est audit-first et ne modifie rien sans confirmation. C'est le **seul** agent autorisé à les écrire.
 
-> **Important** : `.kp-agents.local.yml` doit être gitignoré. Ne jamais committer de chemin machine-spécifique.
+> **Migration** : les anciens `.kp-agents.yml` / `.kp-agents.local.yml` (v1.x) ne sont **plus lus** depuis la v2.0.0. Si `kp-setup` les détecte à la racine, il propose de migrer leur contenu vers les fichiers `docs/*.md` ci-dessus.
+
+> **Important** : les fichiers `docs/*.local.md` doivent être gitignorés (`docs/*.local.md` suffit). Ne jamais committer de chemin machine-spécifique.
 
 ## Troubleshooting
 

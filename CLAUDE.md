@@ -86,6 +86,20 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 ### Cursor (`cursor/kp-<nom>.mdc`)
 - Frontmatter `description` + `alwaysApply: false`, puis le corps **entièrement inliné**.
 
+### Convention d'inlining (Codex et Cursor)
+
+Ces deux cibles sont des **fichiers uniques** : ni skill partagée, ni `references/`. Le contenu que Claude charge à la demande y est rassemblé en fin de fichier, sous un titre `# Annexes`, **un bloc `## Annexe — <nom>` par skill partagée ou procédure**, chacun présent **une seule fois**.
+
+Dans le corps, les renvois prennent la forme `annexe « <nom> »` :
+
+| Côté Claude | Côté Codex / Cursor |
+|---|---|
+| charge la skill `kp-doc-templates` | voir l'annexe « kp-doc-templates » |
+| lis `references/setup-git.md` | voir l'annexe « setup-git » |
+| une skill partagée **non** inlinée dans ce rôle | reformulée en clair (« les gabarits de documents structurants ») |
+
+⚠️ **Ne jamais coller un bloc au milieu d'une phrase ou d'une cellule de tableau** — c'est ce que faisait l'ancienne génération par substitution textuelle, qui cassait les tableaux et dupliquait le même gabarit jusqu'à 3× par fichier. Le corps renvoie, l'annexe contient.
+
 ## Ajouter ou modifier un agent
 
 1. Côté **Claude** : éditer la **skill de rôle** (`claude/skills/kp-<role>/SKILL.md`) et/ou la procédure concernée (`references/<proc>.md`). Garder le `SKILL.md` lisible : une procédure qui grossit part en `references/`. Si elle devient utile à un 2ᵉ rôle, la promouvoir en skill partagée.

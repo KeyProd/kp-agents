@@ -5,4 +5,5 @@
 .DS_Store
 
 # kp-agents: chemins machine-spécifiques (config projet locale)
+docs/*.local.md
 .kp-agents.local.yml

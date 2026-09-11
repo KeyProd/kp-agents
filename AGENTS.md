@@ -59,6 +59,9 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 ### Cursor (`cursor/kp-<nom>.mdc`)
 - Frontmatter `description` + `alwaysApply: false`, puis le corps inliné.
 
+### Convention d'inlining (Codex et Cursor)
+Fichier unique : pas de skill partagée ni de `references/`. Le contenu chargé à la demande côté Claude est rassemblé en fin de fichier sous `# Annexes`, un bloc `## Annexe — <nom>` par skill partagée ou procédure, **une seule occurrence chacun**. Le corps renvoie sous la forme `annexe « <nom> »` ; une skill partagée non inlinée est reformulée en clair. Ne jamais insérer un bloc au milieu d'une phrase ou d'une cellule de tableau.
+
 ## Ajouter ou modifier un agent
 
 1. Éditer le contenu dans les **3 dossiers** (`claude/skills/kp-<nom>/`, `codex/kp-<nom>/`, `cursor/kp-<nom>.mdc`) en respectant le format de chacun.

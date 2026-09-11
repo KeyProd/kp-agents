@@ -8,6 +8,23 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v4.1.0] — Codex et Cursor reconstruits (annexes) + README réaligné
+
+### Corrigé
+
+- **Inlining Codex / Cursor cassé** — l'ancienne génération substituait `{{ref:...}}` par le contenu brut du gabarit, **au milieu des phrases et des cellules de tableau**. Résultat sur les 20 fichiers `codex/` + `cursor/` : tableaux d'Inputs/Outputs éclatés sur 75 lignes, et le même gabarit répété jusqu'à **3×** dans un fichier (`kp-architect`, `kp-review`).
+  Les 20 fichiers sont régénérés depuis la source Claude selon une convention explicite : le corps **renvoie** (`annexe « nom »`), une section `# Annexes` en fin de fichier **contient** un bloc `## Annexe — <nom>` par skill partagée et par procédure, chacun présent **une seule fois**.
+- **5 gabarits jamais répliqués** (ajoutés en v3.1.0 côté Claude uniquement) : `idea`, `roadmap`, `ux`, `ui`, `design-system` sont désormais présents dans les 7 rôles qui déclarent `kp-doc-templates`, sur les 3 cibles.
+- **`kp-doc-templates` ne fuit plus vers `kp-setup` et `kp-test`** : la v3.1.0 l'avait retiré de leurs compétences, mais il restait tiré transitivement par une mention de passage dans `kp-sources-config`. `kp-test` passe de 1474 à 864 lignes, `kp-setup` de 1990 à 1805.
+- **README — section « Configuration projet »** : documentait encore `.kp-agents.yml` / `.kp-agents.local.yml`, format **plus lu depuis la v2.0.0**. Réécrite sur le format en vigueur (frontmatter `kp-agents:` des `docs/*.md` + variantes `.local.md`), avec le tableau des clés par fichier et la note de migration.
+
+### Ajouté
+
+- **Convention d'inlining** documentée dans `CLAUDE.md` et `AGENTS.md` : table de correspondance des renvois Claude → Codex/Cursor, et la règle « le corps renvoie, l'annexe contient ».
+- `.gitignore` : `docs/*.local.md`.
+
+---
+
 ## [kp-agents-v4.0.0] — Retour au modèle 100 % skills (BREAKING)
 
 ⚠️ **BREAKING (Claude)** — Les **subagents introduits en v3.0.0 sont supprimés**. Côté Claude Code, chaque rôle redevient une **skill** invocable `/kp-agents:kp-<role>` (comme en v2.x). `@agent-kp-agents:kp-<role>` ne fonctionne plus.

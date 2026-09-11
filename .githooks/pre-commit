@@ -6,7 +6,7 @@ set -euo pipefail
 #
 # Si le commit modifie le contenu d'un skill (claude/skills/, codex/,
 # cursor/), exige que la version du plugin ait été montée à la main
-# dans claude/.claude-plugin/plugin.json (vs HEAD).
+# dans .claude-plugin/plugin.json (vs HEAD).
 #
 # Activation : git config core.hooksPath .githooks  (fait par ./sync.sh)
 # Contournement ponctuel : git commit --no-verify
@@ -16,9 +16,9 @@ PLUGIN_JSON=".claude-plugin/plugin.json"
 
 RED='\033[0;31m'; YELLOW='\033[0;33m'; GREEN='\033[0;32m'; NC='\033[0m'
 
-# Fichiers de contenu d'agent / skill staged (hors plugin.json, qui porte la version)
+# Fichiers de contenu de skill staged (hors plugin.json, qui porte la version)
 skill_changes="$(git diff --cached --name-only --diff-filter=ACMRD \
-    | grep -E '^(claude/agents/|claude/skills/|codex/|cursor/)' || true)"
+    | grep -E '^(claude/skills/|codex/|cursor/)' || true)"
 
 if [[ -z "$skill_changes" ]]; then
     exit 0

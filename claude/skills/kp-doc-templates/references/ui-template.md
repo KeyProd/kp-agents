@@ -36,5 +36,5 @@ Une phrase qui résume l'intention visuelle (ex : « précision chirurgicale »,
 - Couleurs, espacements, rayons, ombres — conformes à `docs/design-system.md`
 
 ## États & breakpoints
-- Specs détaillées pour le developer : voir la skill `kp-uxui-dev-specs`
+- Specs détaillées pour le developer : voir la skill `kp-ux-ui` (procédure `uxui-dev-specs`)
 ```

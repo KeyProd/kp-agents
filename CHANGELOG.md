@@ -4,7 +4,52 @@ Toutes les modifications notables de kp-agents sont listées ici. Format inspir�
 
 Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` → champ `version`). Les tags git suivent le format `<plugin-name>-v<X.Y.Z>`.
 
-> **Note sur le versioning** : depuis la refonte « dossiers plats par outil », le bump de version est **manuel** (`claude/.claude-plugin/plugin.json` → `version`). Un hook de pré-commit (`.githooks/pre-commit`) bloque tout commit modifiant un skill sans bump de version. L'auto-bump par `sync.sh` (hash SHA256 / `_contentHash`) a été supprimé.
+> **Note sur le versioning** : depuis la refonte « dossiers plats par outil », le bump de version est **manuel** (`.claude-plugin/plugin.json` → `version`). Un hook de pré-commit (`.githooks/pre-commit`) bloque tout commit modifiant un skill sans bump de version. L'auto-bump par `sync.sh` (hash SHA256 / `_contentHash`) a été supprimé.
+
+---
+
+## [kp-agents-v4.0.0] — Retour au modèle 100 % skills (BREAKING)
+
+⚠️ **BREAKING (Claude)** — Les **subagents introduits en v3.0.0 sont supprimés**. Côté Claude Code, chaque rôle redevient une **skill** invocable `/kp-agents:kp-<role>` (comme en v2.x). `@agent-kp-agents:kp-<role>` ne fonctionne plus.
+
+La refonte « dossiers plats par outil » est conservée : toujours pas de génération ni de templating, `claude/` / `codex/` / `cursor/` restent les 3 sources écrites à plat. Seul le modèle Claude change.
+
+**Arbitrage retenu** — un seul critère pour placer un contenu :
+
+| Contenu | Où il vit | Chargement |
+|---|---|---|
+| Transverse à plusieurs rôles | skill partagée `claude/skills/kp-<nom>/` | outil `Skill` |
+| Propre à un seul rôle | `claude/skills/kp-<role>/references/<proc>.md` | `Read` |
+
+Les 17 skills « spécifiques » de la v3 ne servaient chacune qu'à un seul rôle : elles polluaient le namespace `/kp-agents:` sans rien dé-dupliquer. Elles redeviennent des `references/`.
+
+### Supprimé
+
+- **`claude/agents/`** (10 subagents) et le champ `agents[]` de `.claude-plugin/plugin.json`.
+- **17 skills spécifiques** promues à tort en v3.0.0, repliées en `references/` de leur rôle :
+  - `kp-setup-*` (8) → `claude/skills/kp-setup/references/setup-*.md`
+  - `kp-test-*` (7) → `claude/skills/kp-test/references/kp-test-*.md`
+  - `kp-doc-index` → `claude/skills/kp-documentation/references/doc-index-management.md`
+  - `kp-uxui-dev-specs` → `claude/skills/kp-ux-ui/references/uxui-dev-specs.md`
+
+### Ajouté
+
+- **10 skills de rôle** `claude/skills/kp-<role>/SKILL.md` — corps dédupliqué hérité des subagents v3, frontmatter `name` + `description` **orientée déclenchement** (celle déjà utilisée par Cursor et Codex, bien plus riche que le `short_description` servi aux skills jusqu'en v2.4.0).
+
+### Conservé
+
+- **5 skills partagées** : `kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`, `kp-validation-criteres` (developer ↔ review) — c'est là que vit la dé-duplication réelle (les gabarits étaient copiés 9× par `sync.sh` jusqu'en v2.4.0).
+- `codex/` et `cursor/` inchangés : monolithiques par rôle, tout inliné.
+- `sync.sh` (copie seule), hook de pré-commit, manifeste racine, versioning manuel.
+
+### Modifié
+
+- Section « Compétences » des 10 rôles : distingue explicitement **skills transverses** (outil `Skill`) et **procédures locales** (`references/`, via `Read`).
+- Tournures cassées héritées de la génération v2 corrigées (« Utilise le template charge la skill `kp-doc-templates` » → « Utilise le gabarit fourni par la skill `kp-doc-templates` »).
+- Tous les `@agent-kp-agents:kp-<role>` → `/kp-agents:kp-<role>` (skills, gabarits, bloc de handoff, docs).
+- `.githooks/pre-commit` : ne surveille plus `claude/agents/`.
+- `plugin.json` : version `3.1.1` → `4.0.0`.
+- `CLAUDE.md`, `AGENTS.md`, `README.md`, `docs/agents.md` mis à jour.
 
 ---
 

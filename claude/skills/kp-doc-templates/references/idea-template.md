@@ -31,5 +31,5 @@ author: brainstorm-agent
 
 ## Décision / Next steps
 - [ ] …
-- Relais : `@agent-kp-agents:kp-product` (si qualifiée) ou `@agent-kp-agents:kp-architect` (incertitudes techniques)
+- Relais : `/kp-agents:kp-product` (si qualifiée) ou `/kp-agents:kp-architect` (incertitudes techniques)
 ```

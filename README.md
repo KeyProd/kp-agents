@@ -24,22 +24,22 @@ cursor/   → règles Cursor (.mdc) → ~/.cursor/rules/   (via sync.sh)
 /reload-plugins
 ```
 
-Côté Claude, chaque rôle est un **subagent** : il s'**auto-délègue** quand ta demande correspond à sa `description`, ou tu l'adresses explicitement :
+Côté Claude, chaque rôle est une **skill** — pas de subagent. Invoque-la directement :
 
 ```
-@agent-kp-agents:kp-setup
-@agent-kp-agents:kp-brainstorm
-@agent-kp-agents:kp-product
-@agent-kp-agents:kp-architect
-@agent-kp-agents:kp-developer
-@agent-kp-agents:kp-review
-@agent-kp-agents:kp-documentation
-@agent-kp-agents:kp-ux-ui
-@agent-kp-agents:kp-test
-@agent-kp-agents:kp-daily
+/kp-agents:kp-setup
+/kp-agents:kp-brainstorm
+/kp-agents:kp-product
+/kp-agents:kp-architect
+/kp-agents:kp-developer
+/kp-agents:kp-review
+/kp-agents:kp-documentation
+/kp-agents:kp-ux-ui
+/kp-agents:kp-test
+/kp-agents:kp-daily
 ```
 
-Les **skills** (`kp-docs-structure`, `kp-test-implementation`, `kp-setup-git`…) portent les **actions** : les agents les chargent à la demande via l'outil `Skill`. Elles restent invocables directement (`/kp-agents:<skill>`) au besoin.
+Cinq **skills partagées** (`kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`, `kp-validation-criteres`) portent ce qui est commun à plusieurs rôles : les rôles les chargent à la demande via l'outil `Skill`. Ce qui est propre à un seul rôle vit dans ses `references/*.md`.
 
 ### Cursor et Codex (via sync.sh)
 
@@ -63,18 +63,18 @@ Le contenu est **dupliqué dans les 3 dossiers** — il n'y a pas de source uniq
 
 | Cible | Emplacement | Format |
 |-------|-------------|--------|
-| Claude — agent | `claude/agents/kp-<role>.md` | subagent : `name` + `description` + body (contexte + méthode) |
-| Claude — skill | `claude/skills/kp-<skill>/SKILL.md` (+ `references/*.md`) | `name` + `description` + procédure (action) |
-| Codex | `codex/kp-<nom>/SKILL.md` (+ `agents/openai.yaml`) | frontmatter `name` + `description` + `metadata` |
-| Cursor | `cursor/kp-<nom>.mdc` | frontmatter `description` + `alwaysApply` |
+| Claude — rôle | `claude/skills/kp-<role>/SKILL.md` (+ `references/*.md`) | `name` + `description` (déclencheurs) + persona/méthode/routage |
+| Claude — skill partagée | `claude/skills/kp-<nom>/SKILL.md` | `name` + `description` (usage) + procédure commune |
+| Codex | `codex/kp-<nom>/SKILL.md` (+ `agents/openai.yaml`) | frontmatter `name` + `description` + `metadata`, corps inliné |
+| Cursor | `cursor/kp-<nom>.mdc` | frontmatter `description` + `alwaysApply`, corps inliné |
 
 Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter `name:`.
 
-> **Modèle agents / skills (Claude)** : un rôle = un **subagent** (contexte/méthode/bonnes pratiques) qui délègue les **actions** à des **skills** dédiées — partagées (`kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`) ou spécifiques (`kp-test-*`, `kp-setup-*`, `kp-doc-index`, `kp-uxui-dev-specs`). ⚠️ Appliqué à `claude/` uniquement pour l'instant ; `codex/` et `cursor/` restent monolithiques par rôle (réplication à venir).
+> **Modèle 100 % skills (Claude)** : un rôle = une **skill**. Le contenu **transverse à plusieurs rôles** part en skill partagée (chargée via l'outil `Skill`) ; le contenu **propre à un rôle** reste dans ses `references/*.md` (lus via `Read`). ⚠️ `codex/` et `cursor/` n'ont pas de sous-fichiers : tout y est **inliné**, monolithique par rôle.
 
 ### Publier une mise à jour
 
-1. Éditer l'agent dans les 3 dossiers. **Nouvel agent** → l'ajouter à la liste `agents[]` de `.claude-plugin/plugin.json` (ce champ liste des fichiers, pas un dossier).
+1. Éditer l'agent dans les 3 dossiers. **Nouvel agent** → créer `claude/skills/kp-<nom>/SKILL.md` (le manifeste pointe le dossier `./claude/skills/`, rien à déclarer) et `codex/kp-<nom>/agents/openai.yaml`.
 2. **Monter la version** à la main dans `.claude-plugin/plugin.json` (patch / minor / major) + mettre à jour `CHANGELOG.md`.
 3. `./sync.sh` pour installer Cursor + Codex en local.
 4. `git add` + commit (le hook de pré-commit vérifie le bump) + `git tag kp-agents-v<X.Y.Z>` + push.
@@ -84,7 +84,7 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 
 ## Hook de pré-commit
 
-`.githooks/pre-commit` bloque tout commit qui modifie un agent ou un skill (`claude/agents/`, `claude/skills/`, `codex/`, `cursor/`) **sans** bump de `version` dans `plugin.json` (comparaison vs `HEAD`). Les commits docs / `sync.sh` passent librement.
+`.githooks/pre-commit` bloque tout commit qui modifie un skill (`claude/skills/`, `codex/`, `cursor/`) **sans** bump de `version` dans `plugin.json` (comparaison vs `HEAD`). Les commits docs / `sync.sh` passent librement.
 
 - Activation : automatique via `./sync.sh`, ou manuellement `git config core.hooksPath .githooks`.
 - Contournement ponctuel : `git commit --no-verify`.
@@ -94,11 +94,12 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 ```
 .claude-plugin/
   marketplace.json                Catalogue marketplace (source: ./ → le repo est le plugin)
-  plugin.json                     Manifeste : name, version (manuelle), agents[] + skills[] → ./claude
+  plugin.json                     Manifeste : name, version (manuelle), skills[] → ./claude/skills/
 claude/                           Contenu du plugin Claude Code (commité)
-  agents/kp-<role>.md             Subagent : contexte + méthode (10)
-  skills/kp-<skill>/              SKILL.md + references/ : actions partagées & spécifiques (22)
-codex/kp-<nom>/                   SKILL.md + agents/openai.yaml (monolithique par rôle)
+  skills/kp-<role>/               Skill de rôle (10) : SKILL.md + references/ (procédures du rôle)
+  skills/kp-<partagée>/           Skill partagée (5) : sources-config, docs-structure, handoff,
+                                    doc-templates, validation-criteres
+codex/kp-<nom>/                   SKILL.md + agents/openai.yaml (monolithique, inliné)
 cursor/kp-<nom>.mdc               Règle Cursor
 sync.sh                           Installe cursor/ + codex/ en local (macOS)
 .githooks/pre-commit              Vérifie le bump de version

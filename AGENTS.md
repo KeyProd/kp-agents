@@ -6,14 +6,16 @@ Ce projet est un **catalogue d'agents IA distribué sur 3 outils**.
 Il n'y a **plus de génération ni de templating** : chaque outil a son dossier dédié, au format qu'il attend directement. Le contenu de chaque agent est **écrit à plat et dupliqué** dans les 3 dossiers.
 
 ```
-claude/   ← plugin Claude Code : subagents (agents/) + skills (skills/)
+claude/   ← plugin Claude Code : skills uniquement (skills/)
 codex/    ← skills Codex (monolithiques par rôle)
 cursor/   ← règles Cursor (.mdc, monolithiques par rôle)
 ```
 
-⚠️ **Asymétrie transitoire** : côté **Claude**, chaque rôle est un **subagent** (`claude/agents/`, contexte + méthode) qui délègue les **actions** à des **skills** (`claude/skills/`, partagées + spécifiques). `codex/` et `cursor/` restent des skills/règles **monolithiques par rôle** jusqu'à une passe de réplication.
+**Modèle 100 % skills (côté Claude)** : pas de subagent. Un rôle = une **skill** (`claude/skills/kp-<role>/`), invocable `/kp-agents:kp-<role>`. Ce qui est **transverse à plusieurs rôles** vit dans une skill partagée chargée via l'outil `Skill` (`kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`, `kp-validation-criteres`) ; ce qui est **propre à un rôle** vit dans ses `references/*.md`, lus à la demande.
 
-Modifier un rôle = éditer son agent + ses skills (`claude/`) **et** ses équivalents `codex/` / `cursor/`. Pas de `sync.sh` qui régénère : il se contente d'**installer** Cursor et Codex sur la machine locale.
+⚠️ **Asymétrie assumée** : `codex/` et `cursor/` n'ont pas de mécanisme de sous-fichiers → leur contenu est **entièrement inliné, monolithique par rôle**.
+
+Modifier un rôle = éditer sa skill (`claude/`) **et** ses équivalents `codex/` / `cursor/`. Pas de `sync.sh` qui régénère : il se contente d'**installer** Cursor et Codex sur la machine locale.
 
 ## Distribution
 
@@ -26,23 +28,22 @@ Modifier un rôle = éditer son agent + ses skills (`claude/`) **et** ses équiv
 ```
 .claude-plugin/
   marketplace.json   ← Catalogue marketplace (source: ./ → le repo entier est le plugin)
-  plugin.json        ← Manifeste plugin : name, version (manuelle), agents[] (liste de fichiers) + skills[] → ./claude
+  plugin.json        ← Manifeste plugin : name, version (manuelle), skills[] → ./claude/skills/
 claude/              ← Contenu du plugin Claude Code (référencé par plugin.json)
-  agents/kp-<role>.md          ← Subagent : contexte + méthode + bonnes pratiques (10)
-  skills/kp-<skill>/           ← Skill d'action ou partagée (22)
-    SKILL.md         ← frontmatter name + description, puis la procédure
-    references/*.md   ← Templates / gabarits lourds chargés à la demande
-codex/               ← Skills Codex (monolithiques par rôle — réplication à venir)
+  skills/kp-<role>/            ← Skill de rôle (10) — persona + méthode + routage
+    SKILL.md         ← frontmatter name + description (déclencheurs), puis le corps
+    references/*.md   ← Procédures et gabarits propres au rôle, lus à la demande
+  skills/kp-<partagée>/        ← Skill partagée (5) — chargée par les rôles via l'outil Skill
+codex/               ← Skills Codex (monolithiques par rôle, tout inliné)
   kp-<nom>/
     SKILL.md         ← Skill (frontmatter name + description + metadata)
     agents/openai.yaml   ← Interface Codex (display_name, default_prompt, policy)
 cursor/              ← Règles Cursor
-  kp-<nom>.mdc       ← Règle (frontmatter description + alwaysApply)
+  kp-<nom>.mdc       ← Règle (frontmatter description + alwaysApply), tout inliné
 sync.sh              ← Installe cursor/ → ~/.cursor/rules et codex/ → ~/.codex/skills (macOS)
 .githooks/pre-commit ← Vérifie le bump de version quand un skill change
 docs/                ← Documentation projet (vision, architecture, epics, stories)
-.kp-agents.yml          ← OPTIONNEL — politique de sources du projet (commité)
-.kp-agents.local.yml    ← OPTIONNEL — chemins machine-spécifiques (gitignoré)
+.kp-context.yml      ← OPTIONNEL — carte de contexte du projet
 ```
 
 ## Format par cible
@@ -52,7 +53,8 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 - `agents/openai.yaml` — `interface` (`display_name`, `short_description`, `default_prompt`) + `policy.allow_implicit_invocation`.
 
 ### Claude (`claude/skills/kp-<nom>/`)
-- `SKILL.md` (persona + scope + router) + `persona.md` + `references/*.md` (templates lourds, chargés à la demande).
+- `SKILL.md` — frontmatter `name` + `description` (orientée déclenchement), puis persona + méthode + routage.
+- `references/*.md` — procédures et gabarits propres au rôle, markdown nu, chargés à la demande via `Read`.
 
 ### Cursor (`cursor/kp-<nom>.mdc`)
 - Frontmatter `description` + `alwaysApply: false`, puis le corps inliné.
@@ -60,7 +62,7 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 ## Ajouter ou modifier un agent
 
 1. Éditer le contenu dans les **3 dossiers** (`claude/skills/kp-<nom>/`, `codex/kp-<nom>/`, `cursor/kp-<nom>.mdc`) en respectant le format de chacun.
-2. Pour un **nouvel** agent : ajouter son fichier à la liste `agents[]` de `.claude-plugin/plugin.json`, créer aussi `codex/kp-<nom>/agents/openai.yaml` et, si besoin, les `references/` côté Claude.
+2. Pour un **nouvel** agent : créer `claude/skills/kp-<nom>/SKILL.md` (le manifeste pointe le dossier `./claude/skills/`, rien à déclarer), `codex/kp-<nom>/agents/openai.yaml` et, si besoin, les `references/` côté Claude.
 3. **Monter la version** dans `.claude-plugin/plugin.json` (patch / minor / major) + mettre à jour `CHANGELOG.md`.
 4. Lancer `./sync.sh` pour installer Cursor + Codex en local.
 5. `git add` + commit (le hook de pré-commit vérifie le bump) + tag `kp-agents-v<X.Y.Z>` + push.
@@ -69,7 +71,8 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 
 ## Règles critiques
 
-- **Toute modification d'agent doit être répliquée dans les 3 dossiers.** Le contenu est dupliqué par design.
+- **Toute modification d'agent doit être répliquée dans les 3 dossiers.** Le contenu est dupliqué par design ; ce qui est en `references/` côté Claude est **inliné** côté Codex / Cursor.
+- **Pas de subagent** : ne jamais recréer `claude/agents/` ni de champ `agents[]` dans `plugin.json`.
 - **La version est unique et manuelle** (`.claude-plugin/plugin.json` → `version`), référence pour les 3 cibles.
 - **`sync.sh` ne génère plus rien** : il copie `cursor/` et `codex/` vers `~/.cursor` / `~/.codex` et câble le hook. Ne pas y remettre de templating ou de bump.
 

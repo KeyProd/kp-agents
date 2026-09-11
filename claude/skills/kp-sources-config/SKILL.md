@@ -27,7 +27,7 @@ La configuration des sources externes vit dans des **fichiers markdown** dans `d
    - `product.mode: external` (dans `documentation.md`) → `product.path` (dans `documentation.local.md`) renseigné et accessible.
    - `global_doc.specs` ou `global_doc.tech` (dans `documentation.local.md`) → chemin accessible.
    - `tickets.mode: mcp` (dans `project.md`) → `mcp_server` et `project_key` renseignés.
-3. Config incomplète ou chemin inaccessible → warn + proposer `@agent-kp-agents:kp-setup` + continuer en mode local dégradé.
+3. Config incomplète ou chemin inaccessible → warn + proposer `/kp-agents:kp-setup` + continuer en mode local dégradé.
 
 ### Comment parser le frontmatter
 
@@ -47,7 +47,7 @@ Pour lire `branch_pattern`, lis le fichier `docs/git.md` et extrais la clé `kp-
 
 ### Migration depuis `.kp-agents.yml` (v1.x)
 
-Les anciens fichiers `.kp-agents.yml` et `.kp-agents.local.yml` ne sont **plus lus** depuis la v2.0.0. Si tu détectes leur présence à la racine du projet, signale-le à l'utilisateur et propose `@agent-kp-agents:kp-setup` pour migrer automatiquement le contenu vers les nouveaux MD canoniques.
+Les anciens fichiers `.kp-agents.yml` et `.kp-agents.local.yml` ne sont **plus lus** depuis la v2.0.0. Si tu détectes leur présence à la racine du projet, signale-le à l'utilisateur et propose `/kp-agents:kp-setup` pour migrer automatiquement le contenu vers les nouveaux MD canoniques.
 
 ### Résolution de chemin pour la dimension `product`
 
@@ -68,7 +68,7 @@ Si un fichier existe à la fois localement et sur `<product.path>/<path>` : lire
 
 Quand `product.mode: external` **et** `product.access: read-only` : lire uniquement, ne jamais écrire — ni externe, ni fallback local. Rendre le contenu en chat :
 
-> 🔒 **Mode produit read-only** — `<product.path>` en lecture seule. Je n'écris pas `<chemin relatif>`. Contenu ci-dessous pour copie manuelle. Pour autoriser l'écriture : `@agent-kp-agents:kp-setup` → `product.access: read-write`.
+> 🔒 **Mode produit read-only** — `<product.path>` en lecture seule. Je n'écris pas `<chemin relatif>`. Contenu ci-dessous pour copie manuelle. Pour autoriser l'écriture : `/kp-agents:kp-setup` → `product.access: read-write`.
 >
 > ```markdown
 > <contenu rédigé>
@@ -87,8 +87,8 @@ Toute écriture sur source externe suit ce protocole :
 
 | Cause | Signal | Conseil |
 |---|---|---|
-| Path inaccessible | chemin inexistant | Vérifier que OneDrive est monté. Sinon `@agent-kp-agents:kp-setup` pour corriger le chemin. |
-| Permission refusée | EACCES | Vérifier droits auprès du propriétaire. Config valide, pas besoin de `@agent-kp-agents:kp-setup`. |
+| Path inaccessible | chemin inexistant | Vérifier que OneDrive est monté. Sinon `/kp-agents:kp-setup` pour corriger le chemin. |
+| Permission refusée | EACCES | Vérifier droits auprès du propriétaire. Config valide, pas besoin de `/kp-agents:kp-setup`. |
 | Erreur transitoire | ENOSPC, EIO, timeout | Réessayer après vérification espace disque et connexion. |
 
 Warn à chaque fallback (pas de dédoublonnage). Au démarrage : si `product.path` inaccessible dès le début → warn global + mode local dégradé pour toute la session.
@@ -99,8 +99,8 @@ Répertoires partagés complémentaires à `docs/` — clés dans le frontmatter
 
 | Clé | Propriétaire écriture | Lecture | Règle pour les autres agents |
 |---|---|---|---|
-| `global_doc.specs` | `documentation` | tous | Écriture interdite → suggérer : « Veux-tu passer le relais à `@agent-kp-agents:kp-documentation` ? » |
-| `global_doc.tech` | `architect` | tous | Écriture interdite → suggérer : « Veux-tu passer le relais à `@agent-kp-agents:kp-architect` ? » |
+| `global_doc.specs` | `documentation` | tous | Écriture interdite → suggérer : « Veux-tu passer le relais à `/kp-agents:kp-documentation` ? » |
+| `global_doc.tech` | `architect` | tous | Écriture interdite → suggérer : « Veux-tu passer le relais à `/kp-agents:kp-architect` ? » |
 | `global_doc.product_inputs` | **personne** | tous | Jamais modifiable par un agent. Maintenu par un humain (PM). |
 
 `global_doc.product_inputs` ≠ `product.path` : `.path` = destination des outputs de `product` ; `product_inputs` = source d'inputs du PM humain. Peuvent coexister et pointer différents dossiers.
@@ -111,11 +111,11 @@ Répertoires partagés complémentaires à `docs/` — clés dans le frontmatter
 **Écriture** : uniquement par l'agent propriétaire, sur demande explicite. Processus : lire le fichier cible → proposer le contenu → attendre confirmation → écrire.
 
 Si chemin `global_doc` inaccessible : warn une seule fois, poursuivre normalement.
-> ⚠️ **Documentation globale inaccessible** — `<chemin>` (`global_doc.<clé>`) introuvable. Documentation locale utilisée. Vérifier le chemin ou `@agent-kp-agents:kp-setup`.
+> ⚠️ **Documentation globale inaccessible** — `<chemin>` (`global_doc.<clé>`) introuvable. Documentation locale utilisée. Vérifier le chemin ou `/kp-agents:kp-setup`.
 
-### Redirection vers `@agent-kp-agents:kp-setup`
+### Redirection vers `/kp-agents:kp-setup`
 
-Si config requise absente, incomplète ou incohérente, proposer `@agent-kp-agents:kp-setup`. Suggestion, jamais un blocage.
+Si config requise absente, incomplète ou incohérente, proposer `/kp-agents:kp-setup`. Suggestion, jamais un blocage.
 
 ### Mode `tickets.mode: mcp`
 
@@ -197,9 +197,9 @@ Sur échec (timeout, 401, 403, 500, outil non chargé), proposer **3 options** :
 
 | Cause | Signal | Conseil |
 |---|---|---|
-| MCP non chargé | tool not found | Vérifier MCP JIRA activé dans la session, ou `@agent-kp-agents:kp-setup`. |
+| MCP non chargé | tool not found | Vérifier MCP JIRA activé dans la session, ou `/kp-agents:kp-setup`. |
 | Auth expirée | 401/403 | Reconnexion OAuth Atlassian nécessaire. |
-| Champ requis manquant | 400 + `errors.fieldName` | Ajouter dans `tickets.mapping.custom_fields` via `@agent-kp-agents:kp-setup`. |
+| Champ requis manquant | 400 + `errors.fieldName` | Ajouter dans `tickets.mapping.custom_fields` via `/kp-agents:kp-setup`. |
 
 #### Non-régression mode local
 
@@ -241,7 +241,7 @@ Configuration lue dans le frontmatter `kp-agents:` des fichiers `docs/git.md` (c
 
 ### Dimension `testing` (agent `kp-test`)
 
-Configuration lue dans le frontmatter `kp-agents:` de `docs/testing.md` (commité — politique partagée) avec overrides dans `docs/testing.local.md` (gitignored — machine-spécifique). Absente = `kp-test` bascule en mode dégradé (demande les infos minimales en conversation, propose `@agent-kp-agents:kp-setup`).
+Configuration lue dans le frontmatter `kp-agents:` de `docs/testing.md` (commité — politique partagée) avec overrides dans `docs/testing.local.md` (gitignored — machine-spécifique). Absente = `kp-test` bascule en mode dégradé (demande les infos minimales en conversation, propose `/kp-agents:kp-setup`).
 
 #### Schéma `testing`
 
@@ -297,7 +297,7 @@ kp-agents:
 3. **Secrets** : `credentials_env` pointe un fichier `.env` gitignored (jamais commité, jamais affiché). `kp-test` lit `XRAY_CLIENT_ID`/`SECRET` pour l'auth GraphQL du référentiel de cas.
 4. **Rangement bloquant** : si `credentials_env` absent ou auth GraphQL KO, le critère 1 (cas rangé) est non satisfiable → `kp-test` signale le prérequis, ne déclare jamais un cas DONE sans rangement vérifié.
 5. **Agnosticité** : `framework: playwright` est le framework livré. Pour un autre framework (ex. `pest-browser`), remplir les mêmes clés différemment — `kp-test` applique la config, sans hardcode.
-6. Config absente / incomplète → warn + `@agent-kp-agents:kp-setup` + mode local dégradé. Jamais bloquant en dehors du critère 1 (rangement).
+6. Config absente / incomplète → warn + `/kp-agents:kp-setup` + mode local dégradé. Jamais bloquant en dehors du critère 1 (rangement).
 
 ## Carte de contexte
 

@@ -75,7 +75,7 @@ Frontmatter YAML de chaque story, champ `status` :
 
 - Si `docs/index.md` existe → **consulte-le en priorité** pour naviguer
 - Index maintenu **exclusivement** par l'agent `documentation` — ne le modifie pas toi-même
-- Si index absent ou obsolète → signale-le et recommande `@agent-kp-agents:kp-documentation`
+- Si index absent ou obsolète → signale-le et recommande `/kp-agents:kp-documentation`
 
 ### Monorepo
 

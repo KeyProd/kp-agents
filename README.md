@@ -57,6 +57,24 @@ Après sync :
 
 `sync.sh` câble aussi le hook de pré-commit du dépôt (`core.hooksPath .githooks`).
 
+## Plugin jpb-platform
+
+La marketplace porte un **second plugin**, `jpb-platform`, indépendant de `kp-agents` : les
+skills qui amènent une application sur JPB-Platform, la plateforme d'hébergement des
+applications internes de JPB (`app-kickstart`, `app-conformite-audit`,
+`app-conformite-transformation`).
+
+```
+/plugin install jpb-platform@kp-agents
+```
+
+Il vit dans [`jpb-platform/`](jpb-platform/) (manifeste, skills Claude, variantes Codex
+`jpb-*`, script de lecture du référentiel) et a **sa propre version** —
+`jpb-platform/.claude-plugin/plugin.json`, tags `jpb-platform-v<X.Y.Z>`. Plugin « mince » : ce
+dépôt étant public, ses skills ne portent que la démarche et lisent les règles dans le dépôt
+privé `KeyProd/jpb-platform` (compte membre de KeyProd et `gh` connecté requis). Détails :
+[`jpb-platform/README.md`](jpb-platform/README.md).
+
 ## Modifier ou créer un agent
 
 Le contenu est **dupliqué dans les 3 dossiers** — il n'y a pas de source unique qui se propage. Pour chaque modification, éditer les 3 cibles en respectant leur format :
@@ -84,7 +102,7 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 
 ## Hook de pré-commit
 
-`.githooks/pre-commit` bloque tout commit qui modifie un skill (`claude/skills/`, `codex/`, `cursor/`) **sans** bump de `version` dans `plugin.json` (comparaison vs `HEAD`). Les commits docs / `sync.sh` passent librement.
+`.githooks/pre-commit` bloque tout commit qui modifie un skill **sans** bump de la `version` du plugin concerné (comparaison vs `HEAD`) : `claude/skills/`, `codex/`, `cursor/` → `.claude-plugin/plugin.json` ; `jpb-platform/{skills,codex,scripts}/` → `jpb-platform/.claude-plugin/plugin.json`. Les commits docs / `sync.sh` passent librement.
 
 - Activation : automatique via `./sync.sh`, ou manuellement `git config core.hooksPath .githooks`.
 - Contournement ponctuel : `git commit --no-verify`.

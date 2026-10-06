@@ -8,6 +8,32 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [jpb-platform-v0.1.0] — Nouveau plugin jpb-platform
+
+Second plugin de la marketplace, indépendant de `kp-agents` (sa propre version, ses propres tags).
+
+### Ajouté
+
+- **`app-kickstart`** — point d'entrée d'une nouvelle application JPB-Platform, à lancer dès la
+  première session : règles de la plateforme dans la conversation, brainstorm recommandé si le
+  besoin n'est pas cadré, création du dépôt `KeyProd/<app>` (branche `develop`, jamais `main`),
+  inscription des règles dans `CLAUDE.md` / `AGENTS.md` de l'app, demande de raccordement pour
+  l'équipe DevOps, point de conformité au fil des décisions. Ré-invocable.
+- **`app-conformite-audit`** et **`app-conformite-transformation`** — reprises du dépôt
+  jpb-platform (`.claude/skills/`), où elles ne portaient que pour les sessions ouvertes sur le
+  poste de l'équipe DevOps. Désormais : mode créateur / contre-audit pour l'audit, partage
+  créateur / DevOps pour la transformation (gestes plateforme → demande de raccordement),
+  hébergement sous GitHub KeyProd (point 13).
+- **Plugin « mince »** : ce dépôt étant public, les skills ne portent que la démarche ; les
+  règles (référentiel de conformité, procédure, standards) sont lues dans le dépôt privé
+  `KeyProd/jpb-platform` par `scripts/jpb-platform-ref.sh` (clone de travail
+  `$JPB_PLATFORM_DIR`, sinon copie en cache rafraîchie à chaque appel).
+- Variantes **Codex** `jpb-app-*` dans `jpb-platform/codex/`, installées par `sync.sh`.
+- `sync.sh` installe et nettoie aussi `jpb-*` ; le hook de pré-commit vérifie le bump de
+  chaque plugin séparément.
+
+---
+
 ## [kp-agents-v4.1.0] — Codex et Cursor reconstruits (annexes) + README réaligné
 
 ### Corrigé

@@ -32,6 +32,7 @@ Modifier un rôle = éditer sa **skill** côté `claude/`, **et** ses équivalen
   Claude Code n'est **pas** installé localement par `sync.sh` — il passe par le marketplace git.
 - **Cursor** → règles copiées par `sync.sh` dans `~/.cursor/rules/kp-*.mdc`
 - **Codex** → skills copiées par `sync.sh` dans `~/.codex/skills/kp-*/`
+- **Plugin `jpb-platform`** (second plugin de la marketplace) → dossier `jpb-platform/`, source `./jpb-platform` dans `marketplace.json`, version propre (`jpb-platform/.claude-plugin/plugin.json`, tags `jpb-platform-v<X.Y.Z>`). Skills Claude dans `jpb-platform/skills/` (invocation `/jpb-platform:<nom>`), variantes Codex dans `jpb-platform/codex/jpb-*` (copiées par `sync.sh`), pas de variante Cursor à ce jour. Plugin **mince** : le dépôt étant public, ses skills ne portent que la démarche et lisent les règles dans le dépôt privé `KeyProd/jpb-platform` (`jpb-platform/scripts/jpb-platform-ref.sh`). Une règle de la plateforme se modifie là-bas, pas ici. Pas de préfixe `kp-` : côté Claude, l'espace de noms `jpb-platform:` assure l'unicité ; côté Codex, le préfixe `jpb-`.
 
 ## Structure du projet
 

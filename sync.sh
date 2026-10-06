@@ -11,6 +11,8 @@ set -euo pipefail
 #               (PAS d'install locale ici — voir /plugin marketplace)
 #   cursor/   → règles Cursor (.mdc)   → copiées dans ~/.cursor/rules/
 #   codex/    → skills Codex           → copiées dans ~/.codex/skills/
+#   jpb-platform/codex/ → skills Codex du plugin jpb-platform (jpb-*)
+#                         → copiées dans ~/.codex/skills/
 #
 # Ce script se contente de COPIER cursor/ et codex/ vers leurs
 # emplacements locaux, et de câbler le hook de pré-commit du dépôt.
@@ -21,6 +23,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 CURSOR_SRC="$REPO_DIR/cursor"
 CODEX_SRC="$REPO_DIR/codex"
+JPB_CODEX_SRC="$REPO_DIR/jpb-platform/codex"
 
 CURSOR_DST="$HOME/.cursor/rules"
 CODEX_DST="$HOME/.codex/skills"
@@ -41,6 +44,7 @@ Usage: ./sync.sh [--clean]
 Installe les skills KeyProd sur cette machine :
   - cursor/*.mdc   → ~/.cursor/rules/
   - codex/kp-*/    → ~/.codex/skills/
+  - jpb-platform/codex/jpb-*/ → ~/.codex/skills/
   - câble le hook de pré-commit du dépôt (core.hooksPath .githooks)
 
 Claude Code n'est PAS installé localement : il passe par le marketplace
@@ -48,7 +52,7 @@ Claude Code n'est PAS installé localement : il passe par le marketplace
   /plugin install kp-agents@kp-agents
 
 Options:
-  --clean   Supprime les artefacts kp-* installés (~/.cursor/rules, ~/.codex/skills) puis sort
+  --clean   Supprime les artefacts kp-* et jpb-* installés (~/.cursor/rules, ~/.codex/skills) puis sort
   -h, --help
 HELP
 }
@@ -62,17 +66,17 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-# ── Nettoyage des artefacts kp-* installés (toujours fait avant une (ré)install) ──
+# ── Nettoyage des artefacts kp-* et jpb-* installés (toujours fait avant une (ré)install) ──
 clean_targets() {
     rm -f "$CURSOR_DST"/kp-*.mdc 2>/dev/null || true
-    rm -rf "$CODEX_DST"/kp-* 2>/dev/null || true
+    rm -rf "$CODEX_DST"/kp-* "$CODEX_DST"/jpb-* 2>/dev/null || true
 }
 
 if $CLEAN_ONLY; then
     log "Suppression des skills KeyProd installés…"
     clean_targets
     ok "Cursor  : ~/.cursor/rules/kp-*.mdc supprimés"
-    ok "Codex   : ~/.codex/skills/kp-* supprimés"
+    ok "Codex   : ~/.codex/skills/kp-* et jpb-* supprimés"
     exit 0
 fi
 
@@ -101,9 +105,9 @@ done
 # ── Install Codex ──
 log "Codex → $CODEX_DST"
 mkdir -p "$CODEX_DST"
-rm -rf "$CODEX_DST"/kp-* 2>/dev/null || true
+rm -rf "$CODEX_DST"/kp-* "$CODEX_DST"/jpb-* 2>/dev/null || true
 codex_count=0
-for d in "$CODEX_SRC"/kp-*/; do
+for d in "$CODEX_SRC"/kp-*/ "$JPB_CODEX_SRC"/jpb-*/; do
     [[ -d "$d" ]] || continue
     name="$(basename "$d")"
     cp -R "$d" "$CODEX_DST/$name"
@@ -118,5 +122,6 @@ echo
 echo "Claude Code : plugin via le marketplace git"
 echo "              /plugin marketplace add KeyProd/kp-agents"
 echo "              /plugin install kp-agents@kp-agents"
+echo "              /plugin install jpb-platform@kp-agents"
 echo "Cursor      : @kp-brainstorm (via le sélecteur de règles)"
-echo "Codex       : skills auto-détectées (redémarre Codex pour les recharger)"
+echo "Codex       : skills auto-détectées (redémarre Codex pour les recharger) — jpb-* : gh connecté à KeyProd requis"

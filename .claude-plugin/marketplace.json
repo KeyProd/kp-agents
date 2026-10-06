@@ -5,13 +5,18 @@
     "email": "contact@keyprod.com"
   },
   "metadata": {
-    "description": "KeyProd agents marketplace for Claude Code — development workflow agents (kp-brainstorm, kp-product, kp-architect, kp-developer, kp-review, kp-documentation, kp-ux-ui, kp-setup, kp-e2e) + standalone agent kp-daily (sessions Claude/Outlook/Teams synthesis)"
+    "description": "KeyProd marketplace for Claude Code — kp-agents (development workflow skills: kp-brainstorm, kp-product, kp-architect, kp-developer, kp-review, kp-documentation, kp-ux-ui, kp-setup, kp-test, kp-daily) and jpb-platform (start, audit and bring applications into compliance with JPB-Platform)"
   },
   "plugins": [
     {
       "name": "kp-agents",
       "source": "./",
       "description": "KeyProd agents for the development workflow"
+    },
+    {
+      "name": "jpb-platform",
+      "source": "./jpb-platform",
+      "description": "JPB-Platform : démarrer une nouvelle application, auditer et mettre en conformité une application existante"
     }
   ]
 }

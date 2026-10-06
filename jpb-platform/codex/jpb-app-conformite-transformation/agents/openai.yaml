@@ -1,0 +1,6 @@
+interface:
+  display_name: "JPB-Platform Transformation"
+  short_description: "JPB-Platform — mise en conformité d'une application existante"
+  default_prompt: "Utilise $jpb-app-conformite-transformation pour mettre cette application en conformité avec JPB-Platform."
+policy:
+  allow_implicit_invocation: true

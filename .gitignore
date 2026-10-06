@@ -1,11 +1,9 @@
-# Generated artifacts (rebuild with ./sync.sh)
-dist/
-
-# Sync state (tracks previously installed agents)
-.installed-agents
-
 # Claude Code local config
 .claude/
 
-# kp-agents: chemins machine-spécifiques (E-0004 Sources Externalisation)
+# macOS
+.DS_Store
+
+# kp-agents: chemins machine-spécifiques (config projet locale)
+docs/*.local.md
 .kp-agents.local.yml

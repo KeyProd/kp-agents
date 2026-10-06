@@ -1,0 +1,6 @@
+interface:
+  display_name: "KeyProd Brainstorm"
+  short_description: "KeyProd Brainstorm — Explorer des idées"
+  default_prompt: "Utilise $kp-brainstorm pour explorer cette idée et proposer des approches."
+policy:
+  allow_implicit_invocation: true

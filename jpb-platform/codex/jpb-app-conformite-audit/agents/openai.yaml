@@ -1,0 +1,6 @@
+interface:
+  display_name: "JPB-Platform Audit"
+  short_description: "JPB-Platform — audit de conformité d'une application"
+  default_prompt: "Utilise $jpb-app-conformite-audit pour auditer cette application contre le référentiel JPB-Platform."
+policy:
+  allow_implicit_invocation: true

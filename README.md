@@ -1,25 +1,22 @@
 # kp-agents
 
-Système de distribution multi-cibles pour agents IA KeyProd. Définir un agent une seule fois, le déployer sur **Claude Code** (via un plugin marketplace installable), **Cursor** (règles importées localement) et **Codex** (skills importées localement).
+Catalogue d'agents IA KeyProd distribué sur **Claude Code** (plugin marketplace), **Cursor** (règles locales) et **Codex** (skills locales).
 
 ## Principe
 
+Pas de génération ni de templating : chaque outil a son **dossier dédié, au format qu'il attend directement**. Le contenu de chaque agent est écrit à plat et **dupliqué** dans les 3 dossiers.
+
 ```
-agents/*.md  ──→  sync.sh  ──→  plugins/kp-agents/  → commit/push → Claude Code via marketplace
-                            ──→  dist/cursor/      → ~/.cursor/rules/
-                            ──→  dist/codex/       → ~/.codex/skills/
+claude/   → plugin Claude Code  → commit/push → distribué via le marketplace git
+codex/    → skills Codex         → ~/.codex/skills/   (via sync.sh)
+cursor/   → règles Cursor (.mdc) → ~/.cursor/rules/   (via sync.sh)
 ```
 
-Un seul fichier source par agent dans `agents/`. Le script `sync.sh` :
-- **Génère le plugin `kp-agents`** dans `plugins/kp-agents/` (versionné dans git, distribué via le marketplace Claude Code)
-- **Installe les règles Cursor** dans `~/.cursor/rules/`
-- **Installe les skills Codex** dans `~/.codex/skills/`
+`sync.sh` n'installe que **Cursor et Codex** sur la machine locale. Claude Code passe par le marketplace git (aucun clone ni `sync.sh` côté consommateur).
 
 ## Utilisation
 
 ### Claude Code (plugin marketplace)
-
-L'installation se fait directement depuis le repo git — aucun clone ni `sync.sh` nécessaire côté consommateur :
 
 ```
 /plugin marketplace add KeyProd/kp-agents
@@ -27,7 +24,7 @@ L'installation se fait directement depuis le repo git — aucun clone ni `sync.s
 /reload-plugins
 ```
 
-Puis invoque les agents avec le namespace `kp-agents:` (chaque skill est lui-même préfixé `kp-` pour garantir son unicité — convention v2.0.0) :
+Côté Claude, chaque rôle est une **skill** — pas de subagent. Invoque-la directement :
 
 ```
 /kp-agents:kp-setup
@@ -38,96 +35,93 @@ Puis invoque les agents avec le namespace `kp-agents:` (chaque skill est lui-mê
 /kp-agents:kp-review
 /kp-agents:kp-documentation
 /kp-agents:kp-ux-ui
-/kp-agents:kp-e2e
+/kp-agents:kp-test
 /kp-agents:kp-daily
 ```
+
+Cinq **skills partagées** (`kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`, `kp-validation-criteres`) portent ce qui est commun à plusieurs rôles : les rôles les chargent à la demande via l'outil `Skill`. Ce qui est propre à un seul rôle vit dans ses `references/*.md`.
 
 ### Cursor et Codex (via sync.sh)
 
 ```bash
-# Cloner le repo, puis générer et installer
+# Cloner le repo, puis installer en local
 ./sync.sh
 
-# Générer sans installer (artefacts dans plugins/ et dist/ uniquement)
-./sync.sh --dist-only
-
-# Nettoyer les agents installés lors du précédent sync (via manifeste)
+# Supprimer les kp-* installés (~/.cursor/rules, ~/.codex/skills)
 ./sync.sh --clean
-
-# Nettoyer TOUS les artefacts kp-* (glob, indépendant du manifeste)
-./sync.sh --clean-all
 ```
 
 Après sync :
 - **Cursor** : `@kp-brainstorm` via le sélecteur de règles
-- **Codex** : skills auto-détectées (`kp-brainstorm`, `kp-product`, etc.)
+- **Codex** : skills auto-détectées (`kp-brainstorm`, `kp-product`, etc. — redémarre Codex pour recharger)
 
-**Note** : `sync.sh` ne dépose plus rien dans `~/.claude/commands/` — la distribution Claude Code passe exclusivement par le plugin marketplace. Si tu avais des `kp-*.md` installés par une version antérieure de `sync.sh`, ils sont automatiquement purgés au premier run.
+`sync.sh` câble aussi le hook de pré-commit du dépôt (`core.hooksPath .githooks`).
 
-### Manifeste de synchronisation
+## Plugin jpb-platform
 
-À chaque run, `sync.sh` écrit la liste des agents installés dans `.installed-agents` (fichier local, non versionné). Cela permet au run suivant de supprimer proprement les agents qui ont été retirés de `agents/` entre-temps.
+La marketplace porte un **second plugin**, `jpb-platform`, indépendant de `kp-agents` : les
+skills qui amènent une application sur JPB-Platform, la plateforme d'hébergement des
+applications internes de JPB (`app-kickstart`, `app-conformite-audit`,
+`app-conformite-transformation`).
 
-- `--clean` lit ce manifeste et retire chirurgicalement chaque agent (plugin skills + Cursor + Codex)
-- `--clean-all` ignore le manifeste et supprime tout ce qui commence par `kp-*` dans les 3 cibles (utile pour repartir de zéro)
-
-## Créer un agent
-
-Créer `agents/kp-mon-agent.md` (le préfixe `kp-` est désormais obligatoire dans le nom de fichier ET dans le frontmatter `name:` — convention v2.0.0) :
-
-```yaml
----
-name: kp-mon-agent
-description: "Description longue pour les outils IA"
-short_description: "Description courte pour les listes"
-default_prompt: "Prompt suggéré à l'utilisateur."
----
-
-# Contenu de l'agent
-
-Instructions, processus, règles...
+```
+/plugin install jpb-platform@kp-agents
 ```
 
-Lancer `./sync.sh` — le plugin Claude exposera l'agent comme `/kp-agents:kp-mon-agent`, Cursor comme `@kp-mon-agent`, Codex avec la skill `kp-mon-agent`.
+Il vit dans [`jpb-platform/`](jpb-platform/) (manifeste, skills Claude, variantes Codex
+`jpb-*`, script de lecture du référentiel) et a **sa propre version** —
+`jpb-platform/.claude-plugin/plugin.json`, tags `jpb-platform-v<X.Y.Z>`. Plugin « mince » : ce
+dépôt étant public, ses skills ne portent que la démarche et lisent les règles dans le dépôt
+privé `KeyProd/jpb-platform` (compte membre de KeyProd et `gh` connecté requis). Détails :
+[`jpb-platform/README.md`](jpb-platform/README.md).
 
-### Publier une mise à jour Claude Code
+## Modifier ou créer un agent
 
-1. Modifier l'agent source dans `agents/kp-<nom>.md`
-2. Lancer `./sync.sh` pour régénérer `plugins/kp-agents/skills/kp-<nom>/SKILL.md`. **La version patch est bumpée automatiquement** si le contenu des skills a changé (via un hash SHA256 stocké dans `_contentHash`).
-   - Pour l'ajout d'un nouvel agent ou une feature notable : `./sync.sh --minor` (`X.Y.Z` → `X.(Y+1).0`)
-   - Pour une rupture (retrait d'agent, renommage de namespace) : `./sync.sh --major` (`X.Y.Z` → `(X+1).0.0`)
-   - `--minor` et `--major` sont mutuellement exclusifs et ne se combinent pas avec `--clean` / `--clean-all`.
-3. `git add agents/ plugins/ && git commit && git tag kp-agents-v<X.Y.Z> && git push --tags`
-4. Les utilisateurs reçoivent la mise à jour au prochain `/plugin marketplace update` (ou automatiquement selon leur config)
+Le contenu est **dupliqué dans les 3 dossiers** — il n'y a pas de source unique qui se propage. Pour chaque modification, éditer les 3 cibles en respectant leur format :
 
-**Note** : un bump manuel de `version` dans `plugin.json` (édition directe) est **respecté** par `sync.sh` — il ne re-bumpe pas par-dessus. Le mécanisme compare `version` à `_lastAutoVersion` pour détecter les bumps manuels.
+| Cible | Emplacement | Format |
+|-------|-------------|--------|
+| Claude — rôle | `claude/skills/kp-<role>/SKILL.md` (+ `references/*.md`) | `name` + `description` (déclencheurs) + persona/méthode/routage |
+| Claude — skill partagée | `claude/skills/kp-<nom>/SKILL.md` | `name` + `description` (usage) + procédure commune |
+| Codex | `codex/kp-<nom>/SKILL.md` (+ `agents/openai.yaml`) | frontmatter `name` + `description` + `metadata`, corps inliné |
+| Cursor | `cursor/kp-<nom>.mdc` | frontmatter `description` + `alwaysApply`, corps inliné |
 
-## Includes
+Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter `name:`.
 
-Les agents peuvent réutiliser des blocs partagés avec `{{include:nom}}` :
+> **Modèle 100 % skills (Claude)** : un rôle = une **skill**. Le contenu **transverse à plusieurs rôles** part en skill partagée (chargée via l'outil `Skill`) ; le contenu **propre à un rôle** reste dans ses `references/*.md` (lus via `Read`). ⚠️ `codex/` et `cursor/` n'ont pas de sous-fichiers : tout y est **inliné**, monolithique par rôle.
 
-```markdown
-{{include:docs-structure}}
-```
+### Publier une mise à jour
 
-Les fichiers d'include sont dans `includes/*.md`. Les directives sont **résolues par `sync.sh`** — les artefacts générés dans `plugins/`, `dist/cursor/` et `dist/codex/` contiennent du markdown final sans dépendances.
+1. Éditer l'agent dans les 3 dossiers. **Nouvel agent** → créer `claude/skills/kp-<nom>/SKILL.md` (le manifeste pointe le dossier `./claude/skills/`, rien à déclarer) et `codex/kp-<nom>/agents/openai.yaml`.
+2. **Monter la version** à la main dans `.claude-plugin/plugin.json` (patch / minor / major) + mettre à jour `CHANGELOG.md`.
+3. `./sync.sh` pour installer Cursor + Codex en local.
+4. `git add` + commit (le hook de pré-commit vérifie le bump) + `git tag kp-agents-v<X.Y.Z>` + push.
+5. Les utilisateurs Claude reçoivent la maj au prochain `/plugin marketplace update`.
+
+> La version est **unique** (`plugin.json`) et sert de référence pour les 3 cibles. Le bump est **manuel** : aucun mécanisme automatique.
+
+## Hook de pré-commit
+
+`.githooks/pre-commit` bloque tout commit qui modifie un skill **sans** bump de la `version` du plugin concerné (comparaison vs `HEAD`) : `claude/skills/`, `codex/`, `cursor/` → `.claude-plugin/plugin.json` ; `jpb-platform/{skills,codex,scripts}/` → `jpb-platform/.claude-plugin/plugin.json`. Les commits docs / `sync.sh` passent librement.
+
+- Activation : automatique via `./sync.sh`, ou manuellement `git config core.hooksPath .githooks`.
+- Contournement ponctuel : `git commit --no-verify`.
 
 ## Structure
 
 ```
-agents/            Source de vérité (un .md par agent)
-includes/          Templates partagés ({{include:nom}})
 .claude-plugin/
-  marketplace.json Catalogue du marketplace Claude Code (statique)
-plugins/           Plugins Claude Code (COMMITÉS dans git)
-  kp-agents/
-    .claude-plugin/plugin.json  Manifeste statique (name, version, description)
-    skills/        Skills générés par sync.sh (SKILL.md par agent)
-dist/              Artefacts Cursor / Codex (NON commités, .gitignore)
-  cursor/          Règles Cursor (.mdc)
-  codex/           Skills Codex (SKILL.md + openai.yaml)
-sync.sh            Script de synchronisation
-docs/              Documentation projet (vision, architecture, epics, stories)
+  marketplace.json                Catalogue marketplace (source: ./ → le repo est le plugin)
+  plugin.json                     Manifeste : name, version (manuelle), skills[] → ./claude/skills/
+claude/                           Contenu du plugin Claude Code (commité)
+  skills/kp-<role>/               Skill de rôle (10) : SKILL.md + references/ (procédures du rôle)
+  skills/kp-<partagée>/           Skill partagée (5) : sources-config, docs-structure, handoff,
+                                    doc-templates, validation-criteres
+codex/kp-<nom>/                   SKILL.md + agents/openai.yaml (monolithique, inliné)
+cursor/kp-<nom>.mdc               Règle Cursor
+sync.sh                           Installe cursor/ + codex/ en local (macOS)
+.githooks/pre-commit              Vérifie le bump de version
+docs/                             Documentation projet
 ```
 
 ## Agents
@@ -141,9 +135,9 @@ docs/              Documentation projet (vision, architecture, epics, stories)
 | `kp-review` | Relire, tester, valider le code |
 | `kp-documentation` | Analyser et maintenir la documentation |
 | `kp-ux-ui` | Designer UX/UI et identité visuelle |
-| `kp-setup` | Configurer les sources du projet (`.kp-agents.yml` / `.kp-agents.local.yml`) |
-| `kp-e2e` | Générer et maintenir des tests E2E browser (Playwright + Playwright MCP) dans `devel/` |
-| `kp-daily` | Générer un daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
+| `kp-setup` | Configurer les sources du projet (frontmatter `kp-agents:` des `docs/*.md`) |
+| `kp-test` | Orchestrer les tests E2E (cas Xray + test code + remontée) |
+| `kp-daily` | Daily synthétique en français (sessions Claude J-1, Outlook, Teams) |
 
 ### Flux entre agents
 
@@ -155,50 +149,66 @@ kp-brainstorm → kp-product → kp-architect → kp-developer → kp-review →
                                                 └──────────────────────────┘
 ```
 
-`kp-setup` est transversal : auto-redirect depuis tout agent détectant une config manquante. `kp-daily` est un agent standalone (pas dans le pipeline de dev). Détails dans [docs/agents.md](docs/agents.md).
+`kp-setup` est transversal (auto-redirect depuis tout agent détectant une config manquante). `kp-test` s'insère après `kp-developer`. `kp-daily` est standalone. Détails dans [docs/agents.md](docs/agents.md).
 
-## Configuration projet (`.kp-agents.yml` — optionnel)
+## Configuration projet (optionnel)
 
-**v1.1.0** — Chaque projet peut déclarer une politique de sources : doc produit sur OneDrive, tickets dans JIRA via MCP, préférences Git d'équipe. **Par défaut (absence de fichier), le comportement est 100% local — rétro-compatible avec toute version antérieure.**
+Chaque projet peut déclarer une politique de sources : doc produit sur OneDrive, tickets dans JIRA via MCP, préférences Git d'équipe, configuration des tests E2E. **Par défaut (aucune configuration), le comportement est 100 % local.**
 
-```yaml
-# .kp-agents.yml (commité — politique partagée par l'équipe)
-product:
-  mode: external          # local | external (OneDrive, ...)
-  access: read-only       # read-write | read-only (pertinent si external)
-tickets:
-  mode: mcp               # local | mcp (JIRA via MCP)
-  mcp_server: atlassian
-  project_key: KP
-git:
-  branch_pattern: "feat/{slug}"
-  auto_commit: ask        # yes | no | ask
-  auto_push: no
+La configuration vit dans le **frontmatter YAML** des fichiers markdown de `docs/`, sous la clé `kp-agents:`. Chaque dimension a un fichier commité (politique d'équipe) et un fichier `.local.md` gitignoré (chemins et préférences machine) :
+
+| Fichier | Commité | Clés portées |
+|---------|---------|--------------|
+| `docs/git.md` | ✅ | `branch_pattern` |
+| `docs/git.local.md` | ❌ | `auto_commit`, `auto_push` |
+| `docs/project.md` | ✅ | `tickets.mode`, `tickets.mcp_server`, `tickets.project_key`, `tickets.mapping.*` |
+| `docs/project.local.md` | ❌ | overrides `tickets.*` |
+| `docs/documentation.md` | ✅ | `product.mode`, `product.access` |
+| `docs/documentation.local.md` | ❌ | `product.path`, `global_doc.specs`, `global_doc.tech`, `global_doc.product_inputs` |
+| `docs/testing.md` | ✅ | `testing.framework`, `testing.tests_dir`, `testing.run_commands`, `testing.case_repository.*`, `testing.isolation.*` |
+| `docs/testing.local.md` | ❌ | `testing.discovery.*`, `testing.case_repository.credentials_env` |
+
+```markdown
+<!-- docs/project.md — commité, politique partagée par l'équipe -->
+---
+kp-agents:
+  tickets:
+    mode: mcp             # local | mcp (JIRA via MCP)
+    mcp_server: atlassian
+    project_key: KP
+---
+
+# Projet & Tickets
+
+Le body reste du markdown libre : conventions d'équipe, liens, contexte.
 ```
 
-```yaml
-# .kp-agents.local.yml (gitignoré — chemins machine-spécifiques et override local)
-product:
-  path: /Users/alice/OneDrive/MonProjet
-tickets:
-  project_key: POC        # override local pour pousser dans un projet sandbox
+```markdown
+<!-- docs/documentation.local.md — gitignoré, chemins machine-spécifiques -->
+---
+kp-agents:
+  product:
+    path: /Users/alice/OneDrive/MonProjet
+  global_doc:
+    tech: /Users/alice/OneDrive/Specs/tech
+---
 ```
 
-Invoque `/kp-agents:kp-setup` pour configurer ces fichiers interactivement — l'agent est audit-first et ne modifie rien sans confirmation.
+Invoque `/kp-agents:kp-setup` pour écrire ces fichiers interactivement — il est audit-first et ne modifie rien sans confirmation. C'est le **seul** agent autorisé à les écrire.
 
-> **Important** : `.kp-agents.local.yml` doit être gitignoré (l'agent `setup` le fait automatiquement). Ne jamais committer de chemin machine-spécifique.
+> **Migration** : les anciens `.kp-agents.yml` / `.kp-agents.local.yml` (v1.x) ne sont **plus lus** depuis la v2.0.0. Si `kp-setup` les détecte à la racine, il propose de migrer leur contenu vers les fichiers `docs/*.md` ci-dessus.
+
+> **Important** : les fichiers `docs/*.local.md` doivent être gitignorés (`docs/*.local.md` suffit). Ne jamais committer de chemin machine-spécifique.
 
 ## Troubleshooting
 
 ### `0 skills` au reload-plugins après install
 
-Si `/reload-plugins` annonce `0 skills` au lieu du nombre attendu juste après `/plugin install kp-agents@kp-agents`, le cache local du plugin est sans doute stale (typiquement après un renommage ou un changement de source du plugin). Purge le cache puis réinstalle :
+Si `/reload-plugins` annonce `0 skills` juste après `/plugin install kp-agents@kp-agents`, le cache local du plugin est sans doute stale. Purge-le puis réinstalle :
 
 ```bash
 rm -rf ~/.claude/plugins/cache/kp-agents
 ```
-
-Puis dans Claude Code :
 
 ```
 /plugin marketplace remove kp-agents
@@ -207,40 +217,13 @@ Puis dans Claude Code :
 /reload-plugins
 ```
 
-### Les anciens `/kp-brainstorm` (sans namespace) ne répondent plus
-
-Normal : la distribution Claude Code se fait désormais via le plugin marketplace. Les skills sont préfixés `kp-` dans leur frontmatter (convention v2.0.0, garantit l'unicité côté Cursor / Codex et lève toute collision avec d'autres plugins) et le namespace de plugin (`kp-agents:`) reste préfixé devant. Forme d'invocation finale : `/kp-agents:kp-<nom>`. L'ancien install local via `sync.sh` a été automatiquement purgé au premier run de la nouvelle version.
-
-Utilise `/kp-agents:kp-brainstorm` à la place de `/kp-brainstorm`, etc.
-
 ### Installer une branche feature (pour tester)
 
 ```
-/plugin marketplace add KeyProd/kp-agents@feat/ma-branche
+/plugin marketplace add KeyProd/kp-agents@refactor/ma-branche
 /plugin install kp-agents@kp-agents
 ```
 
-### Auto-bump de version : la version ne bouge pas après modification
+### Le commit est bloqué par le hook de pré-commit
 
-Si tu modifies un agent, lances `./sync.sh`, mais que la version dans `plugin.json` reste identique :
-
-1. **Vérifie les outils de hash** : `shasum` (standard macOS/Linux) ou `openssl` doit être dans le `PATH`. Si aucun des deux n'est disponible, `sync.sh` affiche un warning `"Hash calculation skipped (no SHA256 tool available)"` et saute le bump.
-2. **Vérifie `python3`** : la manipulation JSON du `plugin.json` dépend de `python3` (standard macOS/Linux récent). Test rapide : `python3 --version`.
-3. **Vérifie le champ `_lastAutoVersion`** : si `version` dans `plugin.json` diffère de `_lastAutoVersion`, `sync.sh` considère un bump manuel et ne re-bumpe pas. Aligne les deux champs pour réactiver l'auto-patch, ou utilise `./sync.sh --minor` / `--major` pour forcer.
-4. **Relance manuellement** après modification d'un agent : `./sync.sh`. Le log doit afficher `"Plugin version bumped: X.Y.Z → X.Y.(Z+1) (content changed)"`.
-
-### Conflit Git sur `plugin.json` après merge concurrent
-
-Si deux branches ont bumpé `plugin.json` en parallèle, un merge peut produire une incohérence entre `version` et `_contentHash`. Résolution :
-
-1. Résous le conflit manuellement en gardant la plus haute des deux versions
-2. Relance `./sync.sh` — il mettra à jour `_contentHash` pour refléter l'état réel des skills et alignera `_lastAutoVersion`
-3. Vérifie avec `claude plugin validate .` que le résultat est conforme
-
-### Rollback d'une release
-
-Semver ne permet pas de "descendre" la version côté client (un client qui a reçu `0.3.0` ignorera un futur `0.2.1` sorti après). Pour revenir en arrière :
-
-1. `git revert` le commit fautif (le code revient à l'état précédent)
-2. Lance `./sync.sh` — le hash détecte le changement et bumpe le patch en avant (`0.3.0` → `0.3.1`)
-3. La version `0.3.1` porte alors le contenu "corrigé" (qui est l'état pré-release problématique)
+Le hook exige un bump de `version` (`plugin.json`) dès qu'un skill change. Monte la version + mets à jour le `CHANGELOG.md`, ou contourne ponctuellement avec `git commit --no-verify` (commits sans impact skill).

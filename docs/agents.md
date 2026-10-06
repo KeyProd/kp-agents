@@ -10,7 +10,7 @@ author: documentation-agent
 > Description de chaque agent et visualisation de leurs workflows.
 > Les traits pleins (`-->`) indiquent les chemins **obligatoires**. Les traits pointillés (`-.->`) indiquent les chemins **facultatifs**.
 
-> **Invocation** : via le plugin Claude Code, les agents sont namespacés sous la forme `/kp-agents:<nom>`. Dans Cursor, ils apparaissent sous `@kp-<nom>`. Dans Codex, ce sont les skills `kp-<nom>`.
+> **Invocation** : côté Claude Code, chaque rôle est une **skill** — `/kp-agents:kp-<nom>`. Pas de subagent. La skill de rôle porte la persona, la méthode et le routage ; elle charge à la demande les **skills partagées** (`kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`, `kp-validation-criteres`) via l'outil `Skill`, et lit ses **procédures locales** dans ses `references/*.md`. Dans Cursor, les règles apparaissent sous `@kp-<nom>` ; dans Codex, ce sont les skills `kp-<nom>` (Cursor/Codex restent monolithiques par rôle : tout y est inliné).
 
 ---
 

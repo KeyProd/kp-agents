@@ -1,6 +1,6 @@
 ---
 name: "app-kickstart"
-description: "Point d'entrée d'une NOUVELLE application destinée à JPB-Platform (plateforme d'hébergement des applications internes de JPB). À lancer dès la première session, avant tout brainstorm ou code : vérifie le poste et les accès (outils, compte GitHub, organisation KeyProd), charge les règles de la plateforme, crée tout de suite le dépôt KeyProd/<app>, branches develop et main comprises, avec ses règles et ses garde-fous (CLAUDE.md, AGENTS.md, hooks git et Claude Code, .gitignore), installe le travail par branches feat/ et fix/ avec PR vers develop, propose un brainstorm si le besoin n'est pas cadré, rédige la demande de raccordement pour l'équipe DevOps, puis fait le point de conformité à chaque décision structurante (technologie, connexion des utilisateurs, données, première livraison). Ré-invocable : reprend là où en est le projet et remet les garde-fous à jour. Déclencheurs : « je démarre une nouvelle app », « nouvelle application pour la plateforme », « kickstart », « créer une app JPB-Platform », « où en est la conformité de mon app », « qu'est-ce qui manque avant de livrer ». Pour une application qui existe déjà : jpb-platform:app-conformite-audit puis jpb-platform:app-conformite-transformation."
+description: "Point d'entrée d'une NOUVELLE application destinée à JPB-Platform (plateforme d'hébergement des applications internes de JPB). À lancer dès la première session, avant tout brainstorm ou code : demande d'abord comment parler à l'utilisateur (débutant, connaisseur, développeur) et s'y tient pour toute la session, vérifie le poste et les accès (outils, compte GitHub, organisation KeyProd), charge les règles de la plateforme, crée tout de suite le dépôt KeyProd/<app>, branches develop et main comprises, avec ses règles et ses garde-fous (CLAUDE.md, AGENTS.md, hooks git et Claude Code, .gitignore), installe le travail par branches feat/ et fix/ avec PR vers develop, propose un brainstorm si le besoin n'est pas cadré, rédige la demande de raccordement pour l'équipe DevOps, puis fait le point de conformité à chaque décision structurante (technologie, connexion des utilisateurs, données, première livraison). Ré-invocable : reprend là où en est le projet et remet les garde-fous à jour. Déclencheurs : « je démarre une nouvelle app », « nouvelle application pour la plateforme », « kickstart », « créer une app JPB-Platform », « où en est la conformité de mon app », « qu'est-ce qui manque avant de livrer ». Pour une application qui existe déjà : jpb-platform:app-conformite-audit puis jpb-platform:app-conformite-transformation."
 metadata:
   short-description: "JPB-Platform — démarrer une nouvelle application"
 ---
@@ -21,7 +21,39 @@ Ordre d'une première session : poste vérifié → dépôt créé et protégé 
 raccordement demandé. Le dépôt vient **avant** le brainstorm : même vierge de code, il porte
 déjà les règles et les garde-fous, et le cadrage s'y écrit.
 
-## 0. Vérifier le poste et charger le référentiel — toujours en premier
+## Avant tout : le mode de communication
+
+Ton utilisateur choisit comment tu lui parles — **débutant** (« je découvre »),
+**connaisseur** (« j'ai des notions ») ou **développeur** — pour toute la session et les
+suivantes. Le mode décide de tes mots, du détail que tu donnes et de qui fait les choix
+techniques ; il ne change jamais les règles.
+
+1. Cherche-le dans le bloc « Mode de communication JPB-Platform » du `CLAUDE.local.md` à la
+   racine du dépôt de l'app (fichier personnel, non versionné). Codex ne le charge pas tout seul :
+   lis-le.
+2. Sinon, c'est ta première question, avant toute autre :
+
+   > Pour adapter ma façon de vous parler, lequel vous ressemble le plus ?
+   >
+   > 1. **Je découvre** : je ne suis pas développeur. Parlez-moi simplement et faites pour moi
+   >    les choix techniques.
+   > 2. **J'ai des notions** : je ne suis pas développeur, mais un peu de vocabulaire technique
+   >    me va et je veux comprendre les choix.
+   > 3. **Je suis développeur** : parlez-moi normalement, je fais mes choix.
+   >
+   > Vous pourrez changer à tout moment : dites-le simplement.
+
+   Sans réponse claire : débutant, et dis-le.
+3. Le référentiel chargé (§ 0), lis
+   `$JPB/docs/features/plateforme-vxrail/standards/modes-communication.md` et applique-le à
+   toute la suite : mots, niveau de détail, qui fait les choix techniques, décisions qui
+   restent toujours à l'utilisateur, préconisations. Sur la forme, il prime sur les consignes
+   de cette skill.
+4. Garde le mode dans `CLAUDE.local.md` (format du standard, § 5) dès que le dépôt existe :
+   tout de suite s'il existe déjà, sinon à l'amorçage (§ 3). Mets le bloc à jour quand
+   l'utilisateur change de mode.
+
+## 0. Vérifier le poste et charger le référentiel
 
 ```bash
 echo "git|$(git --version 2>&1)"
@@ -43,9 +75,12 @@ fi
 echo "Référentiel|$JPB — $(git -C "$JPB" rev-parse --abbrev-ref HEAD 2>&1) @ $(git -C "$JPB" log -1 --format='%h du %cs' 2>&1)"
 ```
 
-Une ligne par contrôle (`contrôle|constat`). **Montre le résultat à l'utilisateur en tableau
-✅ / ⚠️ / ❌**, au premier appel d'une session — c'est sa preuve que le poste est prêt ; aux
-appels suivants, une ligne suffit si tout est ✅. Lecture :
+Une ligne par contrôle (`contrôle|constat`), à lire avec le tableau ci-dessous. **Montre le
+résultat à l'utilisateur** au premier appel d'une session — c'est sa preuve que le poste est
+prêt —, selon le mode : débutant, « votre poste est prêt », ou seulement ce qui manque, en mots
+simples, avec la personne à contacter ; connaisseur, un tableau ✅ / ⚠️ / ❌ et une ligne
+d'explication par ⚠️ ou ❌ ; développeur, le tableau complet. Aux appels suivants, une ligne
+suffit si tout est ✅. Lecture :
 
 | Contrôle | ✅ | ❌ et geste à indiquer |
 |---|---|---|
@@ -77,7 +112,8 @@ Puis lis :
 - `$JPB/docs/features/plateforme-vxrail/runbooks/mise-en-conformite-app.md`, § « Qui joue
   quoi » et « Demande de raccordement ».
 
-Au premier appel d'une session, résume les règles à l'utilisateur en cinq lignes au plus.
+Au premier appel d'une session, résume les règles à l'utilisateur en cinq lignes au plus —
+trois phrases sans jargon en mode débutant.
 
 ## 1. Détecter l'état du projet
 
@@ -99,7 +135,8 @@ Relève, sans rien modifier :
 | Raccordée ? | `ls -d "$JPB"/envs/dev/<app>` |
 
 Présente l'état en un court tableau (✅ fait · ⏳ à faire maintenant · — pas encore
-pertinent), dis quelle est la prochaine étape, puis enchaîne sur la section correspondante.
+pertinent) — en mode débutant, une phrase : où en est le projet et quelle est la prochaine
+étape —, puis enchaîne sur la section correspondante.
 Des garde-fous absents ou différents du gabarit passent avant tout le reste (§ 3).
 
 ## 2. Nommer l'app et créer le dépôt — dès la première session
@@ -107,7 +144,9 @@ Des garde-fous absents ou différents du gabarit passent avant tout le reste (§
 - **Nom** : minuscules, chiffres et tirets ; court et parlant. Il sert au dépôt, à l'image, à
   l'adresse web et au client de connexion. C'est un **nom de travail** jusqu'à l'envoi de la
   demande de raccordement (§ 5) : il reste renommable d'ici là, il est **définitif** ensuite.
-  Si le besoin n'est pas encore cadré, un nom provisoire suffit. Demande d'abord si l'équipe
+  Si le besoin n'est pas encore cadré, un nom provisoire suffit. En mode débutant, propose deux
+  ou trois noms tirés de ce que fait l'app, en disant à quoi sert le nom (l'adresse web de
+  l'app) : le choix reste le sien. Demande d'abord si l'équipe
   DevOps a déjà déclaré l'app dans jpb-gateway (elle le fait souvent dès l'ouverture des
   accès) : si oui, reprends ce nom-là, il est déjà définitif.
 - Annonce ce que tu vas créer (dépôt privé `KeyProd/<app>`, branches `develop` et `main`,
@@ -191,8 +230,10 @@ Codex, l'utilisateur dans un terminal.
 6. **Codex n'a pas de hook de session** : à chaque appel, vérifie `git config core.hooksPath`
    (attendu : `.githooks`) et, sinon, pose-le. Les fichiers `.claude/` ne servent qu'aux
    sessions Claude Code ; installe-les quand même, le dépôt est partagé.
-7. **Explique à l'utilisateur** ce qui vient d'être posé, une ligne par fichier, et ce que ça
-   change pour lui : désormais, un commit sur `develop`, un secret, un manifest Kubernetes ou
+7. **Explique à l'utilisateur** ce qui vient d'être posé, selon le mode — débutant : une
+   phrase (« j'ai mis en place des protections contre les erreurs courantes ») ; connaisseur :
+   une ligne par élément ; développeur : une ligne par fichier —, et ce que ça change pour
+   lui : désormais, un commit sur `develop`, un secret, un manifest Kubernetes ou
    un push vers `develop` sont refusés sur son poste ; le travail passe par des branches ; la
    PR en brouillon du caller CI attend le raccordement — on ne la ferme pas.
 
@@ -201,7 +242,9 @@ Codex, l'utilisateur dans un terminal.
 
 ### Travailler par branches (BR-13)
 
-À expliquer simplement à l'utilisateur dès l'amorçage, puis à appliquer à chaque étape :
+À expliquer simplement à l'utilisateur dès l'amorçage, puis à appliquer à chaque étape. En
+mode débutant, tu gères seul branches et PR, sans ce vocabulaire : tu ne lui demandes que
+l'accord de publier (« je mets ce travail sur la version de test ? »).
 
 - `develop`, c'est la DEV ; on n'y travaille jamais directement. Chaque sujet a sa branche,
   partie de `develop` à jour : `feat/<sujet>` pour une évolution, `fix/<sujet>` pour une
@@ -240,14 +283,17 @@ avant d'aller plus loin. Les règles de la plateforme sont déjà dans la conver
 - le **responsable métier** du projet sera le propriétaire de l'app et décidera de ses accès :
   qui est-ce ?
 
-C'est une recommandation, pas une porte : l'utilisateur peut la décliner. Le cadrage fini
+C'est une recommandation, pas une porte : l'utilisateur peut la décliner. En mode débutant,
+présente-la comme un échange pour clarifier son besoin, sans nommer la skill. Le cadrage fini
 (`docs/ideas/…`), PR vers `develop`. Si le cadrage a fait évoluer le nom, renomme maintenant
 (§ 2) : c'est la dernière occasion.
 
 ## 5. Demander le raccordement — dès que le nom est confirmé
 
 Remplis le modèle « Demande de raccordement » du runbook avec ce que tu sais ; écris « à
-préciser » pour ce qui ne l'est pas encore (mode d'accès, base, secrets…). **Aucune valeur de
+préciser » pour ce qui ne l'est pas encore (mode d'accès, base, secrets…). En mode débutant,
+remplis toi-même tout ce qui est technique, selon le besoin et les préconisations ; ne lui
+demande que le métier (responsable, qui accède, données d'autres services). **Aucune valeur de
 secret** dans la demande, seulement leurs noms et leur rôle. Enregistre-la dans
 `docs/raccordement.md`, sur la branche de travail en cours ; l'utilisateur l'envoie à l'équipe
 DevOps (mail, Teams ou en direct) et tu notes en tête du fichier « Envoyée le <date> ».
@@ -271,6 +317,12 @@ points du référentiel **qui s'appliquent à ce stade**, et à eux seuls :
 | Données | 5 secrets · 6 état · 7 migrations |
 | Raccordement confirmé par DevOps | 9 CI : sortir la PR du caller du brouillon (`gh pr ready`) et la fusionner, avec l'accord de l'utilisateur — c'est la première livraison en DEV · 12 cohérence du nom · 13 hébergement |
 | Avant la PROD | 11 protection des branches (DevOps) · contre-audit |
+
+Le **choix de la technologie**, et de tout autre choix technique structurant (données,
+stockage), suit le mode : débutant, tu appliques les préconisations du standard sans le
+demander et tu l'annonces en une phrase ; connaisseur, tu les proposes avec leur raison et
+demandes l'accord ; développeur, tu présentes les options, la préconisation signalée comme le
+défaut de la plateforme, et il choisit.
 
 Pour chaque écart : explique-le en une phrase, propose la correction ; avec l'accord de
 l'utilisateur, fais-la sur une branche de travail, ou laisse `kp-developer` la faire — les
@@ -302,7 +354,9 @@ pas pour autant : c'est le pense-bête de la première livraison.
   branches : tu prépares la demande, l'équipe DevOps la joue. La copie de jpb-platform est en
   lecture seule.
 - Créer le dépôt, fusionner une PR, renommer : chaque fois avec l'accord explicite de
-  l'utilisateur. La PR du caller CI ne se fusionne jamais avant la confirmation du
+  l'utilisateur.
+- Le mode change ta façon de parler et qui fait les choix techniques, jamais les règles : les
+  décisions métier et les gestes visibles hors du poste se demandent dans tous les modes. La PR du caller CI ne se fusionne jamais avant la confirmation du
   raccordement.
 - Une règle qui bloque le besoin se remonte à l'équipe DevOps : tu ne la contournes pas et tu
   n'inventes pas d'exception.

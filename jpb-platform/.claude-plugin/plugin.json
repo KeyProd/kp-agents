@@ -1,7 +1,7 @@
 {
   "name": "jpb-platform",
   "description": "JPB-Platform : démarrer une nouvelle application (app-kickstart), auditer (app-conformite-audit) et mettre en conformité (app-conformite-transformation) une application existante. Les skills ne portent que la démarche : les règles sont lues dans le dépôt privé KeyProd/jpb-platform.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "KeyProd",
     "email": "contact@keyprod.com"

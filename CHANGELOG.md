@@ -8,6 +8,24 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v4.2.2] et [jpb-platform-v0.4.2] — Compatibilité avec l'import GitHub — 2026-10-08
+
+### Corrigé
+
+- Paquets Codex autonomes dans `codex/` et `jpb-platform/codex/`, avec leur manifeste
+  `.codex-plugin/plugin.json` et un dossier standard `skills/`. Le catalogue natif pointe
+  ces deux racines ; les anciens manifestes Codex aux racines Claude sont retirés.
+- Description de découverte d'`app-kickstart` abrégée à 709 caractères dans les deux
+  variantes (limite d'import OpenAI : 1 024). Instructions des agents inchangées.
+- Contrôles de régression des catalogues, manifestes, chemins et métadonnées de skills.
+- Hook de version et documentation adaptés aux nouveaux emplacements.
+
+Vérifications : le contrôle des descriptions échoue sur l'ancienne version et passe après
+correction ; les deux plugins s'installent dans un environnement Codex vierge, et leurs
+skills sont visibles dans le contexte du modèle.
+
+---
+
 ## [kp-agents-v4.2.1] et [jpb-platform-v0.4.1] — Catalogue Codex natif — 2026-10-08
 
 ### Corrigé

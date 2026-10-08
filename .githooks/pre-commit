@@ -70,6 +70,6 @@ check_parity() {
 status=0
 check_bump ".claude-plugin/plugin.json" '^(claude/skills/|codex/|cursor/)' || status=1
 check_bump "jpb-platform/.claude-plugin/plugin.json" '^jpb-platform/(skills|codex|scripts)/' || status=1
-check_parity ".claude-plugin/plugin.json" ".codex-plugin/plugin.json" || status=1
-check_parity "jpb-platform/.claude-plugin/plugin.json" "jpb-platform/.codex-plugin/plugin.json" || status=1
+check_parity ".claude-plugin/plugin.json" "codex/.codex-plugin/plugin.json" || status=1
+check_parity "jpb-platform/.claude-plugin/plugin.json" "jpb-platform/codex/.codex-plugin/plugin.json" || status=1
 exit $status

@@ -1,6 +1,6 @@
 {
   "name": "kp-agents",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "KeyProd agents for the development workflow: kp-brainstorm, kp-product, kp-architect, kp-developer, kp-review, kp-documentation, kp-ux-ui, kp-setup, kp-test, kp-daily",
   "author": {
     "name": "KeyProd",
@@ -21,7 +21,7 @@
     "ux",
     "test"
   ],
-  "skills": "./codex/",
+  "skills": "./skills/",
   "interface": {
     "displayName": "KeyProd agents",
     "shortDescription": "Du cadrage à la relecture : brainstorm, produit, architecture, développement, revue",

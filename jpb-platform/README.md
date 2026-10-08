@@ -58,7 +58,7 @@ codex plugin add jpb-platform@kp-agents
 
 Redémarrer Codex. Mise à jour : `codex plugin marketplace upgrade kp-agents`. Le plugin porte
 deux manifestes à la même version : `.claude-plugin/plugin.json` (Claude Code, skills de
-`skills/`) et `.codex-plugin/plugin.json` (Codex, variantes de `codex/`).
+`skills/`) et `codex/.codex-plugin/plugin.json` (Codex, variantes de `codex/skills/`).
 
 ## Documentation côté plateforme (dépôt jpb-platform)
 

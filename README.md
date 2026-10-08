@@ -8,15 +8,16 @@ Pas de génération ni de templating : chaque outil a son **dossier dédié, au 
 
 ```
 claude/   → plugin Claude Code  → .claude-plugin/plugin.json ┐ commit/push → même
-codex/    → plugin Codex        → .codex-plugin/plugin.json  ┘ marketplace git
+codex/    → plugin Codex        → codex/.codex-plugin/plugin.json  ┘ marketplace git
 cursor/   → règles Cursor (.mdc) → ~/.cursor/rules/   (via sync.sh)
 ```
 
 La même marketplace git porte deux catalogues écrits à plat :
 `.claude-plugin/marketplace.json` pour Claude Code et `.agents/plugins/marketplace.json`
-pour Codex. Tous deux exposent `kp-agents` (`./`) et `jpb-platform` (`./jpb-platform`). Aucun
+pour Codex. Le catalogue Claude pointe `./` et `./jpb-platform` ; celui de Codex pointe les paquets
+autonomes `./codex` et `./jpb-platform/codex`, chacun avec son dossier `skills/`. Aucun
 clone ni script côté consommateur. Chaque plugin porte deux manifestes, un par outil, à la **même
-version** ; celui de Codex pointe les variantes `codex/`. `sync.sh` n'installe plus que
+version** ; celui de Codex pointe son dossier `./skills/`. `sync.sh` n'installe plus que
 **Cursor**.
 
 ## Utilisation
@@ -92,7 +93,7 @@ codex plugin add jpb-platform@kp-agents       # Codex
 
 Il vit dans [`jpb-platform/`](jpb-platform/) (manifestes Claude et Codex, skills Claude,
 variantes Codex, script de lecture du référentiel) et a **sa propre version** —
-`jpb-platform/.claude-plugin/plugin.json` et `.codex-plugin/plugin.json`, tags
+`jpb-platform/.claude-plugin/plugin.json` et `jpb-platform/codex/.codex-plugin/plugin.json`, tags
 `jpb-platform-v<X.Y.Z>`. Plugin « mince » : ce
 dépôt étant public, ses skills ne portent que la démarche et lisent les règles dans le dépôt
 privé `KeyProd/jpb-platform` (compte membre de KeyProd et `gh` connecté requis). Détails :
@@ -106,7 +107,7 @@ Le contenu est **dupliqué dans les 3 dossiers** — il n'y a pas de source uniq
 |-------|-------------|--------|
 | Claude — rôle | `claude/skills/kp-<role>/SKILL.md` (+ `references/*.md`) | `name` + `description` (déclencheurs) + persona/méthode/routage |
 | Claude — skill partagée | `claude/skills/kp-<nom>/SKILL.md` | `name` + `description` (usage) + procédure commune |
-| Codex | `codex/kp-<nom>/SKILL.md` (+ `agents/openai.yaml`) | frontmatter `name` + `description` + `metadata`, corps inliné |
+| Codex | `codex/skills/kp-<nom>/SKILL.md` (+ `agents/openai.yaml`) | frontmatter `name` + `description` + `metadata`, corps inliné |
 | Cursor | `cursor/kp-<nom>.mdc` | frontmatter `description` + `alwaysApply`, corps inliné |
 
 Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter `name:`.
@@ -115,8 +116,8 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 
 ### Publier une mise à jour
 
-1. Éditer l'agent dans les 3 dossiers. **Nouvel agent** → créer `claude/skills/kp-<nom>/SKILL.md` (le manifeste pointe le dossier `./claude/skills/`, rien à déclarer) et `codex/kp-<nom>/agents/openai.yaml`.
-2. **Monter la version** à la main dans `.claude-plugin/plugin.json` **et** `.codex-plugin/plugin.json` (même valeur ; patch / minor / major) + mettre à jour `CHANGELOG.md`.
+1. Éditer l'agent dans les 3 dossiers. **Nouvel agent** → créer `claude/skills/kp-<nom>/SKILL.md` (le manifeste pointe le dossier `./claude/skills/`, rien à déclarer) et `codex/skills/kp-<nom>/agents/openai.yaml`.
+2. **Monter la version** à la main dans `.claude-plugin/plugin.json` **et** `codex/.codex-plugin/plugin.json` (même valeur ; patch / minor / major) + mettre à jour `CHANGELOG.md`.
 3. `./sync.sh` pour installer Cursor en local.
 4. `git add` + commit (le hook de pré-commit vérifie le bump et l'égalité des deux versions) + `git tag kp-agents-v<X.Y.Z>` + push.
 5. Les utilisateurs reçoivent la maj par `/plugin marketplace update kp-agents` (Claude Code) ou `codex plugin marketplace upgrade kp-agents` (Codex).
@@ -125,7 +126,9 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 
 ## Hook de pré-commit
 
-`.githooks/pre-commit` bloque tout commit qui modifie un skill **sans** bump de la `version` du plugin concerné (comparaison vs `HEAD`) : `claude/skills/`, `codex/`, `cursor/` → `.claude-plugin/plugin.json` ; `jpb-platform/{skills,codex,scripts}/` → `jpb-platform/.claude-plugin/plugin.json`. Il refuse aussi qu'un manifeste Codex (`.codex-plugin/plugin.json`) porte une autre version que le manifeste Claude du même plugin. Les commits docs / `sync.sh` passent librement.
+Contrôles des paquets et des métadonnées d'import : `python3 -m unittest discover -s tests -v`.
+
+`.githooks/pre-commit` bloque tout commit qui modifie un skill **sans** bump de la `version` du plugin concerné (comparaison vs `HEAD`) : `claude/skills/`, `codex/`, `cursor/` → `.claude-plugin/plugin.json` ; `jpb-platform/{skills,codex,scripts}/` → `jpb-platform/.claude-plugin/plugin.json`. Il refuse aussi qu'un manifeste Codex (`codex/.codex-plugin/plugin.json`) porte une autre version que le manifeste Claude du même plugin. Les commits docs / `sync.sh` passent librement.
 
 - Activation : automatique via `./sync.sh`, ou manuellement `git config core.hooksPath .githooks`.
 - Contournement ponctuel : `git commit --no-verify`.
@@ -133,22 +136,25 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 ## Structure
 
 ```
-.claude-plugin/
-  marketplace.json                Catalogue Claude : kp-agents (./), jpb-platform (./jpb-platform)
-  plugin.json                     Manifeste Claude : name, version (manuelle), skills[] → ./claude/skills/
-.agents/plugins/
-  marketplace.json                Catalogue Codex natif : mêmes plugins et chemins, politiques explicites
-.codex-plugin/
-  plugin.json                     Manifeste Codex : même version, skills → ./codex/
-claude/                           Contenu du plugin Claude Code (commité)
-  skills/kp-<role>/               Skill de rôle (10) : SKILL.md + references/ (procédures du rôle)
-  skills/kp-<partagée>/           Skill partagée (5) : sources-config, docs-structure, handoff,
-                                    doc-templates, validation-criteres
-codex/kp-<nom>/                   SKILL.md + agents/openai.yaml (monolithique, inliné)
-cursor/kp-<nom>.mdc               Règle Cursor
-sync.sh                           Installe cursor/ en local (macOS), retire les anciennes copies Codex
-.githooks/pre-commit              Vérifie le bump de version
-docs/                             Documentation projet
+.agents/plugins/marketplace.json   ← Catalogue Codex : ./codex, ./jpb-platform/codex
+.claude-plugin/marketplace.json    ← Catalogue Claude : ./, ./jpb-platform
+.claude-plugin/plugin.json         ← Manifeste Claude kp-agents
+claude/skills/kp-<nom>/            ← Skills Claude : SKILL.md + references/ à la demande
+codex/                            ← Paquet Codex kp-agents autonome
+  .codex-plugin/plugin.json       ← Manifeste Codex, skills → ./skills/
+  skills/kp-<nom>/                ← SKILL.md monolithique + agents/openai.yaml
+cursor/kp-<nom>.mdc               ← Règles Cursor monolithiques
+jpb-platform/                     ← Plugin Claude jpb-platform
+  .claude-plugin/plugin.json
+  skills/app-<nom>/SKILL.md        ← Skills Claude
+  scripts/                       ← Lecture du référentiel et vérification du poste
+  codex/                         ← Paquet Codex jpb-platform autonome
+    .codex-plugin/plugin.json     ← Manifeste Codex, skills → ./skills/
+    skills/app-<nom>/             ← SKILL.md monolithique + agents/openai.yaml
+sync.sh                           ← Installation locale de Cursor, sans génération
+.githooks/pre-commit              ← Bump et parité des versions Claude/Codex
+tests/                           ← Contrôles des paquets et métadonnées d'import
+docs/                            ← Documentation projet
 ```
 
 ## Agents

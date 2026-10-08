@@ -1,6 +1,6 @@
 ---
-name: "jpb-app-conformite-transformation"
-description: "Met une application existante en conformité avec JPB-Platform, à partir de son rapport d'audit : hébergement sous GitHub KeyProd, configuration par variables d'environnement, Dockerfile, healthcheck, migrations, authentification via jpb-gateway, CI. Rédige la demande de raccordement pour l'équipe DevOps, qui joue les gestes côté plateforme. Déclencheurs : « rends cette app déployable », « mets X en conformité », « prépare cette app pour la plateforme », « dockerise cette app pour l'infra », « transforme cette app ». Modifie l'app — pour un simple état des lieux : jpb-app-conformite-audit ; pour une nouvelle app : jpb-app-kickstart."
+name: "app-conformite-transformation"
+description: "Met une application existante en conformité avec JPB-Platform, à partir de son rapport d'audit : hébergement sous GitHub KeyProd, configuration par variables d'environnement, Dockerfile, healthcheck, migrations, authentification via jpb-gateway, CI. Rédige la demande de raccordement pour l'équipe DevOps, qui joue les gestes côté plateforme. Déclencheurs : « rends cette app déployable », « mets X en conformité », « prépare cette app pour la plateforme », « dockerise cette app pour l'infra », « transforme cette app ». Modifie l'app — pour un simple état des lieux : jpb-platform:app-conformite-audit ; pour une nouvelle app : jpb-platform:app-kickstart."
 metadata:
   short-description: "JPB-Platform — mise en conformité d'une application existante"
 ---
@@ -47,7 +47,7 @@ Puis lis **intégralement** :
 ## 1. Partir de l'audit
 
 Réutilise le rapport d'audit de la session ; sinon, lance d'abord
-`$jpb-app-conformite-audit`. Présente le plan de transformation qui en découle et
+`$jpb-platform:app-conformite-audit`. Présente le plan de transformation qui en découle et
 attends l'accord de l'utilisateur avant toute modification.
 
 ## 2. Établir qui joue quoi
@@ -77,7 +77,7 @@ qu'une fois le raccordement confirmé.
 
 ## 5. Clore
 
-- Rejoue `$jpb-app-conformite-audit` : il ne doit plus rester d'écart bloquant.
+- Rejoue `$jpb-platform:app-conformite-audit` : il ne doit plus rester d'écart bloquant.
 - Remets le **journal des écarts** : ce que le référentiel ou les skills n'ont pas su traiter,
   même vide.
 - L'utilisateur envoie rapport et journal à l'équipe DevOps pour le **contre-audit**, exigé

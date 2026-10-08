@@ -1,18 +1,21 @@
 # kp-agents
 
-Catalogue d'agents IA KeyProd distribué sur **Claude Code** (plugin marketplace), **Cursor** (règles locales) et **Codex** (skills locales).
+Catalogue d'agents IA KeyProd distribué sur **Claude Code** et **Codex** (plugins, par la même marketplace git) et **Cursor** (règles locales).
 
 ## Principe
 
 Pas de génération ni de templating : chaque outil a son **dossier dédié, au format qu'il attend directement**. Le contenu de chaque agent est écrit à plat et **dupliqué** dans les 3 dossiers.
 
 ```
-claude/   → plugin Claude Code  → commit/push → distribué via le marketplace git
-codex/    → skills Codex         → ~/.codex/skills/   (via sync.sh)
+claude/   → plugin Claude Code  → .claude-plugin/plugin.json ┐ commit/push → même
+codex/    → plugin Codex        → .codex-plugin/plugin.json  ┘ marketplace git
 cursor/   → règles Cursor (.mdc) → ~/.cursor/rules/   (via sync.sh)
 ```
 
-`sync.sh` n'installe que **Cursor et Codex** sur la machine locale. Claude Code passe par le marketplace git (aucun clone ni `sync.sh` côté consommateur).
+Claude Code et Codex lisent le même catalogue, `.claude-plugin/marketplace.json` : aucun clone
+ni script côté consommateur. Chaque plugin porte deux manifestes, un par outil, à la **même
+version** ; celui de Codex pointe les variantes `codex/`. `sync.sh` n'installe plus que
+**Cursor**.
 
 ## Utilisation
 
@@ -41,21 +44,35 @@ Côté Claude, chaque rôle est une **skill** — pas de subagent. Invoque-la di
 
 Cinq **skills partagées** (`kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`, `kp-validation-criteres`) portent ce qui est commun à plusieurs rôles : les rôles les chargent à la demande via l'outil `Skill`. Ce qui est propre à un seul rôle vit dans ses `references/*.md`.
 
-### Cursor et Codex (via sync.sh)
+### Codex (plugin marketplace)
+
+```bash
+codex plugin marketplace add KeyProd/kp-agents
+codex plugin add kp-agents@kp-agents
+```
+
+Redémarrer Codex. Les skills apparaissent sous `kp-agents:kp-brainstorm`, `kp-agents:kp-product`…
+(`$kp-agents:kp-brainstorm` dans la conversation). Mise à jour :
+
+```bash
+codex plugin marketplace upgrade kp-agents
+```
+
+Les copies laissées dans `~/.codex/skills/` par l'ancien `sync.sh` (avant la 4.2.0) doublent
+les skills du plugin : `./sync.sh --clean` les retire.
+
+### Cursor (via sync.sh)
 
 ```bash
 # Cloner le repo, puis installer en local
 ./sync.sh
 
-# Supprimer les kp-* installés (~/.cursor/rules, ~/.codex/skills)
+# Supprimer les règles kp-* (et les anciennes copies Codex)
 ./sync.sh --clean
 ```
 
-Après sync :
-- **Cursor** : `@kp-brainstorm` via le sélecteur de règles
-- **Codex** : skills auto-détectées (`kp-brainstorm`, `kp-product`, etc. — redémarre Codex pour recharger)
-
-`sync.sh` câble aussi le hook de pré-commit du dépôt (`core.hooksPath .githooks`).
+Après sync : `@kp-brainstorm` via le sélecteur de règles. `sync.sh` câble aussi le hook de
+pré-commit du dépôt (`core.hooksPath .githooks`).
 
 ## Plugin jpb-platform
 
@@ -65,12 +82,14 @@ applications internes de JPB (`app-kickstart`, `app-conformite-audit`,
 `app-conformite-transformation`).
 
 ```
-/plugin install jpb-platform@kp-agents
+/plugin install jpb-platform@kp-agents        # Claude Code
+codex plugin add jpb-platform@kp-agents       # Codex
 ```
 
-Il vit dans [`jpb-platform/`](jpb-platform/) (manifeste, skills Claude, variantes Codex
-`jpb-*`, script de lecture du référentiel) et a **sa propre version** —
-`jpb-platform/.claude-plugin/plugin.json`, tags `jpb-platform-v<X.Y.Z>`. Plugin « mince » : ce
+Il vit dans [`jpb-platform/`](jpb-platform/) (manifestes Claude et Codex, skills Claude,
+variantes Codex, script de lecture du référentiel) et a **sa propre version** —
+`jpb-platform/.claude-plugin/plugin.json` et `.codex-plugin/plugin.json`, tags
+`jpb-platform-v<X.Y.Z>`. Plugin « mince » : ce
 dépôt étant public, ses skills ne portent que la démarche et lisent les règles dans le dépôt
 privé `KeyProd/jpb-platform` (compte membre de KeyProd et `gh` connecté requis). Détails :
 [`jpb-platform/README.md`](jpb-platform/README.md).
@@ -93,16 +112,16 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 ### Publier une mise à jour
 
 1. Éditer l'agent dans les 3 dossiers. **Nouvel agent** → créer `claude/skills/kp-<nom>/SKILL.md` (le manifeste pointe le dossier `./claude/skills/`, rien à déclarer) et `codex/kp-<nom>/agents/openai.yaml`.
-2. **Monter la version** à la main dans `.claude-plugin/plugin.json` (patch / minor / major) + mettre à jour `CHANGELOG.md`.
-3. `./sync.sh` pour installer Cursor + Codex en local.
-4. `git add` + commit (le hook de pré-commit vérifie le bump) + `git tag kp-agents-v<X.Y.Z>` + push.
-5. Les utilisateurs Claude reçoivent la maj au prochain `/plugin marketplace update`.
+2. **Monter la version** à la main dans `.claude-plugin/plugin.json` **et** `.codex-plugin/plugin.json` (même valeur ; patch / minor / major) + mettre à jour `CHANGELOG.md`.
+3. `./sync.sh` pour installer Cursor en local.
+4. `git add` + commit (le hook de pré-commit vérifie le bump et l'égalité des deux versions) + `git tag kp-agents-v<X.Y.Z>` + push.
+5. Les utilisateurs reçoivent la maj par `/plugin marketplace update kp-agents` (Claude Code) ou `codex plugin marketplace upgrade kp-agents` (Codex).
 
-> La version est **unique** (`plugin.json`) et sert de référence pour les 3 cibles. Le bump est **manuel** : aucun mécanisme automatique.
+> La version est **unique** par plugin — portée par ses deux manifestes, Claude et Codex, gardés égaux par le hook — et sert de référence pour les 3 cibles. Le bump est **manuel** : aucun mécanisme automatique.
 
 ## Hook de pré-commit
 
-`.githooks/pre-commit` bloque tout commit qui modifie un skill **sans** bump de la `version` du plugin concerné (comparaison vs `HEAD`) : `claude/skills/`, `codex/`, `cursor/` → `.claude-plugin/plugin.json` ; `jpb-platform/{skills,codex,scripts}/` → `jpb-platform/.claude-plugin/plugin.json`. Les commits docs / `sync.sh` passent librement.
+`.githooks/pre-commit` bloque tout commit qui modifie un skill **sans** bump de la `version` du plugin concerné (comparaison vs `HEAD`) : `claude/skills/`, `codex/`, `cursor/` → `.claude-plugin/plugin.json` ; `jpb-platform/{skills,codex,scripts}/` → `jpb-platform/.claude-plugin/plugin.json`. Il refuse aussi qu'un manifeste Codex (`.codex-plugin/plugin.json`) porte une autre version que le manifeste Claude du même plugin. Les commits docs / `sync.sh` passent librement.
 
 - Activation : automatique via `./sync.sh`, ou manuellement `git config core.hooksPath .githooks`.
 - Contournement ponctuel : `git commit --no-verify`.
@@ -112,14 +131,16 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 ```
 .claude-plugin/
   marketplace.json                Catalogue marketplace (source: ./ → le repo est le plugin)
-  plugin.json                     Manifeste : name, version (manuelle), skills[] → ./claude/skills/
+  plugin.json                     Manifeste Claude : name, version (manuelle), skills[] → ./claude/skills/
+.codex-plugin/
+  plugin.json                     Manifeste Codex : même version, skills → ./codex/
 claude/                           Contenu du plugin Claude Code (commité)
   skills/kp-<role>/               Skill de rôle (10) : SKILL.md + references/ (procédures du rôle)
   skills/kp-<partagée>/           Skill partagée (5) : sources-config, docs-structure, handoff,
                                     doc-templates, validation-criteres
 codex/kp-<nom>/                   SKILL.md + agents/openai.yaml (monolithique, inliné)
 cursor/kp-<nom>.mdc               Règle Cursor
-sync.sh                           Installe cursor/ + codex/ en local (macOS)
+sync.sh                           Installe cursor/ en local (macOS), retire les anciennes copies Codex
 .githooks/pre-commit              Vérifie le bump de version
 docs/                             Documentation projet
 ```

@@ -22,7 +22,7 @@ Les 5 skills partagées : `kp-sources-config`, `kp-docs-structure`, `kp-handoff`
 
 ⚠️ **Asymétrie assumée** : ce découpage skill de rôle + `references/` n'existe que côté `claude/`. `codex/` et `cursor/` n'ont pas de mécanisme de sous-fichiers → leur contenu est **entièrement inliné, monolithique par rôle**.
 
-Modifier un rôle = éditer sa **skill** côté `claude/`, **et** ses équivalents `codex/` / `cursor/`. Pas de source unique, pas de `sync.sh` qui régénère : `sync.sh` se contente d'**installer** Cursor et Codex sur la machine locale.
+Modifier un rôle = éditer sa **skill** côté `claude/`, **et** ses équivalents `codex/` / `cursor/`. Pas de source unique, pas de `sync.sh` qui régénère : `sync.sh` se contente d'**installer** Cursor sur la machine locale.
 
 ## Distribution
 
@@ -31,8 +31,8 @@ Modifier un rôle = éditer sa **skill** côté `claude/`, **et** ses équivalen
   Invocation : `/kp-agents:kp-<role>` pour les rôles ; les skills partagées sont surtout chargées par les rôles via l'outil `Skill`, mais restent invocables directement.
   Claude Code n'est **pas** installé localement par `sync.sh` — il passe par le marketplace git.
 - **Cursor** → règles copiées par `sync.sh` dans `~/.cursor/rules/kp-*.mdc`
-- **Codex** → skills copiées par `sync.sh` dans `~/.codex/skills/kp-*/`
-- **Plugin `jpb-platform`** (second plugin de la marketplace) → dossier `jpb-platform/`, source `./jpb-platform` dans `marketplace.json`, version propre (`jpb-platform/.claude-plugin/plugin.json`, tags `jpb-platform-v<X.Y.Z>`). Skills Claude dans `jpb-platform/skills/` (invocation `/jpb-platform:<nom>`), variantes Codex dans `jpb-platform/codex/jpb-*` (copiées par `sync.sh`), pas de variante Cursor à ce jour. Plugin **mince** : le dépôt étant public, ses skills ne portent que la démarche et lisent les règles dans le dépôt privé `KeyProd/jpb-platform` (`jpb-platform/scripts/jpb-platform-ref.sh`). Une règle de la plateforme se modifie là-bas, pas ici. Pas de préfixe `kp-` : côté Claude, l'espace de noms `jpb-platform:` assure l'unicité ; côté Codex, le préfixe `jpb-`.
+- **Codex** → plugin, par la **même marketplace git** que Claude Code : Codex lit `.claude-plugin/marketplace.json`, puis le manifeste `.codex-plugin/plugin.json` de chaque plugin (prioritaire sur celui de Claude), qui pointe les variantes `codex/`. Installation : `codex plugin marketplace add KeyProd/kp-agents` + `codex plugin add kp-agents@kp-agents`. Invocation : `$kp-agents:kp-<role>`. Depuis la 4.2.0, `sync.sh` ne copie plus rien dans `~/.codex/skills/` ; il y retire les anciennes copies, qui doubleraient les skills du plugin.
+- **Plugin `jpb-platform`** (second plugin de la marketplace) → dossier `jpb-platform/`, source `./jpb-platform` dans `marketplace.json`, version propre (`jpb-platform/.claude-plugin/plugin.json`, tags `jpb-platform-v<X.Y.Z>`). Skills Claude dans `jpb-platform/skills/` (invocation `/jpb-platform:<nom>`), variantes Codex dans `jpb-platform/codex/app-*` (manifeste `jpb-platform/.codex-plugin/plugin.json`, invocation `$jpb-platform:<nom>`), pas de variante Cursor à ce jour. Plugin **mince** : le dépôt étant public, ses skills ne portent que la démarche et lisent les règles dans le dépôt privé `KeyProd/jpb-platform` (`jpb-platform/scripts/jpb-platform-ref.sh`). Une règle de la plateforme se modifie là-bas, pas ici. Pas de préfixe `kp-` : l'espace de noms `jpb-platform:` du plugin assure l'unicité, dans Claude Code comme dans Codex.
 
 ## Structure du projet
 
@@ -54,7 +54,9 @@ codex/               ← Skills Codex (monolithiques par rôle, tout inliné)
     agents/openai.yaml   ← Interface Codex (display_name, default_prompt, policy)
 cursor/              ← Règles Cursor
   kp-<nom>.mdc       ← Règle (frontmatter description + alwaysApply), tout inliné
-sync.sh              ← Installe cursor/ → ~/.cursor/rules et codex/ → ~/.codex/skills (macOS)
+.codex-plugin/
+  plugin.json        ← Manifeste plugin Codex : même name/version que .claude-plugin, skills → ./codex/
+sync.sh              ← Installe cursor/ → ~/.cursor/rules (macOS), retire les anciennes copies Codex
 .githooks/pre-commit ← Vérifie le bump de version quand un skill change
 docs/                ← Documentation projet (vision, architecture, epics, stories)
 .kp-context.yml      ← OPTIONNEL — carte de contexte du projet
@@ -66,7 +68,8 @@ docs/                ← Documentation projet (vision, architecture, epics, stor
 - **Respecter le format propre à chaque cible** (voir « Format par cible » ci-dessous). Ne pas copier-coller un `.mdc` Cursor dans `claude/` ou inversement : les frontmatters diffèrent.
 - **Pas de subagent** : ne jamais recréer `claude/agents/` ni de champ `agents[]` dans `plugin.json`. Un rôle est une skill, point.
 - **La version est unique et manuelle** : `.claude-plugin/plugin.json` → champ `version`. C'est la version de référence pour les 3 cibles. La monter à la main dès qu'un skill change (le hook de pré-commit le rappelle).
-- **`sync.sh` ne génère plus rien** — il copie `cursor/` et `codex/` vers `~/.cursor` / `~/.codex`. Ne pas y remettre de logique de templating ou de bump.
+- **`sync.sh` ne génère plus rien** — il copie `cursor/` vers `~/.cursor` et retire les anciennes copies Codex. Ne pas y remettre de logique de templating ou de bump.
+- **Deux manifestes par plugin, une seule version** : `.claude-plugin/plugin.json` et `.codex-plugin/plugin.json` portent la même `version` (le hook de pré-commit le vérifie). Ne jamais ajouter de champ `skills` pointant `codex/` dans le manifeste Claude, ni l'inverse.
 - Préfixe `kp-` **obligatoire** dans le nom de dossier ET dans le frontmatter `name:` (unicité du skill sur les 3 cibles, pas de collision avec d'autres plugins).
 
 ## Format par cible
@@ -106,7 +109,7 @@ Dans le corps, les renvois prennent la forme `annexe « <nom> »` :
 1. Côté **Claude** : éditer la **skill de rôle** (`claude/skills/kp-<role>/SKILL.md`) et/ou la procédure concernée (`references/<proc>.md`). Garder le `SKILL.md` lisible : une procédure qui grossit part en `references/`. Si elle devient utile à un 2ᵉ rôle, la promouvoir en skill partagée.
 2. Côté **Codex / Cursor** : répliquer le changement dans `codex/kp-<nom>/SKILL.md` et `cursor/kp-<nom>.mdc`, **en inlinant** ce qui est en `references/` côté Claude. Pour un **nouvel** agent Codex : créer aussi `codex/kp-<nom>/agents/openai.yaml`.
 3. **Monter la version** dans `.claude-plugin/plugin.json` (patch pour un correctif, minor pour un ajout d'agent / une feature, major pour une rupture). Mettre à jour `CHANGELOG.md`.
-4. Lancer `./sync.sh` pour installer Cursor + Codex en local (macOS).
+4. Lancer `./sync.sh` pour installer Cursor en local (macOS). Codex se met à jour par `codex plugin marketplace upgrade kp-agents`.
 5. Publier : `git add` + commit (le hook de pré-commit vérifie le bump) + tag `kp-agents-v<X.Y.Z>` + push. Les utilisateurs Claude reçoivent la maj au prochain `/plugin marketplace update`.
 
 **Anti-pattern** : ne **pas** fragmenter un rôle en plusieurs slash commands (`/kp-agents:kp-setup-git`, `/kp-agents:kp-setup-tickets`…). Un rôle reste UNE entité avec UNE persona — la décomposition en `references/` est interne, invisible pour l'utilisateur.
@@ -114,8 +117,8 @@ Dans le corps, les renvois prennent la forme `annexe « <nom> »` :
 ## sync.sh
 
 ```
-./sync.sh            # installe cursor/ → ~/.cursor/rules et codex/ → ~/.codex/skills + câble le hook
-./sync.sh --clean    # supprime les kp-* installés (~/.cursor/rules, ~/.codex/skills) puis sort
+./sync.sh            # installe cursor/ → ~/.cursor/rules, retire les anciennes copies Codex, câble le hook
+./sync.sh --clean    # supprime les règles kp-* et les anciennes copies Codex kp-* / jpb-* puis sort
 ./sync.sh -h         # aide
 ```
 
@@ -123,8 +126,8 @@ Dans le corps, les renvois prennent la forme `annexe « <nom> »` :
 
 ## Versioning & hook de pré-commit
 
-- **Versioning manuel** : aucun bump automatique. La version vit dans `.claude-plugin/plugin.json`.
-- **`.githooks/pre-commit`** : si un commit modifie un skill (`claude/skills/`, `codex/`, `cursor/`) **sans** que `version` ait changé vs `HEAD`, le commit est **bloqué**. Les commits qui ne touchent pas aux skills (docs, `sync.sh`…) passent librement.
+- **Versioning manuel** : aucun bump automatique. La version vit dans `.claude-plugin/plugin.json` et, à l'identique, dans `.codex-plugin/plugin.json`.
+- **`.githooks/pre-commit`** : si un commit modifie un skill (`claude/skills/`, `codex/`, `cursor/`) **sans** que `version` ait changé vs `HEAD`, le commit est **bloqué**. Il bloque aussi un manifeste Codex dont la version diffère de celle du manifeste Claude du même plugin. Les commits qui ne touchent pas aux skills (docs, `sync.sh`…) passent librement.
 - Activation : `git config core.hooksPath .githooks` (fait automatiquement par `sync.sh`).
 - Contournement ponctuel : `git commit --no-verify`.
 
@@ -171,4 +174,4 @@ Convention de nommage : tous les rôles portent le préfixe `kp-` dès le frontm
 
 Skills partagées : `kp-sources-config`, `kp-docs-structure`, `kp-handoff`, `kp-doc-templates`, `kp-validation-criteres`.
 
-Pour Cursor : `@kp-<nom>` via le sélecteur de règles. Pour Codex : skill auto-détectée `kp-<nom>`. (Codex/Cursor restent monolithiques par rôle — les procédures y sont inlinées.)
+Pour Cursor : `@kp-<nom>` via le sélecteur de règles. Pour Codex : `$kp-agents:kp-<nom>` (plugin). (Codex/Cursor restent monolithiques par rôle — les procédures y sont inlinées.)

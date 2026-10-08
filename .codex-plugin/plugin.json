@@ -1,0 +1,41 @@
+{
+  "name": "kp-agents",
+  "version": "4.2.0",
+  "description": "KeyProd agents for the development workflow: kp-brainstorm, kp-product, kp-architect, kp-developer, kp-review, kp-documentation, kp-ux-ui, kp-setup, kp-test, kp-daily",
+  "author": {
+    "name": "KeyProd",
+    "email": "contact@keyprod.com",
+    "url": "https://github.com/KeyProd"
+  },
+  "homepage": "https://github.com/KeyProd/kp-agents",
+  "repository": "https://github.com/KeyProd/kp-agents",
+  "keywords": [
+    "keyprod",
+    "workflow",
+    "brainstorm",
+    "product",
+    "architecture",
+    "developer",
+    "review",
+    "documentation",
+    "ux",
+    "test"
+  ],
+  "skills": "./codex/",
+  "interface": {
+    "displayName": "KeyProd agents",
+    "shortDescription": "Du cadrage à la relecture : brainstorm, produit, architecture, développement, revue",
+    "longDescription": "Les rôles du workflow de développement KeyProd, un par skill : cadrer une idée (kp-brainstorm), la découper en epics et stories (kp-product), concevoir (kp-architect), implémenter (kp-developer), relire (kp-review), documenter (kp-documentation), concevoir l'expérience (kp-ux-ui), tester (kp-test), configurer un projet (kp-setup) et faire son daily (kp-daily).",
+    "developerName": "KeyProd",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Explore cette idée avec moi avant de coder",
+      "Découpe ce besoin en epics et stories",
+      "Implémente cette story"
+    ]
+  }
+}

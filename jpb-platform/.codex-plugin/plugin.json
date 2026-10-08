@@ -1,0 +1,37 @@
+{
+  "name": "jpb-platform",
+  "version": "0.3.0",
+  "description": "JPB-Platform : démarrer une nouvelle application (app-kickstart), auditer (app-conformite-audit) et mettre en conformité (app-conformite-transformation) une application existante. Les skills ne portent que la démarche : les règles sont lues dans le dépôt privé KeyProd/jpb-platform.",
+  "author": {
+    "name": "KeyProd",
+    "email": "contact@keyprod.com",
+    "url": "https://github.com/KeyProd"
+  },
+  "homepage": "https://github.com/KeyProd/kp-agents/tree/main/jpb-platform",
+  "repository": "https://github.com/KeyProd/kp-agents",
+  "keywords": [
+    "jpb-platform",
+    "kubernetes",
+    "conformité",
+    "kickstart",
+    "audit",
+    "déploiement"
+  ],
+  "skills": "./codex/",
+  "interface": {
+    "displayName": "JPB-Platform",
+    "shortDescription": "Démarrer, auditer et mettre en conformité une application JPB-Platform",
+    "longDescription": "Amène une application sur JPB-Platform, la plateforme d'hébergement des applications internes de JPB : app-kickstart pour une nouvelle app (dépôt, règles, garde-fous, demande de raccordement), app-conformite-audit pour l'état des lieux, app-conformite-transformation pour la mise en conformité d'une app existante. Requiert gh connecté à un compte membre de l'organisation GitHub KeyProd.",
+    "developerName": "KeyProd",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Je démarre une nouvelle application pour la plateforme",
+      "Audite cette application",
+      "Rends cette application déployable sur la plateforme"
+    ]
+  }
+}

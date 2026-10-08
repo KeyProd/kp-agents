@@ -8,6 +8,8 @@ set -euo pipefail
 # plugin concerné ait été montée à la main (vs HEAD) :
 #   kp-agents    : claude/skills/, codex/, cursor/ → .claude-plugin/plugin.json
 #   jpb-platform : jpb-platform/{skills,codex,scripts}/ → jpb-platform/.claude-plugin/plugin.json
+# et que le manifeste Codex (.codex-plugin/plugin.json) de chaque plugin porte la
+# même version que son manifeste Claude.
 #
 # Activation : git config core.hooksPath .githooks  (fait par ./sync.sh)
 # Contournement ponctuel : git commit --no-verify
@@ -52,7 +54,22 @@ check_bump() {
     echo -e "${GREEN}✓ pre-commit : $plugin_json — version montée $head_version → $staged_version${NC}"
 }
 
+# check_parity <manifeste Claude> <manifeste Codex>
+# Les deux manifestes d'un même plugin portent la même version (index = ce qui sera commité).
+check_parity() {
+    local claude_v codex_v
+    claude_v="$(read_version ":$1")"; codex_v="$(read_version ":$2")"
+    [[ -z "$codex_v" ]] && return 0   # pas (encore) de manifeste Codex
+    if [[ "$claude_v" != "$codex_v" ]]; then
+        echo -e "${RED}✗ pre-commit : versions divergentes — $1 ($claude_v) ≠ $2 ($codex_v).${NC}" >&2
+        echo -e "  Les deux manifestes d'un plugin portent la même version." >&2
+        return 1
+    fi
+}
+
 status=0
 check_bump ".claude-plugin/plugin.json" '^(claude/skills/|codex/|cursor/)' || status=1
 check_bump "jpb-platform/.claude-plugin/plugin.json" '^jpb-platform/(skills|codex|scripts)/' || status=1
+check_parity ".claude-plugin/plugin.json" ".codex-plugin/plugin.json" || status=1
+check_parity "jpb-platform/.claude-plugin/plugin.json" "jpb-platform/.codex-plugin/plugin.json" || status=1
 exit $status

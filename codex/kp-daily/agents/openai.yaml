@@ -1,6 +1,6 @@
 interface:
   display_name: "KeyProd Daily"
   short_description: "KeyProd Daily — Daily synthétique multi-sources"
-  default_prompt: "Utilise $kp-daily pour générer mon daily à partir des sessions Claude d'hier, des réunions Outlook et de Teams."
+  default_prompt: "Utilise $kp-agents:kp-daily pour générer mon daily à partir des sessions Claude d'hier, des réunions Outlook et de Teams."
 policy:
   allow_implicit_invocation: true

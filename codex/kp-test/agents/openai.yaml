@@ -1,6 +1,6 @@
 interface:
   display_name: "KeyProd Test"
   short_description: "KeyProd Test — Orchestrateur E2E (cas Xray + test + remontée)"
-  default_prompt: "Utilise $kp-test pour garantir la conformité E2E d'un cas : du cas Xray au test vert remonté."
+  default_prompt: "Utilise $kp-agents:kp-test pour garantir la conformité E2E d'un cas : du cas Xray au test vert remonté."
 policy:
   allow_implicit_invocation: true

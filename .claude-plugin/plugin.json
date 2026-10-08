@@ -1,7 +1,7 @@
 {
   "name": "kp-agents",
   "description": "KeyProd agents for the development workflow: kp-brainstorm, kp-product, kp-architect, kp-developer, kp-review, kp-documentation, kp-ux-ui, kp-setup, kp-test, kp-daily",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "author": {
     "name": "KeyProd",
     "email": "contact@keyprod.com"

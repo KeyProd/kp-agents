@@ -2,28 +2,27 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────
-# sync.sh — Installe les skills KeyProd sur cette machine (macOS).
+# sync.sh — Installe les règles Cursor KeyProd sur cette machine (macOS).
 #
 # Plus aucune génération : les 3 dossiers plats sont la source de
 # vérité, déjà au format attendu par chaque outil.
 #
-#   claude/   → plugin Claude Code, distribué via le marketplace git
-#               (PAS d'install locale ici — voir /plugin marketplace)
+#   claude/   → plugin Claude Code, distribué par la marketplace git
+#               (/plugin marketplace add KeyProd/kp-agents)
+#   codex/    → plugin Codex, distribué par la MÊME marketplace git
+#               (codex plugin marketplace add KeyProd/kp-agents) — plus
+#               copié par ce script depuis la 4.2.0 ; ce script retire
+#               seulement les anciennes copies de ~/.codex/skills/
 #   cursor/   → règles Cursor (.mdc)   → copiées dans ~/.cursor/rules/
-#   codex/    → skills Codex           → copiées dans ~/.codex/skills/
-#   jpb-platform/codex/ → skills Codex du plugin jpb-platform (jpb-*)
-#                         → copiées dans ~/.codex/skills/
 #
-# Ce script se contente de COPIER cursor/ et codex/ vers leurs
-# emplacements locaux, et de câbler le hook de pré-commit du dépôt.
+# Ce script COPIE cursor/ vers ~/.cursor/rules/, nettoie les anciennes
+# copies Codex, et câble le hook de pré-commit du dépôt.
 # Aucun bump de version : la version (claude/.claude-plugin/plugin.json)
 # se monte à la main.
 # ─────────────────────────────────────────────────────────────
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 CURSOR_SRC="$REPO_DIR/cursor"
-CODEX_SRC="$REPO_DIR/codex"
-JPB_CODEX_SRC="$REPO_DIR/jpb-platform/codex"
 
 CURSOR_DST="$HOME/.cursor/rules"
 CODEX_DST="$HOME/.codex/skills"
@@ -41,18 +40,21 @@ usage() {
     cat <<'HELP'
 Usage: ./sync.sh [--clean]
 
-Installe les skills KeyProd sur cette machine :
+Installe les règles Cursor KeyProd sur cette machine :
   - cursor/*.mdc   → ~/.cursor/rules/
-  - codex/kp-*/    → ~/.codex/skills/
-  - jpb-platform/codex/jpb-*/ → ~/.codex/skills/
+  - retire les anciennes copies Codex (~/.codex/skills/kp-* et jpb-*)
   - câble le hook de pré-commit du dépôt (core.hooksPath .githooks)
 
-Claude Code n'est PAS installé localement : il passe par le marketplace
-  /plugin marketplace add KeyProd/kp-agents
-  /plugin install kp-agents@kp-agents
+Claude Code et Codex passent par la marketplace git, sans ce script :
+  Claude Code : /plugin marketplace add KeyProd/kp-agents
+                /plugin install kp-agents@kp-agents
+                /plugin install jpb-platform@kp-agents
+  Codex       : codex plugin marketplace add KeyProd/kp-agents
+                codex plugin add kp-agents@kp-agents
+                codex plugin add jpb-platform@kp-agents
 
 Options:
-  --clean   Supprime les artefacts kp-* et jpb-* installés (~/.cursor/rules, ~/.codex/skills) puis sort
+  --clean   Supprime les règles Cursor kp-* et les anciennes copies Codex kp-* / jpb-* puis sort
   -h, --help
 HELP
 }
@@ -76,7 +78,7 @@ if $CLEAN_ONLY; then
     log "Suppression des skills KeyProd installés…"
     clean_targets
     ok "Cursor  : ~/.cursor/rules/kp-*.mdc supprimés"
-    ok "Codex   : ~/.codex/skills/kp-* et jpb-* supprimés"
+    ok "Codex   : anciennes copies ~/.codex/skills/kp-* et jpb-* supprimées"
     exit 0
 fi
 
@@ -102,26 +104,21 @@ for f in "$CURSOR_SRC"/kp-*.mdc; do
     cursor_count=$((cursor_count + 1))
 done
 
-# ── Install Codex ──
-log "Codex → $CODEX_DST"
-mkdir -p "$CODEX_DST"
-rm -rf "$CODEX_DST"/kp-* "$CODEX_DST"/jpb-* 2>/dev/null || true
-codex_count=0
-for d in "$CODEX_SRC"/kp-*/ "$JPB_CODEX_SRC"/jpb-*/; do
-    [[ -d "$d" ]] || continue
-    name="$(basename "$d")"
-    cp -R "$d" "$CODEX_DST/$name"
-    rm -f "$CODEX_DST/$name/.DS_Store" 2>/dev/null || true
-    ok "skill $name"
-    codex_count=$((codex_count + 1))
-done
+# ── Anciennes copies Codex (avant la 4.2.0, Codex passait par ce script) ──
+# Elles doubleraient les skills du plugin Codex : on les retire.
+legacy="$(ls -d "$CODEX_DST"/kp-* "$CODEX_DST"/jpb-* 2>/dev/null || true)"
+if [[ -n "$legacy" ]]; then
+    log "Codex : anciennes copies retirées de $CODEX_DST (remplacées par le plugin)"
+    rm -rf "$CODEX_DST"/kp-* "$CODEX_DST"/jpb-*
+    echo "$legacy" | sed 's|.*/|    - |'
+fi
 
 echo
-echo -e "${GREEN}━━━ Terminé : $cursor_count règles Cursor + $codex_count skills Codex installées ━━━${NC}"
+echo -e "${GREEN}━━━ Terminé : $cursor_count règles Cursor installées ━━━${NC}"
 echo
-echo "Claude Code : plugin via le marketplace git"
-echo "              /plugin marketplace add KeyProd/kp-agents"
-echo "              /plugin install kp-agents@kp-agents"
-echo "              /plugin install jpb-platform@kp-agents"
 echo "Cursor      : @kp-brainstorm (via le sélecteur de règles)"
-echo "Codex       : skills auto-détectées (redémarre Codex pour les recharger) — jpb-* : gh connecté à KeyProd requis"
+echo "Claude Code : /plugin marketplace add KeyProd/kp-agents"
+echo "              /plugin install kp-agents@kp-agents && /plugin install jpb-platform@kp-agents"
+echo "Codex       : codex plugin marketplace add KeyProd/kp-agents"
+echo "              codex plugin add kp-agents@kp-agents && codex plugin add jpb-platform@kp-agents"
+echo "              (jpb-platform : gh connecté à un compte membre de KeyProd)"

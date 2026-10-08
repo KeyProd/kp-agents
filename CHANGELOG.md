@@ -8,6 +8,45 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [jpb-platform-v0.2.0] — app-kickstart : poste vérifié, dépôt protégé dès le départ
+
+Retours des premiers essais réels d'`app-kickstart` (2026-10-07 et 2026-10-08). Les règles correspondantes
+sont dans le dépôt jpb-platform (`standards/gabarit-app/`, BR-13 de
+`protection-branches.md`, point 14 du référentiel) : ce plugin ne porte que la démarche.
+
+### Ajouté
+
+- **`scripts/verifier-poste.sh`** — un tableau ✅ / ⚠️ / ❌ montré à l'utilisateur : version
+  du plugin, git, gh, compte GitHub, appartenance à KeyProd, double authentification (non
+  lisible depuis le poste : ⚠️, jamais un faux ✅), référentiel lu (branche et commit). Un ❌
+  arrête la skill avec le geste à faire et la personne à contacter.
+- **Garde-fous du dépôt dès l'amorçage** — hooks git (pas de commit sur `develop` ni `main`,
+  pas de secret ni de manifest Kubernetes, pas de push vers `develop` ni `main`), hooks
+  Claude Code (`core.hooksPath` activé à chaque session, refus de `--no-verify`, `kubectl`,
+  `helm`, lecture des `.env`), bloc `.gitignore` ; remis à jour à chaque appel.
+- **Travail par branches** `feat/<sujet>` et `fix/<sujet>`, retour par PR vers `develop`,
+  expliqué à l'utilisateur dès l'amorçage.
+- **Caller CI préparé dès l'amorçage** sur `feat/ci-plateforme`, dans une PR en brouillon
+  vers `develop`, fusionnée une fois le raccordement confirmé par DevOps.
+- **`develop` et `main` dès la création du dépôt**, sur le commit d'amorçage : il ne porte
+  aucun workflow, GitHub n'y lance aucune CI (BR-02 révisé). Un dépôt créé avec la 0.1.0
+  reçoit `main` sur le premier commit de `develop`, si celui-ci n'a pas de workflow.
+- **Modèle `apps-poc/hello-a`** remis en conformité côté jpb-platform et cité par la skill
+  quand la technologie est choisie (`Dockerfile`, `.env.example`, `qa.yml`).
+- **Nom de travail** renommable (`gh repo rename`) jusqu'à l'envoi de la demande de
+  raccordement, enregistrée dans `docs/raccordement.md`.
+
+### Modifié
+
+- `app-kickstart` : le dépôt est créé **avant** le brainstorm, même vierge de code ; le
+  cadrage s'écrit dedans, sur une branche.
+- `app-conformite-audit` : ne fige plus le nombre de points, il déroule ceux du référentiel
+  (14 depuis l'ajout des garde-fous).
+- Variantes Codex alignées (`jpb-app-kickstart`, `jpb-app-conformite-audit`) ; Codex n'ayant
+  pas de hook de session, la skill y vérifie `core.hooksPath` à chaque appel.
+
+---
+
 ## [jpb-platform-v0.1.0] — Nouveau plugin jpb-platform
 
 Second plugin de la marketplace, indépendant de `kp-agents` (sa propre version, ses propres tags).

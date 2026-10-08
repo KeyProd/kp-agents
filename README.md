@@ -12,8 +12,10 @@ codex/    → plugin Codex        → .codex-plugin/plugin.json  ┘ marketplace
 cursor/   → règles Cursor (.mdc) → ~/.cursor/rules/   (via sync.sh)
 ```
 
-Claude Code et Codex lisent le même catalogue, `.claude-plugin/marketplace.json` : aucun clone
-ni script côté consommateur. Chaque plugin porte deux manifestes, un par outil, à la **même
+La même marketplace git porte deux catalogues écrits à plat :
+`.claude-plugin/marketplace.json` pour Claude Code et `.agents/plugins/marketplace.json`
+pour Codex. Tous deux exposent `kp-agents` (`./`) et `jpb-platform` (`./jpb-platform`). Aucun
+clone ni script côté consommateur. Chaque plugin porte deux manifestes, un par outil, à la **même
 version** ; celui de Codex pointe les variantes `codex/`. `sync.sh` n'installe plus que
 **Cursor**.
 
@@ -49,6 +51,7 @@ Cinq **skills partagées** (`kp-sources-config`, `kp-docs-structure`, `kp-handof
 ```bash
 codex plugin marketplace add KeyProd/kp-agents
 codex plugin add kp-agents@kp-agents
+codex plugin add jpb-platform@kp-agents
 ```
 
 Redémarrer Codex. Les skills apparaissent sous `kp-agents:kp-brainstorm`, `kp-agents:kp-product`…
@@ -56,6 +59,7 @@ Redémarrer Codex. Les skills apparaissent sous `kp-agents:kp-brainstorm`, `kp-a
 
 ```bash
 codex plugin marketplace upgrade kp-agents
+codex plugin list --marketplace kp-agents --available
 ```
 
 Les copies laissées dans `~/.codex/skills/` par l'ancien `sync.sh` (avant la 4.2.0) doublent
@@ -130,8 +134,10 @@ Le préfixe `kp-` est obligatoire dans le nom de fichier ET dans le frontmatter 
 
 ```
 .claude-plugin/
-  marketplace.json                Catalogue marketplace (source: ./ → le repo est le plugin)
+  marketplace.json                Catalogue Claude : kp-agents (./), jpb-platform (./jpb-platform)
   plugin.json                     Manifeste Claude : name, version (manuelle), skills[] → ./claude/skills/
+.agents/plugins/
+  marketplace.json                Catalogue Codex natif : mêmes plugins et chemins, politiques explicites
 .codex-plugin/
   plugin.json                     Manifeste Codex : même version, skills → ./codex/
 claude/                           Contenu du plugin Claude Code (commité)

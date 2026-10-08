@@ -17,7 +17,7 @@ set -euo pipefail
 #
 # Ce script COPIE cursor/ vers ~/.cursor/rules/, nettoie les anciennes
 # copies Codex, et câble le hook de pré-commit du dépôt.
-# Aucun bump de version : la version (claude/.claude-plugin/plugin.json)
+# Aucun bump de version : la version (.claude-plugin/plugin.json)
 # se monte à la main.
 # ─────────────────────────────────────────────────────────────
 

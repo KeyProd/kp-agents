@@ -1,0 +1,32 @@
+{
+  "name": "kp-agents",
+  "interface": {
+    "displayName": "KeyProd"
+  },
+  "plugins": [
+    {
+      "name": "kp-agents",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "jpb-platform",
+      "source": {
+        "source": "local",
+        "path": "./jpb-platform"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

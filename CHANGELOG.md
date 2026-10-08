@@ -8,6 +8,23 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v4.2.1] et [jpb-platform-v0.4.1] — Catalogue Codex natif — 2026-10-08
+
+### Corrigé
+
+- Ajout de `.agents/plugins/marketplace.json` : les deux plugins sont déclarés dans le
+  catalogue natif Codex, avec leurs chemins, politiques d'installation et catégorie.
+  La découverte ne dépend plus du seul catalogue Claude de compatibilité.
+- Conservation des plugins à plat : `kp-agents` à la racine, `jpb-platform` dans son
+  dossier ; manifestes Claude et Codex à la même version pour chacun.
+- Instructions d'installation corrigées : même dépôt git, un catalogue natif par outil.
+  Retrait des affirmations selon lesquelles Codex doit lire le seul catalogue Claude.
+
+Les modifications existantes ont été intégrées dans `main`. Aucun contenu d'agent,
+référence, règle Cursor ou script de plateforme n'est modifié par cette correction.
+
+---
+
 ## [jpb-platform-v0.4.0] — Modes de communication
 
 Demande de Vincent (2026-10-08) : la session s'adapte à son utilisateur. La règle vit dans

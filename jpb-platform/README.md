@@ -48,7 +48,8 @@ Application de bureau Claude (onglet Code) : bouton **+** à côté de la zone d
 **Plugins** → **Ajouter un plugin**, marketplace `KeyProd/kp-agents`, plugin `jpb-platform`.
 Les deux partagent la même installation.
 
-Codex, en terminal — la même marketplace, lue par Codex :
+Codex, en terminal — la même marketplace git, avec son catalogue natif
+`.agents/plugins/marketplace.json` à la racine du dépôt :
 
 ```bash
 codex plugin marketplace add KeyProd/kp-agents

@@ -21,12 +21,14 @@ Modifier un rôle = éditer sa skill (`claude/`) **et** ses équivalents `codex/
 
 - **Claude Code** → plugin marketplace (`claude/`, commité dans git). Le catalogue racine `.claude-plugin/marketplace.json` pointe sur `./` (le repo entier est le plugin). Installation : `/plugin marketplace add KeyProd/kp-agents` + `/plugin install kp-agents@kp-agents`. Invocation : `/kp-agents:<nom>`
 - **Cursor** → règles copiées par `sync.sh` dans `~/.cursor/rules/kp-*.mdc`
-- **Codex** → plugin, par la **même marketplace git** que Claude Code (`.claude-plugin/marketplace.json`) ; le manifeste `.codex-plugin/plugin.json` de chaque plugin pointe les variantes `codex/`. Installation : `codex plugin marketplace add KeyProd/kp-agents` + `codex plugin add kp-agents@kp-agents`. Invocation : `$kp-agents:kp-<nom>`.
+- **Codex** → plugin, par la **même marketplace git** que Claude Code, avec le catalogue natif `.agents/plugins/marketplace.json` ; le manifeste `.codex-plugin/plugin.json` de chaque plugin pointe les variantes `codex/`. Installation : `codex plugin marketplace add KeyProd/kp-agents` + `codex plugin add kp-agents@kp-agents`. Invocation : `$kp-agents:kp-<nom>`.
 - **Plugin `jpb-platform`** (second plugin de la marketplace) → dossier `jpb-platform/`, source `./jpb-platform` dans `marketplace.json`, version propre (`jpb-platform/.claude-plugin/plugin.json`, tags `jpb-platform-v<X.Y.Z>`). Skills Claude dans `jpb-platform/skills/` (invocation `/jpb-platform:<nom>`), variantes Codex dans `jpb-platform/codex/app-*` (manifeste `jpb-platform/.codex-plugin/plugin.json`, invocation `$jpb-platform:<nom>`), pas de variante Cursor à ce jour. Plugin **mince** : le dépôt étant public, ses skills ne portent que la démarche et lisent les règles dans le dépôt privé `KeyProd/jpb-platform` (`jpb-platform/scripts/jpb-platform-ref.sh`). Une règle de la plateforme se modifie là-bas, pas ici. Pas de préfixe `kp-` : l'espace de noms `jpb-platform:` du plugin assure l'unicité, dans Claude Code comme dans Codex.
 
 ## Structure du projet
 
 ```
+.agents/plugins/
+  marketplace.json   ← Catalogue Codex natif : kp-agents (./), jpb-platform (./jpb-platform)
 .claude-plugin/
   marketplace.json   ← Catalogue marketplace (source: ./ → le repo entier est le plugin)
   plugin.json        ← Manifeste plugin : name, version (manuelle), skills[] → ./claude/skills/

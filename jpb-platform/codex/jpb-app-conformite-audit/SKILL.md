@@ -52,7 +52,7 @@ implémentation de référence.
 - **Lecture seule absolue** : aucune écriture dans le dépôt, aucun réglage de dépôt, aucun
   force-push, aucune commande qui modifie un cluster ou un service.
 
-## 2. Dérouler les 13 points
+## 2. Dérouler les points du référentiel
 
 Un verdict ✅ / ⚠️ / ❌ par point, chacun avec sa preuve : fichier et ligne, ou sortie de
 commande. Une vérification impossible faute de droits ou d'outil (`kubectl`, administration
@@ -62,7 +62,7 @@ avoir sa branche `main` protégée.
 
 ## 3. Rendre le rapport
 
-Au format « Sortie attendue » du référentiel : tableau des 13 points, écarts classés
+Au format « Sortie attendue » du référentiel : tableau de tous ses points, écarts classés
 (bloquant / important / cosmétique), effort estimé (S/M/L), points « non vérifié (droits) » à
 part, recommandation. Termine par trois lignes en clair : les trois premières choses à faire.
 

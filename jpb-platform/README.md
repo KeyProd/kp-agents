@@ -5,8 +5,8 @@ applications internes de JPB.
 
 | Skill (Claude Code) | Skill (Codex) | Quand |
 |---|---|---|
-| `/jpb-platform:app-kickstart` | `$jpb-app-kickstart` | **Nouvelle app** : à lancer dès la première session. Pose les règles, propose un brainstorm, crée le dépôt `KeyProd/<app>`, rédige la demande de raccordement, fait le point de conformité au fil des décisions. Ré-invocable. |
-| `/jpb-platform:app-conformite-audit` | `$jpb-app-conformite-audit` | **État des lieux** d'une app, en lecture seule : 13 points de contrôle. Joué par le créateur, rejoué par l'équipe DevOps (contre-audit) avant la PROD. |
+| `/jpb-platform:app-kickstart` | `$jpb-app-kickstart` | **Nouvelle app** : à lancer dès la première session. Vérifie le poste et les accès, crée tout de suite le dépôt `KeyProd/<app>` avec ses règles et ses garde-fous (hooks git et Claude Code, travail par branches `feat/` et `fix/`), prépare le caller CI dans une PR en brouillon, propose un brainstorm, rédige la demande de raccordement, fait le point de conformité au fil des décisions. Ré-invocable. |
+| `/jpb-platform:app-conformite-audit` | `$jpb-app-conformite-audit` | **État des lieux** d'une app, en lecture seule, sur tous les points de contrôle du référentiel. Joué par le créateur, rejoué par l'équipe DevOps (contre-audit) avant la PROD. |
 | `/jpb-platform:app-conformite-transformation` | `$jpb-app-conformite-transformation` | **App existante** : mise en conformité écart par écart, à partir de l'audit. |
 
 ## Un plugin « mince »
@@ -48,3 +48,4 @@ Codex : `./sync.sh` depuis un clone de kp-agents copie `jpb-platform/codex/jpb-*
 - Référentiel de conformité : `docs/features/plateforme-vxrail/standards/conformite-app.md`
 - Procédure : `docs/features/plateforme-vxrail/runbooks/mise-en-conformite-app.md`
 - Règles inscrites dans une nouvelle app : `docs/features/plateforme-vxrail/standards/section-claude-app.md`
+- Garde-fous et caller CI d'une app : `docs/features/plateforme-vxrail/standards/gabarit-app/`

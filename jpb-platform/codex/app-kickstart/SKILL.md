@@ -1,6 +1,6 @@
 ---
-name: "jpb-app-kickstart"
-description: "Point d'entrée d'une NOUVELLE application destinée à JPB-Platform (plateforme d'hébergement des applications internes de JPB). À lancer dès la première session, avant tout brainstorm ou code : vérifie le poste et les accès (outils, compte GitHub, organisation KeyProd), charge les règles de la plateforme, crée tout de suite le dépôt KeyProd/<app>, branches develop et main comprises, avec ses règles et ses garde-fous (CLAUDE.md, AGENTS.md, hooks git et Claude Code, .gitignore), installe le travail par branches feat/ et fix/ avec PR vers develop, propose un brainstorm si le besoin n'est pas cadré, rédige la demande de raccordement pour l'équipe DevOps, puis fait le point de conformité à chaque décision structurante (technologie, connexion des utilisateurs, données, première livraison). Ré-invocable : reprend là où en est le projet et remet les garde-fous à jour. Déclencheurs : « je démarre une nouvelle app », « nouvelle application pour la plateforme », « kickstart », « créer une app JPB-Platform », « où en est la conformité de mon app », « qu'est-ce qui manque avant de livrer ». Pour une application qui existe déjà : jpb-app-conformite-audit puis jpb-app-conformite-transformation."
+name: "app-kickstart"
+description: "Point d'entrée d'une NOUVELLE application destinée à JPB-Platform (plateforme d'hébergement des applications internes de JPB). À lancer dès la première session, avant tout brainstorm ou code : vérifie le poste et les accès (outils, compte GitHub, organisation KeyProd), charge les règles de la plateforme, crée tout de suite le dépôt KeyProd/<app>, branches develop et main comprises, avec ses règles et ses garde-fous (CLAUDE.md, AGENTS.md, hooks git et Claude Code, .gitignore), installe le travail par branches feat/ et fix/ avec PR vers develop, propose un brainstorm si le besoin n'est pas cadré, rédige la demande de raccordement pour l'équipe DevOps, puis fait le point de conformité à chaque décision structurante (technologie, connexion des utilisateurs, données, première livraison). Ré-invocable : reprend là où en est le projet et remet les garde-fous à jour. Déclencheurs : « je démarre une nouvelle app », « nouvelle application pour la plateforme », « kickstart », « créer une app JPB-Platform », « où en est la conformité de mon app », « qu'est-ce qui manque avant de livrer ». Pour une application qui existe déjà : jpb-platform:app-conformite-audit puis jpb-platform:app-conformite-transformation."
 metadata:
   short-description: "JPB-Platform — démarrer une nouvelle application"
 ---
@@ -29,7 +29,6 @@ echo "gh|$(gh --version 2>&1 | head -1)"
 echo "Compte GitHub|$(gh api user --jq .login 2>&1)"
 echo "Organisation KeyProd|$(gh api user/memberships/orgs/KeyProd --jq '.state + " " + .role' 2>&1)"
 echo "Double authentification (2FA)|$(gh api user --jq .two_factor_authentication 2>&1)"
-echo "Skills kp-agents|$(ls -d ~/.codex/skills/kp-brainstorm 2>&1)"
 if [ -n "${JPB_PLATFORM_DIR:-}" ]; then
   JPB="$JPB_PLATFORM_DIR"
 else
@@ -54,7 +53,8 @@ appels suivants, une ligne suffit si tout est ✅. Lecture :
 | Compte GitHub | un identifiant | erreur : `gh auth login` |
 | Organisation KeyProd | `active …` | `pending` : accepter l'invitation (https://github.com/orgs/KeyProd/invitation) ; erreur : demander l'invitation à l'équipe DevOps |
 | Double authentification | `true` | `false` : l'activer (github.com → Settings → Password and authentication) ; vide ou `null` : ⚠️ non vérifiable depuis le poste (GitHub ne l'expose pas au jeton de gh), la rappeler sans bloquer |
-| Skills kp-agents | le dossier existe | absent : `./sync.sh` depuis un clone de `KeyProd/kp-agents` |
+| Plugin jpb-platform | sa version, lue dans le chemin de ce `SKILL.md` (`…/jpb-platform/<version>/codex/app-kickstart/`) | chemin sans version (copie hors plugin) : ⚠️, installer le plugin — `codex plugin marketplace add KeyProd/kp-agents` puis `codex plugin add jpb-platform@kp-agents` |
+| Plugin kp-agents | `kp-agents:kp-brainstorm` figure parmi tes skills | absent : `codex plugin add kp-agents@kp-agents` |
 | Référentiel | un chemin, une branche, un commit | erreur d'accès : voir « Organisation KeyProd » |
 
 - Un **❌** : explique le geste indiqué, dis qui contacter (équipe DevOps pour l'organisation
@@ -230,7 +230,7 @@ Codex, l'utilisateur dans un terminal.
 
 ## 4. Cadrer le besoin — s'il ne l'est pas
 
-Sur une branche `feat/cadrage`, recommande `$kp-brainstorm` (skills kp-agents)
+Sur une branche `feat/cadrage`, recommande `$kp-agents:kp-brainstorm` (plugin kp-agents)
 avant d'aller plus loin. Les règles de la plateforme sont déjà dans la conversation et dans
 `AGENTS.md` : le brainstorm en tiendra compte. Rappelle les trois qui pèsent sur le cadrage :
 
@@ -286,7 +286,7 @@ pas pour autant : c'est le pense-bête de la première livraison.
 - **Livrer en DEV** : une fois l'app raccordée et la PR du caller CI fusionnée, chaque PR
   fusionnée sur `develop` est une livraison ; l'app est en ligne quelques minutes plus tard, son état se suit dans jpb-gateway (*Administration →
   l'app*).
-- **Contre-audit** : dès que le code est sur GitHub, lancer `$jpb-app-conformite-audit`
+- **Contre-audit** : dès que le code est sur GitHub, lancer `$jpb-platform:app-conformite-audit`
   puis envoyer le rapport et le journal des écarts à l'équipe DevOps. Il se déroule en
   parallèle de la DEV et il est exigé avant la PROD.
 

@@ -1,6 +1,6 @@
 interface:
   display_name: "KeyProd Setup"
   short_description: "KeyProd Setup — Configurer les sources du projet"
-  default_prompt: "Utilise $kp-setup pour configurer les sources du projet."
+  default_prompt: "Utilise $kp-agents:kp-setup pour configurer les sources du projet."
 policy:
   allow_implicit_invocation: true

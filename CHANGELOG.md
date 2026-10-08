@@ -8,6 +8,45 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [kp-agents-v4.2.0] et [jpb-platform-v0.3.0] — Codex par la marketplace, sans script
+
+Les deux plugins s'installent dans Codex comme dans Claude Code, par la même marketplace git.
+Codex lit `.claude-plugin/marketplace.json` ; chaque plugin porte désormais un manifeste
+Codex, prioritaire sur celui de Claude, qui pointe ses variantes Codex.
+
+### Ajouté
+
+- `.codex-plugin/plugin.json` (kp-agents, `skills` → `./codex/`) et
+  `jpb-platform/.codex-plugin/plugin.json` (`skills` → `./codex/`), à la même version que les
+  manifestes Claude.
+- Installation Codex :
+  `codex plugin marketplace add KeyProd/kp-agents` puis
+  `codex plugin add kp-agents@kp-agents` / `codex plugin add jpb-platform@kp-agents` ;
+  mise à jour : `codex plugin marketplace upgrade kp-agents`.
+- Hook de pré-commit : refuse qu'un manifeste Codex porte une autre version que le manifeste
+  Claude du même plugin.
+
+### Modifié
+
+- Variantes Codex de jpb-platform renommées `jpb-app-*` → `app-*` : dans Codex, le plugin
+  préfixe ses skills, d'où `jpb-platform:app-kickstart`, le même nom que dans Claude Code.
+  Renvois entre skills en `$jpb-platform:app-…` et `$kp-agents:kp-…`.
+- `jpb-platform:app-kickstart` (Codex) : la version du plugin se lit dans le chemin du
+  `SKILL.md` installé, et la présence de kp-agents dans la liste des skills.
+- `sync.sh` n'installe plus que Cursor ; il retire les anciennes copies `kp-*` / `jpb-*` de
+  `~/.codex/skills/`, qui doubleraient les skills du plugin.
+- README, CLAUDE.md, AGENTS.md, README du plugin jpb-platform : installation Codex.
+
+### Vérifié
+
+Dans un `CODEX_HOME` jetable : marketplace ajoutée, plugins installés, skills vues par le
+modèle (`codex debug prompt-input`) — `jpb-platform:app-*` et `kp-agents:kp-*`, toutes
+depuis `codex/`. Dans une configuration Claude Code jetable : jpb-platform charge toujours
+ses skills de `skills/`. `sync.sh` dans un `HOME` jetable : anciennes copies retirées,
+`.system` et skills tierces intactes.
+
+---
+
 ## [jpb-platform-v0.2.0] — app-kickstart : poste vérifié, dépôt protégé dès le départ
 
 Retours des premiers essais réels d'`app-kickstart` (2026-10-07 et 2026-10-08). Les règles correspondantes

@@ -13,7 +13,7 @@ kp-agents est un système de distribution multi-cibles d'agents IA. Une source u
 
 - **Claude Code** : marketplace installable via URL git (format plugin natif)
 - **Cursor** : règles `.mdc` installées dans `~/.cursor/rules/`
-- **Codex** : skills `SKILL.md` installées dans `~/.codex/skills/`
+- **Codex** : depuis la 4.2.0, plugin installé par la même marketplace git que Claude Code (`.codex-plugin/plugin.json` → `codex/`) ; auparavant, skills copiées par `sync.sh` dans `~/.codex/skills/`
 
 La marketplace Claude expose **un plugin** :
 - `kp-agents` — 7 agents génériques (brainstorm, product, architect, developer, review, documentation, ux-ui)

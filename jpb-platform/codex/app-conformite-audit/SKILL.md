@@ -1,6 +1,6 @@
 ---
-name: "jpb-app-conformite-audit"
-description: "Audite une application (dépôt local ou distant) contre le référentiel de conformité de JPB-Platform et produit un rapport d'écarts avec l'effort estimé. Joué par le créateur de l'app pour se mettre en conformité, puis rejoué par l'équipe DevOps (contre-audit) avant toute mise en PROD. Déclencheurs : « audite cette app », « est-ce que cette app est conforme », « qu'est-ce qui manque pour déployer X sur la plateforme », « check conformité », « contre-audit ». Lecture seule — ne modifie rien (pour corriger : jpb-app-conformite-transformation ; pour une nouvelle app : jpb-app-kickstart)."
+name: "app-conformite-audit"
+description: "Audite une application (dépôt local ou distant) contre le référentiel de conformité de JPB-Platform et produit un rapport d'écarts avec l'effort estimé. Joué par le créateur de l'app pour se mettre en conformité, puis rejoué par l'équipe DevOps (contre-audit) avant toute mise en PROD. Déclencheurs : « audite cette app », « est-ce que cette app est conforme », « qu'est-ce qui manque pour déployer X sur la plateforme », « check conformité », « contre-audit ». Lecture seule — ne modifie rien (pour corriger : jpb-platform:app-conformite-transformation ; pour une nouvelle app : jpb-platform:app-kickstart)."
 metadata:
   short-description: "JPB-Platform — audit de conformité d'une application"
 ---
@@ -70,8 +70,8 @@ Joins le **journal des écarts** : ce que le référentiel ou les skills n'ont p
 même vide. Le rapport reste dans la conversation ; ne l'écris dans un fichier que si
 l'utilisateur le demande.
 
-- **Mode créateur** : s'il reste des écarts, propose `$jpb-app-conformite-transformation`
-  (app existante) ou `$jpb-app-kickstart` (nouvelle app). Sinon, l'utilisateur envoie
+- **Mode créateur** : s'il reste des écarts, propose `$jpb-platform:app-conformite-transformation`
+  (app existante) ou `$jpb-platform:app-kickstart` (nouvelle app). Sinon, l'utilisateur envoie
   rapport et journal à l'équipe DevOps : c'est le contre-audit, exigé avant la PROD.
 - **Mode contre-audit** : compare point par point au rapport du créateur et liste (a) les
   écarts confirmés, (b) les écarts que le créateur n'a pas vus — à verser au référentiel, pour

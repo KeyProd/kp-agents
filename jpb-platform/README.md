@@ -5,9 +5,9 @@ applications internes de JPB.
 
 | Skill (Claude Code) | Skill (Codex) | Quand |
 |---|---|---|
-| `/jpb-platform:app-kickstart` | `$jpb-app-kickstart` | **Nouvelle app** : à lancer dès la première session. Vérifie le poste et les accès, crée tout de suite le dépôt `KeyProd/<app>` avec ses règles et ses garde-fous (hooks git et Claude Code, travail par branches `feat/` et `fix/`), prépare le caller CI dans une PR en brouillon, propose un brainstorm, rédige la demande de raccordement, fait le point de conformité au fil des décisions. Ré-invocable. |
-| `/jpb-platform:app-conformite-audit` | `$jpb-app-conformite-audit` | **État des lieux** d'une app, en lecture seule, sur tous les points de contrôle du référentiel. Joué par le créateur, rejoué par l'équipe DevOps (contre-audit) avant la PROD. |
-| `/jpb-platform:app-conformite-transformation` | `$jpb-app-conformite-transformation` | **App existante** : mise en conformité écart par écart, à partir de l'audit. |
+| `/jpb-platform:app-kickstart` | `$jpb-platform:app-kickstart` | **Nouvelle app** : à lancer dès la première session. Vérifie le poste et les accès, crée tout de suite le dépôt `KeyProd/<app>` avec ses règles et ses garde-fous (hooks git et Claude Code, travail par branches `feat/` et `fix/`), prépare le caller CI dans une PR en brouillon, propose un brainstorm, rédige la demande de raccordement, fait le point de conformité au fil des décisions. Ré-invocable. |
+| `/jpb-platform:app-conformite-audit` | `$jpb-platform:app-conformite-audit` | **État des lieux** d'une app, en lecture seule, sur tous les points de contrôle du référentiel. Joué par le créateur, rejoué par l'équipe DevOps (contre-audit) avant la PROD. |
+| `/jpb-platform:app-conformite-transformation` | `$jpb-platform:app-conformite-transformation` | **App existante** : mise en conformité écart par écart, à partir de l'audit. |
 
 ## Un plugin « mince »
 
@@ -39,8 +39,16 @@ Application de bureau Claude (onglet Code) : bouton **+** à côté de la zone d
 **Plugins** → **Ajouter un plugin**, marketplace `KeyProd/kp-agents`, plugin `jpb-platform`.
 Les deux partagent la même installation.
 
-Codex : `./sync.sh` depuis un clone de kp-agents copie `jpb-platform/codex/jpb-*` dans
-`~/.codex/skills/`.
+Codex, en terminal — la même marketplace, lue par Codex :
+
+```bash
+codex plugin marketplace add KeyProd/kp-agents
+codex plugin add jpb-platform@kp-agents
+```
+
+Redémarrer Codex. Mise à jour : `codex plugin marketplace upgrade kp-agents`. Le plugin porte
+deux manifestes à la même version : `.claude-plugin/plugin.json` (Claude Code, skills de
+`skills/`) et `.codex-plugin/plugin.json` (Codex, variantes de `codex/`).
 
 ## Documentation côté plateforme (dépôt jpb-platform)
 

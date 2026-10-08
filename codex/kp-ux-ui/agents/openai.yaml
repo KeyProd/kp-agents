@@ -1,6 +1,6 @@
 interface:
   display_name: "KeyProd Ux-ui"
   short_description: "KeyProd UX/UI — Concevoir parcours UX et identité visuelle"
-  default_prompt: "Utilise $kp-ux-ui pour concevoir l'expérience et la direction visuelle de cette feature."
+  default_prompt: "Utilise $kp-agents:kp-ux-ui pour concevoir l'expérience et la direction visuelle de cette feature."
 policy:
   allow_implicit_invocation: true

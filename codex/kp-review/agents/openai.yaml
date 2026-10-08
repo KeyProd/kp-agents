@@ -1,6 +1,6 @@
 interface:
   display_name: "KeyProd Review"
   short_description: "KeyProd Review — Relire, tester et valider le code"
-  default_prompt: "Utilise $kp-review pour relire et valider l'implémentation de cette story."
+  default_prompt: "Utilise $kp-agents:kp-review pour relire et valider l'implémentation de cette story."
 policy:
   allow_implicit_invocation: true

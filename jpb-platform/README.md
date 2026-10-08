@@ -9,6 +9,15 @@ applications internes de JPB.
 | `/jpb-platform:app-conformite-audit` | `$jpb-platform:app-conformite-audit` | **État des lieux** d'une app, en lecture seule, sur tous les points de contrôle du référentiel. Joué par le créateur, rejoué par l'équipe DevOps (contre-audit) avant la PROD. |
 | `/jpb-platform:app-conformite-transformation` | `$jpb-platform:app-conformite-transformation` | **App existante** : mise en conformité écart par écart, à partir de l'audit. |
 
+## Trois modes de communication
+
+Au premier appel, les skills demandent comment parler à l'utilisateur : **débutant** (« je
+découvre » — mots simples, choix techniques faits pour lui selon les préconisations de la
+plateforme), **connaisseur** (« j'ai des notions ») ou **développeur** (communication
+habituelle, il fait ses choix). Le mode est gardé dans son `CLAUDE.local.md`, fichier personnel
+non versionné, et vaut pour toutes les sessions sur le dépôt de l'app. Règle et préconisations :
+`docs/features/plateforme-vxrail/standards/modes-communication.md` du dépôt jpb-platform.
+
 ## Un plugin « mince »
 
 Ce dépôt est public : les skills ne portent que la **démarche**. Les **règles** — référentiel

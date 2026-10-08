@@ -8,6 +8,29 @@ Chaque plugin de la marketplace est versionné indépendamment (`plugin.json` �
 
 ---
 
+## [jpb-platform-v0.4.0] — Modes de communication
+
+Demande de Vincent (2026-10-08) : la session s'adapte à son utilisateur. La règle vit dans
+jpb-platform (`standards/modes-communication.md`) : ce plugin ne porte que la démarche.
+
+### Ajouté
+
+- Les trois skills posent d'abord une question : débutant (« je découvre »), connaisseur
+  (« j'ai des notions ») ou développeur ; sans réponse claire, débutant. Le mode est lu dans le
+  bloc « Mode de communication JPB-Platform » du `CLAUDE.local.md` de la personne, et écrit
+  dès que le dépôt de l'app existe. Codex, qui ne charge pas ce fichier tout seul, le lit.
+- `app-kickstart` : vérification du poste, état du projet, nom, garde-fous, branches et PR,
+  demande de raccordement et choix de la technologie suivent le mode. En débutant, les choix
+  techniques appliquent les préconisations (TypeScript, application web, Nuxt/Vue) sans
+  question ; les décisions métier et les gestes visibles se demandent dans tous les modes.
+- `app-conformite-audit` : rapport selon le mode (en débutant, l'essentiel ; le rapport
+  complet à part pour l'équipe DevOps) ; contre-audit en mode développeur d'office ; seule
+  écriture permise, le bloc du mode dans `CLAUDE.local.md`.
+- `app-conformite-transformation` : explications et choix selon le mode ; l'app garde sa
+  technologie, les préconisations ne valent que pour ce qui s'ajoute.
+
+---
+
 ## [kp-agents-v4.2.0] et [jpb-platform-v0.3.0] — Codex par la marketplace, sans script
 
 Les deux plugins s'installent dans Codex comme dans Claude Code, par la même marketplace git.
